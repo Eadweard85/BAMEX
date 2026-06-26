@@ -156,7 +156,7 @@ tr:hover td{background:var(--nc)}
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
-          <span class="pn" id="p1">1 comunidad activa</span>
+          <span class="pn" id="p1">527 comunidades activas</span>
           <span class="pn" style="background:rgba(160,60,0,.8)">Estado de México</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
@@ -170,7 +170,7 @@ tr:hover td{background:var(--nc)}
       </div>
       <div class="gb">
         <div class="gst">
-          <div><div class="gsn" id="sn1">1</div><div class="gsl">comunidades</div></div>
+          <div><div class="gsn" id="sn1">527</div><div class="gsl">comunidades</div></div>
           <div class="gdv"></div>
           <div><div class="gsn" id="sn2">38,400</div><div class="gsl">familias</div></div>
           <div class="gdv"></div>
@@ -282,8 +282,12 @@ tr:hover td{background:var(--nc)}
   var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.045,transparent:true,opacity:0.9}));
   scene.add(stars);
 
-  /* COORDENADAS VERIFICADAS */
-  var MEX_Y=0.8111, MEX_X=-0.3386;
+  /* ═══════════════════════════════════════
+     COORDENADAS VERIFICADAS POR EL USUARIO
+     rotY=0.1658 → México al centro ✓
+     rotX=-0.3386 → latitud 19.4N ✓
+  ═══════════════════════════════════════ */
+  var MEX_Y=0.1658, MEX_X=-0.3386;
   var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
   var zoomT=2.8, zoomC=2.8;
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
@@ -297,7 +301,7 @@ tr:hover td{background:var(--nc)}
       shininess:18
     });
     globe=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),mat);
-    globe.rotation.y=cY-3.483; globe.rotation.x=cX;
+    globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
     /* Atmósfera azul en los bordes */
@@ -307,31 +311,29 @@ tr:hover td{background:var(--nc)}
       side:THREE.FrontSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
     })));
 
-    /* Un solo pin de prueba en el Estado de México */
-    var pinGeo=new THREE.SphereGeometry(0.03,12,12);
-    var ringGeo=new THREE.RingGeometry(0.038,0.058,16);
-    
-    var c = {lat: 19.28, lon: -99.65}; 
-
-    var phi = (90 - c.lat) * (Math.PI / 180);
-    var theta = (c.lon + 180) * (Math.PI / 180);
-
-    var px = -(R + 0.005) * Math.sin(phi) * Math.sin(theta);
-    var py = (R + 0.005) * Math.cos(phi);
-    var pz = (R + 0.005) * Math.sin(phi) * Math.cos(theta);
-    
-    var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500,transparent:true}));
-    pin.position.set(px,py,pz);
-    var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.7,side:THREE.DoubleSide}));
-    ring.position.set(px,py,pz); ring.lookAt(0,0,0);
-    
-    globe.add(pin); 
-    globe.add(ring);
-    pins.push({pin:pin,ring:ring});
+    /* Pines naranja */
+    var pinGeo=new THREE.SphereGeometry(0.024,10,10);
+    var ringGeo=new THREE.RingGeometry(0.030,0.046,16);
+    [{lat:19.29,lon:99.65},{lat:19.60,lon:99.01},{lat:19.41,lon:99.03},
+     {lat:19.47,lon:99.24},{lat:19.43,lon:98.91},{lat:19.52,lon:98.88},
+     {lat:19.37,lon:99.39},{lat:19.19,lon:99.76},{lat:19.36,lon:98.96},
+     {lat:19.63,lon:99.22},{lat:19.68,lon:99.16},{lat:19.28,lon:99.01},
+     {lat:19.25,lon:99.61},{lat:19.65,lon:99.09}
+    ].forEach(function(c){
+      var phi=(90-c.lat)*Math.PI/180,theta=(c.lon+162.59+180)*Math.PI/180;
+      var px=-(R+0.022)*Math.sin(phi)*Math.cos(theta),py=(R+0.022)*Math.cos(phi),pz=(R+0.022)*Math.sin(phi)*Math.sin(theta);
+      var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500,transparent:true}));
+      pin.position.set(px,py,pz);
+      var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.7,side:THREE.DoubleSide}));
+      ring.position.set(px,py,pz); ring.lookAt(0,0,0);
+      globe.add(pin); globe.add(ring);
+      pins.push({pin:pin,ring:ring});
+    });
   }
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
 
+  /* Cargar textura NASA — intentar 2 CDNs */
   function loadTex(urls,idx){
     if(idx>=urls.length){
       document.getElementById('gload').innerHTML='Sin conexión a internet<span>La textura NASA requiere conexión</span>';
@@ -340,11 +342,13 @@ tr:hover td{background:var(--nc)}
     loader.load(urls[idx],
       function(tex){
         buildGlobe(tex);
+        /* Nubes encima */
         loader.load('https://unpkg.com/three-globe/example/img/earth-clouds.png',function(ct){
           if(!globe)return;
           nubes=new THREE.Mesh(new THREE.SphereGeometry(R*1.008,96,96),new THREE.MeshPhongMaterial({map:ct,transparent:true,opacity:0.4,depthWrite:false}));
           scene.add(nubes);
         },undefined,function(){});
+        /* Bump map relieve */
         loader.load('https://unpkg.com/three-globe/example/img/earth-topology.png',function(bt){
           if(globe&&globe.material){globe.material.bumpMap=bt;globe.material.bumpScale=0.05;globe.material.needsUpdate=true;}
         },undefined,function(){});
@@ -367,9 +371,9 @@ tr:hover td{background:var(--nc)}
   window.addEventListener('touchmove',function(e){if(!drag||!globe)return;tY+=(e.touches[0].clientX-prev.x)*0.006;tX+=(e.touches[0].clientY-prev.y)*0.006;tX=Math.max(-1.4,Math.min(1.4,tX));prev={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
   canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.3,Math.min(4.0,zoomT+e.deltaY*0.003));},{passive:false});
 
-  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.68;spin=false;document.getElementById('spb').textContent='▶ Girar';};
+  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.55;spin=false;document.getElementById('spb').textContent='▶ Girar';};
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
-  window.resetZ=function(){zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
+  window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
 
   var t0=performance.now();
   (function loop(){
@@ -380,7 +384,7 @@ tr:hover td{background:var(--nc)}
     else{intro=false;zoomC+=(zoomT-zoomC)*0.05;camera.position.z=zoomC;}
     if(spin&&!drag)tY+=0.0012;
     cY+=(tY-cY)*0.07;cX+=(tX-cX)*0.07;
-    globe.rotation.y=cY-3.483;globe.rotation.x=cX;
+    globe.rotation.y=cY;globe.rotation.x=cX;
     if(nubes){nubes.rotation.y=cY+e*0.0003;nubes.rotation.x=cX;}
     stars.rotation.y=e*0.00006;
     pins.forEach(function(p){
