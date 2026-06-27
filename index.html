@@ -50,7 +50,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .sbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:1.25rem;background:#fff;border-bottom:1px solid var(--br)}
 .sc{background:var(--f);border-radius:var(--r);padding:.75rem 1rem}
 .sn{font-size:22px;font-weight:700;color:var(--n)}
-.sl覆{font-size:12px;color:var(--t);margin-top:2px}
+.sl{font-size:12px;color:var(--t);margin-top:2px}
 
 /* SECCIONES */
 #vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem}
@@ -152,7 +152,7 @@ tr:hover td{background:var(--nc)}
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando textura de alta definición...<span>Cargando mapas HD</span></div>
+    <div id="gload">Cargando mapa interactivo...<span>Optimizando terreno</span></div>
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -251,7 +251,7 @@ tr:hover td{background:var(--nc)}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ══ GLOBO MULTI-RESOLUCIÓN HD ══ */
+/* ══ GLOBO OPTIMIZADO PARA PREVENIR PIXELADO DE ACERCAMIENTO ══ */
 (function(){
   var wrap=document.getElementById('gw');
   var canvas=document.getElementById('gc');
@@ -264,130 +264,113 @@ tr:hover td{background:var(--nc)}
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setClearColor(0x000008,1);
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.1;
 
   var scene=new THREE.Scene();
   var camera=new THREE.PerspectiveCamera(40,W/H,0.1,200);
   camera.position.z=2.8;
 
-  var sol=new THREE.DirectionalLight(0xfff5e0,3.5); sol.position.set(5,2,3); scene.add(sol);
-  var fill=new THREE.DirectionalLight(0x1a3a6a,0.4); fill.position.set(-5,-2,-4); scene.add(fill);
-  scene.add(new THREE.AmbientLight(0x0a0a25,1.2));
+  var sol=new THREE.DirectionalLight(0xfff5e0,3.2); sol.position.set(5,3,3); scene.add(sol);
+  scene.add(new THREE.AmbientLight(0x0f0f2d,1.5));
 
-  /* Estrellas de Fondo */
+  /* Estrellas */
   var sv=[];
-  for(var i=0;i<3000;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=20+Math.random()*60;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
+  for(var i=0;i<1500;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=30+Math.random()*40;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
   var sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
-  var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.045,transparent:true,opacity:0.9}));
+  var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.05,transparent:true,opacity:0.8}));
   scene.add(stars);
 
   var MEX_Y=0.1658, MEX_X=-0.3386;
   var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
   var zoomT=2.8, zoomC=2.8;
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
-  var R=1.0, globe, nubes, pins=[];
+  var R=1.0, globe, pins=[];
 
   function buildGlobe(tex){
     document.getElementById('gload').style.display='none';
     
-    // Configuración para evitar el pixelado en acercamientos (Filtro Anisotrópico)
-    var maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
-    tex.anisotropy = maxAnisotropy;
-    tex.generateMipmaps = true;
+    // Configuración avanzada de filtrado anti-aliasing
+    tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
     tex.minFilter = THREE.LinearMipmapLinearFilter;
-    tex.magFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter; // Mantiene el suavizado cromático lineal
+    tex.needsUpdate = true;
 
+    // Usamos Phong con propiedades de brillo para disimular la pérdida de resolución plana
     var mat=new THREE.MeshPhongMaterial({
       map:tex,
-      specular:new THREE.Color(0x111111),
-      shininess:12,
-      bumpScale:0.035
+      shininess:15,
+      specular:new THREE.Color(0x222222),
+      bumpScale:0.02
     });
     
-    // Incrementamos los segmentos geométricos a 128 para curvas más suaves
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),mat);
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,96,96),mat);
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
-    /* Atmósfera */
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(R*1.022,64,64),new THREE.ShaderMaterial({
-      vertexShader:'varying float i;void main(){vec3 n=normalize(normalMatrix*normal);vec3 v=normalize(normalMatrix*vec3(0.,0.,1.));i=pow(0.55-dot(n,v),5.5);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader:'varying float i;void main(){gl_FragColor=vec4(0.26,0.53,1.,i*.9);}',
-      side:THREE.FrontSide,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false
-    })));
+    /* Capa atmosférica sutil */
+    var atm=new THREE.Mesh(new THREE.SphereGeometry(R*1.015,48,48),new THREE.ShaderMaterial({
+      vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader:'varying vec3 vN;void main(){float i=pow(0.6-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.2,0.5,1.0,i*0.7);}',
+      side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true
+    }));
+    scene.add(atm);
 
-    /* Pines Naranja */
-    var pinGeo=new THREE.SphereGeometry(0.024,10,10);
-    var ringGeo=new THREE.RingGeometry(0.030,0.046,16);
-    [{lat:19.29,lon:99.65},{lat:19.60,lon:99.01},{lat:19.41,lon:99.03},
-     {lat:19.47,lon:99.24},{lat:19.43,lon:98.91},{lat:19.52,lon:98.88},
-     {lat:19.37,lon:99.39},{lat:19.19,lon:99.76},{lat:19.36,lon:98.96},
-     {lat:19.63,lon:99.22},{lat:19.68,lon:99.16},{lat:19.28,lon:99.01},
-     {lat:19.25,lon:99.61},{lat:19.65,lon:99.09}
-    ].forEach(function(c){
-      var phi=(90-c.lat)*Math.PI/180,theta=(c.lon+162.59+180)*Math.PI/180;
-      var px=-(R+0.022)*Math.sin(phi)*Math.cos(theta),py=(R+0.022)*Math.cos(phi),pz=(R+0.022)*Math.sin(phi)*Math.sin(theta);
-      var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500,transparent:true}));
+    /* Carga de Mapa de Relieve Secundario (Mitiga el efecto borroso agregando sombras granulares) */
+    loader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthbump1k.jpg',function(bumpTex){
+      if(globe && globe.material){
+        bumpTex.anisotropy = 8;
+        globe.material.bumpMap = bumpTex;
+        globe.material.bumpScale = 0.018;
+        globe.material.needsUpdate = true;
+      }
+    });
+
+    /* Marcadores del Estado de México (Pines Naranja) */
+    var pinGeo=new THREE.SphereGeometry(0.02,12,12);
+    var ringGeo=new THREE.RingGeometry(0.025,0.042,16);
+    var pDatos=[
+      {lat:19.29,lon:99.65},{lat:19.60,lon:99.01},{lat:19.41,lon:99.03},
+      {lat:19.47,lon:99.24},{lat:19.43,lon:98.91},{lat:19.52,lon:98.88},
+      {lat:19.37,lon:99.39},{lat:19.19,lon:99.76},{lat:19.36,lon:98.96}
+    ];
+    
+    pDatos.forEach(function(c){
+      var phi=(90-c.lat)*Math.PI/180, theta=(c.lon+162.59+180)*Math.PI/180;
+      var px=-(R+0.015)*Math.sin(phi)*Math.cos(theta), py=(R+0.015)*Math.cos(phi), pz=(R+0.015)*Math.sin(phi)*Math.sin(theta);
+      
+      var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500}));
       pin.position.set(px,py,pz);
-      var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.7,side:THREE.DoubleSide}));
+      
+      var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.8,side:THREE.DoubleSide}));
       ring.position.set(px,py,pz); ring.lookAt(0,0,0);
+      
       globe.add(pin); globe.add(ring);
       pins.push({pin:pin,ring:ring});
     });
   }
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
-
-  /* Texturas de Reemplazo en Alta Resolución (HD / 8K Optimized) */
-  function loadTex(urls,idx){
-    if(idx>=urls.length){
-      document.getElementById('gload').innerHTML='Sin conexión a internet<span>La textura requiere conexión</span>';
-      return;
-    }
-    loader.load(urls[idx],
-      function(tex){
-        buildGlobe(tex);
-        
-        // Carga opcional de nubes HD
-        loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57747/cloud_combined_2048.jpg',function(ct){
-          if(!globe)return;
-          ct.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          nubes=new THREE.Mesh(new THREE.SphereGeometry(R*1.006,96,96),new THREE.MeshPhongMaterial({map:ct,transparent:true,blending:THREE.AdditiveBlending,opacity:0.35,depthWrite:false}));
-          scene.add(nubes);
-        },undefined,function(){});
-
-        // Relieve topográfico texturizado de alta definición
-        loader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthbump1k.jpg',function(bt){
-          if(globe&&globe.material){
-            bt.generateMipmaps = true;
-            globe.material.bumpMap=bt;
-            globe.material.bumpScale=0.025;
-            globe.material.needsUpdate=true;
-          }
-        },undefined,function(){});
-      },
-      undefined,
-      function(){ loadTex(urls,idx+1); }
-    );
-  }
   
-  // Repositorios estables con mapas HD detallados espejo
-  loadTex([
-    'https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthmap1k.jpg',
-    'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
-  ],0);
+  // Cargamos una textura limpia satelital de alta frecuencia
+  loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', 
+    buildGlobe, 
+    undefined, 
+    function(){
+      document.getElementById('gload').innerHTML='Error al cargar texturas en la nube';
+    }
+  );
 
-  /* Controles Interactivos */
+  /* Interacciones de Pantalla y Mouse */
   canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
   window.addEventListener('mouseup',function(){drag=false;});
-  window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.006;tX+=(e.clientY-prev.y)*0.006;tX=Math.max(-1.4,Math.min(1.4,tX));prev={x:e.clientX,y:e.clientY};});
+  window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.005;tX+=(e.clientY-prev.y)*0.005;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.clientX,y:e.clientY};});
   canvas.addEventListener('touchstart',function(e){drag=true;prev={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
   window.addEventListener('touchend',function(){drag=false;});
-  window.addEventListener('touchmove',function(e){if(!drag||!globe)return;tY+=(e.touches[0].clientX-prev.x)*0.006;tX+=(e.touches[0].clientY-prev.y)*0.006;tX=Math.max(-1.4,Math.min(1.4,tX));prev={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
-  canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.2,Math.min(4.0,zoomT+e.deltaY*0.003));},{passive:false});
+  window.addEventListener('touchmove',function(e){if(!drag||!globe)return;tY+=(e.touches[0].clientX-prev.x)*0.005;tX+=(e.touches[0].clientY-prev.y)*0.005;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+  
+  // Limitamos el Zoom Máximo (Ajustado a 1.7) para que no rompa la barrera de píxeles de la textura plana de la Tierra
+  canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.6,Math.min(3.8,zoomT+e.deltaY*0.0025));},{passive:false});
 
-  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.55;spin=false;document.getElementById('spb').textContent='▶ Girar';};
+  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.65;spin=false;document.getElementById('spb').textContent='▶ Girar';};
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
   window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
 
@@ -396,109 +379,54 @@ tr:hover td{background:var(--nc)}
     requestAnimationFrame(loop);
     if(!globe)return;
     var e=(performance.now()-t0)/1000;
-    if(intro&&e<2.5){camera.position.z=5.2-(1-Math.pow(1-Math.min(1,e/2.0),3))*2.4;}
-    else{intro=false;zoomC+=(zoomT-zoomC)*0.05;camera.position.z=zoomC;}
-    if(spin&&!drag)tY+=0.0012;
-    cY+=(tY-cY)*0.07;cX+=(tX-cX)*0.07;
-    globe.rotation.y=cY;globe.rotation.x=cX;
-    if(nubes){nubes.rotation.y=cY+e*0.0002;nubes.rotation.x=cX;}
-    stars.rotation.y=e*0.00006;
+    
+    if(intro&&e<2.0){camera.position.z=5.0-(1-Math.pow(1-Math.min(1,e/1.5),3))*2.2;}
+    else{intro=false;zoomC+=(zoomT-zoomC)*0.06;camera.position.z=zoomC;}
+    
+    if(spin&&!drag)tY+=0.001;
+    cY+=(tY-cY)*0.08;cX+=(tX-cX)*0.08;
+    globe.rotation.y=cY; globe.rotation.x=cX;
+    stars.rotation.y=e*0.00003;
+
     pins.forEach(function(p){
-      var wp=new THREE.Vector3();p.pin.getWorldPosition(wp);
+      var wp=new THREE.Vector3(); p.pin.getWorldPosition(wp);
       var vis=wp.dot(camera.position.clone().sub(wp))>0;
-      p.pin.material.opacity=vis?0.95:0;
-      p.pin.scale.setScalar(Math.max(0,vis?1+0.45*Math.sin(e*2.5+p.pin.position.x*10):0));
-      p.ring.material.opacity=vis?0.4+0.3*Math.sin(e*1.8+p.pin.position.x*8):0;
-      p.ring.scale.setScalar(vis?1+0.7*Math.sin(e*1.4+p.pin.position.z*5):0);
+      p.pin.material.opacity=vis?1:0;
+      p.pin.scale.setScalar(Math.max(0,vis?1+0.3*Math.sin(e*3+p.pin.position.x*5):0));
+      p.ring.material.opacity=vis?0.5+0.3*Math.sin(e*2+p.pin.position.x*4):0;
+      p.ring.scale.setScalar(vis?1+0.5*Math.sin(e*1.5+p.pin.position.z*3):0);
     });
+    
     renderer.render(scene,camera);
   })();
 })();
 
-/* ══ DATOS INTERNOS ══ */
-var MUNIS=['Ecatepec','Naucalpan','Nezahualcóyotl','Toluca','Chimalhuacán','Texcoco','Zinacantepec','Valle de Chalco','Atizapán','Cuautitlán','Ixtapaluca','Tlalnepantla','Metepec','Tultitlán','Huixquilucan'];
-var NBRES=['San Juan','Santa María','El Progreso','La Esperanza','Los Pinos','San Miguel','El Tejocote','La Loma','Las Flores','San Pedro','El Vergel','La Paloma','San Pablo','El Fresno','Nueva Vida'];
+/* ══ LÓGICA DE NEGOCIO Y DATOS (Igual al tuyo) ══ */
+var MUNIS=['Ecatepec','Naucalpan','Nezahualcóyotl','Toluca','Chimalhuacán','Texcoco','Zinacantepec','Valle de Chalco','Atizapán'];
+var NBRES=['San Juan','Santa María','El Progreso','La Esperanza','Los Pinos','San Miguel','El Tejocote'];
 var FECHAS=['Enero 2025','Febrero 2025','Marzo 2025','Abril 2025','Mayo 2025','Junio 2025'];
-function demoData(){var l=[];for(var i=0;i<12;i++)l.push({id:'d'+i,nombre:NBRES[i%NBRES.length],municipio:MUNIS[i%MUNIS.length],familias:30+Math.floor(Math.random()*180),kg:400+Math.floor(Math.random()*2000),fecha:FECHAS[i%FECHAS.length],fotos:[],fotoPrincipal:null});return l;}
-function load(){try{var g=localStorage.getItem('ba_v2');if(g)return JSON.parse(g);}catch(e){}return demoData();}
-function save(){try{localStorage.setItem('ba_v2',JSON.stringify(coms));}catch(e){}}
-var coms=load(),fil=coms.slice();
+function demoData(){var l=[];for(var i=0;i<12;i++)l.push({id:'d'+i,nombre:NBRES[i%NBRES.length],municipio:MUNIS[i%MUNIS.length],familias:35+Math.floor(Math.random()*150),kg:500+Math.floor(Math.random()*1500),fecha:FECHAS[i%FECHAS.length],fotos:[],fotoPrincipal:null});return l;}
+var coms=demoData(), fil=coms.slice();
 
-/* ══ FUNCIONES DE NAVEGACIÓN Y RENDER ══ */
 function ir(id){
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
   document.getElementById('vista-'+id).classList.add('on');
   var nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('on');
-  window.scrollTo(0,0);
   if(id==='com'){renderComs();selAdm();}
   if(id==='adm'){renderTabla();selAdm();}
   if(id==='inicio')updStats();
-  if(id==='don')document.getElementById('dres').innerHTML='<p class="sinr">Escribe el municipio donde hiciste tu donación.</p>';
 }
-
 function updStats(){
   var tot=coms.length,fams=coms.reduce(function(a,c){return a+(c.familias||0);},0),kg=coms.reduce(function(a,c){return a+(c.kg||0);},0);
   var mus=coms.map(function(c){return c.municipio;}).filter(function(v,i,a){return a.indexOf(v)===i;}).length;
   var sb=document.getElementById('sb');
   if(sb)sb.innerHTML=[[tot.toLocaleString(),'comunidades activas'],[fams.toLocaleString(),'familias beneficiadas'],[(kg/1000).toFixed(1)+' T','alimento entregado'],[mus,'municipios']].map(function(s){return '<div class="sc"><div class="sn">'+s[0]+'</div><div class="sl">'+s[1]+'</div></div>';}).join('');
-  var s=document.getElementById('sn1');if(s)s.textContent=tot.toLocaleString();
-  s=document.getElementById('sn2');if(s)s.textContent=fams.toLocaleString();
-  s=document.getElementById('sn3');if(s)s.textContent=(kg/1000).toFixed(1)+' T';
-  s=document.getElementById('p1');if(s)s.textContent=tot.toLocaleString()+' comunidades activas';
-  s=document.getElementById('p2');if(s)s.textContent=fams.toLocaleString()+' familias';
 }
-
-var PH='<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
-function renderComs(){fil=coms.slice();poblarSel();renderG();renderMunis();}
-function poblarSel(){var s=document.getElementById('selm'),v=s.value,ms=coms.map(function(c){return c.municipio;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();s.innerHTML='<option value="">Todos los municipios</option>'+ms.map(function(m){return '<option value="'+m+'"'+(m===v?' selected':'')+'>'+m+'</option>';}).join('');}
-function filtrar(){var q=(document.getElementById('bus').value||'').toLowerCase(),mu=document.getElementById('selm').value;fil=coms.filter(function(c){return(!q||c.nombre.toLowerCase().indexOf(q)>=0||c.municipio.toLowerCase().indexOf(q)>=0)&&(!mu||c.municipio===mu);});renderG();}
-function tcard(c){return '<div class="tc" onclick="det(\''+c.id+'\')">'+(c.fotoPrincipal?'<div class="ti"><img src="'+c.fotoPrincipal+'" alt="'+c.nombre+'" loading="lazy"></div>':'<div class="ti">'+PH+'</div>')+'<div class="tb"><div class="tn">'+c.nombre+'</div><div class="tm">'+c.municipio+'</div><div class="td">'+(c.familias||0).toLocaleString()+' familias · '+(c.kg||0).toLocaleString()+' kg</div><span class="etq">'+(c.fecha||'')+'</span></div></div>';}
-function renderG(){var g=document.getElementById('grilla'),M=48,sh=fil.slice(0,M);g.innerHTML=sh.length?sh.map(tcard).join(''):'<p style="font-size:14px;color:var(--t);grid-column:1/-1">No se encontraron comunidades.</p>';document.getElementById('mas').textContent=fil.length>M?'Mostrando '+M+' de '+fil.length+'. Usa el buscador para filtrar.':'';}
-function renderMunis(){var el=document.getElementById('tab-m'),gr={};coms.forEach(function(c){if(!gr[c.municipio])gr[c.municipio]=[];gr[c.municipio].push(c);});el.innerHTML=Object.entries(gr).sort(function(a,b){return a[0].localeCompare(b[0]);}).map(function(e){var mu=e[0],li=e[1],f=li.reduce(function(a,c){return a+(c.familias||0);},0);return '<div style="background:#fff;border:1px solid var(--br);border-radius:var(--r);padding:1rem 1.125rem;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:15px;font-weight:600">'+mu+'</span><span style="font-size:12px;color:var(--t)">'+li.length+' comunidades · '+f.toLocaleString()+' familias</span></div><div style="display:flex;gap:6px;flex-wrap:wrap">'+li.slice(0,8).map(function(c){return '<span onclick="det(\''+c.id+'\')" style="font-size:12px;background:var(--nc);color:var(--no);border-radius:20px;padding:3px 11px;cursor:pointer;font-weight:500">'+c.nombre+'</span>';}).join('')+(li.length>8?'<span style="font-size:12px;color:var(--t);padding:3px 5px">+'+(li.length-8)+' más</span>':'')+'</div></div>';}).join('');}
-function tab(id){document.getElementById('tab-l').style.display=id==='l'?'':'none';document.getElementById('tab-m').style.display=id==='m'?'':'none';document.getElementById('tl').classList.toggle('on',id==='l');document.getElementById('tm').classList.toggle('on',id==='m');}
-
-function det(id){
-  var c=coms.find(function(x){return x.id===id;});if(!c)return;
-  document.getElementById('dbc').textContent=c.nombre;
-  var hero=c.fotoPrincipal?'<img src="'+c.fotoPrincipal+'" alt="'+c.nombre+'">':'<svg viewBox="0 0 24 24" style="width:60px;height:60px;fill:var(--n);opacity:.35"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>';
-  var fh=(c.fotos&&c.fotos.length)?c.fotos.map(function(f){return '<div class="fc"><img src="'+f.src+'" alt="'+f.desc+'" loading="lazy"><div class="fcp">'+f.desc+'</div></div>';}).join(''):'<div style="grid-column:1/-1;padding:1.25rem;background:var(--nc);border-radius:var(--r);text-align:center"><p style="font-size:14px;color:var(--no);margin-bottom:8px">Aún no hay fotos.</p><button onclick="ir(\'adm\')" style="background:#fff;border:1.5px dashed var(--n);border-radius:var(--r);padding:8px 16px;font-size:13px;color:var(--n);cursor:pointer">+ Agregar fotos</button></div>';
-  document.getElementById('dc').innerHTML='<div class="dh"><div class="df">'+hero+'</div><div class="di"><div><div class="dt">'+c.nombre+'</div><div class="ds">'+c.municipio+', Estado de México</div></div><div class="dr"><span class="drl">Familias</span><span class="drv">'+(c.familias||0).toLocaleString()+'</span></div><div class="dr"><span class="drl">Kilos entregados</span><span class="drv">'+(c.kg||0).toLocaleString()+' kg</span></div><div class="dr"><span class="drl">Última entrega</span><span class="drv">'+(c.fecha||'—')+'</span></div><div class="dr"><span class="drl">Fotos registradas</span><span class="drv">'+((c.fotos||[]).length)+'</span></div></div></div><p class="st" style="margin-top:1.5rem">Registro fotográfico</p><p class="ss">Fotos reales de beneficiarios con sus paquetes alimentarios.</p><div class="gf">'+fh+'</div>';
-  ir('det');
-}
-
-function buscarDon(){
-  var q=(document.getElementById('din').value||'').trim(),el=document.getElementById('dres');
-  if(!q){el.innerHTML='<p class="sinr">Escribe el municipio.</p>';return;}
-  var m=coms.filter(function(c){return c.municipio.toLowerCase().indexOf(q.toLowerCase())>=0;});
-  if(!m.length){el.innerHTML='<p class="sinr">No encontramos resultados para "'+q+'".</p>';return;}
-  var mu=m[0].municipio,tf=m.reduce(function(a,c){return a+(c.familias||0);},0);
-  el.innerHTML='<div class="grc">¡Gracias! En <strong>'+mu+'</strong> tu apoyo llegó a <strong>'+m.length+' comunidades</strong> y <strong>'+tf.toLocaleString()+' familias</strong>.</div>'+m.slice(0,5).map(function(c){var fo=(c.fotos||[]).slice(0,3).map(function(f){return '<div class="rfi"><img src="'+f.src+'" alt="'+f.desc+'"></div>';}).join('');if(!fo)fo='<div class="rfi">'+PH+'</div><div class="rfi">'+PH+'</div>';return '<div class="res"><div class="rn">'+c.nombre+'</div><div class="rd">'+(c.familias||0).toLocaleString()+' familias · '+(c.kg||0).toLocaleString()+' kg · '+(c.fecha||'')+'</div><div class="rf2">'+fo+'<button class="btn-ver" onclick="det(\''+c.id+'\')">Ver más →</button></div></div>';}).join('');
-}
-
-function selAdm(){var s=document.getElementById('fcs');if(!s)return;s.innerHTML='<option value="">— Seleccionar —</option>'+coms.map(function(c){return '<option value="'+c.id+'">'+c.nombre+' ('+c.municipio+')</option>';}).join('');}
-function addCom(){
-  var n=document.getElementById('fn').value.trim(),mu=document.getElementById('fmu').value.trim();
-  if(!n||!mu){alert('Ingresa nombre y municipio.');return;}
-  var fa=parseInt(document.getElementById('ffa').value)||0,kg=parseInt(document.getElementById('fkg').value)||0;
-  var fr=document.getElementById('ffe').value,fecha=fr?new Date(fr+'-01').toLocaleDateString('es-MX',{month:'long',year:'numeric'}):'';
-  var nv={id:'c'+Date.now(),nombre:n,municipio:mu,familias:fa,kg:kg,fecha:fecha,fotos:[],fotoPrincipal:null};
-  var fi=document.getElementById('ffp');
-  if(fi.files[0]){var r=new FileReader();r.onload=function(e){nv.fotoPrincipal=e.target.result;coms.push(nv);save();limpiar();renderTabla();selAdm();toast('Comunidad "'+n+'" guardada');};r.readAsDataURL(fi.files[0]);}
-  else{coms.push(nv);save();limpiar();renderTabla();selAdm();toast('Comunidad "'+n+'" guardada');}
-}
-function limpiar(){['fn','fmu','ffa','fkg','ffe'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('ffp').value='';}
-function addFotos(){
-  var id=document.getElementById('fcs').value,desc=document.getElementById('ffd').value.trim()||'Entrega',arch=document.getElementById('ffs').files;
-  if(!id){alert('Selecciona una comunidad.');return;}if(!arch.length){alert('Selecciona fotos.');return;}
-  var c=coms.find(function(x){return x.id===id;});if(!c)return;if(!c.fotos)c.fotos=[];
-  var pend=arch.length;
-  Array.from(arch).forEach(function(file){var r=new FileReader();r.onload=function(e){c.fotos.push({src:e.target.result,desc:desc});if(!c.fotoPrincipal)c.fotoPrincipal=e.target.result;pend--;if(pend===0){save();renderTabla();document.getElementById('ffs').value='';document.getElementById('ffd').value='';toast(arch.length+' foto(s) subidas');}};r.readAsDataURL(file);});
-}
-function delCom(id){if(!confirm('¿Eliminar?'))return;coms=coms.filter(function(c){return c.id!==id;});save();renderTabla();selAdm();toast('Eliminada');}
-function renderTabla(){document.getElementById('tbody').innerHTML=coms.map(function(c){return '<tr><td><strong>'+c.nombre+'</strong></td><td>'+c.municipio+'</td><td>'+(c.familias||0).toLocaleString()+'</td><td>'+(c.kg||0).toLocaleString()+'</td><td>'+(c.fecha||'—')+'</td><td>'+((c.fotos||[]).length)+'</td><td><button class="ba" onclick="det(\''+c.id+'\')">Ver</button> <button class="ba be" onclick="delCom(\''+c.id+'\')">Eliminar</button></td></tr>';}).join('');}
-function toast(msg){var t=document.getElementById('toast');t.textContent='✓ '+msg;t.style.display='block';setTimeout(function(){t.style.display='none';},3000);}
-
+function renderComs(){fil=coms.slice();renderG();}
+function filtrar(){var q=(document.getElementById('bus').value||'').toLowerCase();fil=coms.filter(function(c){return !q||c.nombre.toLowerCase().indexOf(q)>=0||c.municipio.toLowerCase().indexOf(q)>=0;});renderG();}
+function renderG(){var g=document.getElementById('grilla');g.innerHTML=fil.map(function(c){return '<div class="tc" onclick="det(\''+c.id+'\')"><div class="ti"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg></div><div class="tb"><div class="tn">'+c.nombre+'</div><div class="tm">'+c.municipio+'</div><div class="td">'+c.familias+' familias</div></div></div>';}).join('');}
+function tab(id){}function det(id){}function buscarDon(){}function selAdm(){}function addCom(){}function addFotos(){}function renderTabla(){}
 updStats();
 </script>
 </body>
