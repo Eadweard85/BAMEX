@@ -20,12 +20,11 @@ nav button:hover{background:var(--nc);border-color:var(--n)}
 nav button.on{background:var(--n);border-color:var(--n);color:white}
 .vista{width:100%;height:calc(100vh - 60px);overflow:hidden;display:none}.vista.on{display:block}
 
-/* DISEÑO DE PANTALLA ÚNICA TOTAL */
+/* INTERFAZ FLOTANTE TOTALMENTE INTEGRADA */
 #gw{width:100%;height:100%;background:#000008;position:relative;overflow:hidden}
 #gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 #gc:active{cursor:grabbing}
 
-/* INTERFAZ FLOTANTE TOTALMENTE INTEGRADA */
 #gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:1.25rem;z-index:10}
 .gt{display:flex;justify-content:space-between;align-items:flex-start}
 .pn{background:rgba(232,100,10,.9);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,170,60,.25)}
@@ -53,7 +52,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:14px;text-align:center;pointer-events:none;z-index:5}
 #gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)}
 
-/* VISTAS RESTANTES CON SCROLL INTERNO INDEPENDIENTE SI LO REQUIEREN */
+/* SECCIONES SECUNDARIAS CON SCROLL INDEPENDIENTE */
 #vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
@@ -201,7 +200,8 @@ td{padding:9px 11px;border-bottom:1px solid var(--br);color:var(--o)}
   var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.04,transparent:true,opacity:0.7}));
   scene.add(stars);
 
-  var MEX_Y=0.1658, MEX_X=-0.3386;
+  // AJUSTE CLAVE: Inclinación del eje X modificada a 0.46 para cabecear el Polo Norte hacia el frente (Imagen 2)
+  var MEX_Y=0.1658, MEX_X=0.4600;
   var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
   var zoomT=2.8, zoomC=2.8;
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
