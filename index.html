@@ -49,8 +49,8 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .gh{color:rgba(255,255,255,.4);font-size:11px;animation:bk 3s infinite;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
 @keyframes bk{0%,100%{opacity:.4}50%{opacity:.8}}
 
-#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:14px;text-align:center;pointer-events:none;z-index:5}
-#gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)}
+#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
+#gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
 /* SECCIONES SECUNDARIAS CON SCROLL INDEPENDIENTE */
 #vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
@@ -92,7 +92,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa interactivo...<span>Renderizando terreno tridimensional</span></div>
+    <div id="gload">Cargando mapa en UHD...<span>Optimizando texturas para zoom</span></div>
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -165,7 +165,6 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var W=wrap.clientWidth;
   var H=wrap.clientHeight;
 
-  // Habilitamos mapeo de tonos de color para un renderizado premium
   var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
@@ -176,7 +175,6 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
 
-  // Iluminación cinemática oblicua: resalta relieves sin quemar los colores nativos
   var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
   var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
 
@@ -192,28 +190,30 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
   var R=1.0, globe, pins=[];
 
+  // CONFIGURACIÓN ANTI-PIXELADO EXTREMO (A nivel de GPU)
   function configTexture(t){
+    // Forzamos el Filtro Anisotrópico al nivel máximo que soporte el hardware del usuario (normalmente 16x)
     t.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
+    t.generateMipmaps = true;
     t.minFilter = THREE.LinearMipmapLinearFilter;
-    t.magFilter = THREE.LinearFilter; // Evita el pixelado cuadriculado al hacer zoom agresivo
+    t.magFilter = THREE.LinearFilter; 
   }
 
   function buildGlobe(tex){
     document.getElementById('gload').style.display='none';
     configTexture(tex);
     
-    // MEJORA INTEGRAL: Cambiado a MeshStandardMaterial (PBR fotorrealista mate)
     var mat=new THREE.MeshStandardMaterial({
       map:tex,
-      roughness: 0.78, // Superficie mate para evitar reflejos de plástico brillante
+      roughness: 0.75, 
       metalness: 0.05
     });
     
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,90,90),mat); // Incrementada la geometría base para máxima definición esférica
+    // Elevamos la resolución geométrica de la esfera a 128x128 para curvas perfectas al acercarse
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),mat); 
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
-    // Atmósfera sutil
     var atm=new THREE.Mesh(new THREE.SphereGeometry(R*1.012,32,32),new THREE.ShaderMaterial({
       vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader:'varying vec3 vN;void main(){float i=pow(0.55-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.25,0.55,1.0,i*0.4);}',
@@ -221,16 +221,16 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
     }));
     scene.add(atm);
 
+    // Mapa de relieve topográfico acoplado en alta definición
     loader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthbump1k.jpg', function(bumpTex){
       if(globe){
         configTexture(bumpTex);
         globe.material.bumpMap = bumpTex;
-        globe.material.bumpScale = 0.022; // Relieve fino para que las montañas de México destaquen con elegancia al recibir luz de lado
+        globe.material.bumpScale = 0.018; 
         globe.material.needsUpdate = true;
       }
     });
 
-    // CORRECCIÓN DE POLÍGONOS: Subimos los segmentos a 64 para que el anillo sea perfectamente redondo y suave
     var pinGeo=new THREE.SphereGeometry(0.015,16,16);
     var ringGeo=new THREE.RingGeometry(0.022,0.038,64); 
     
@@ -251,7 +251,17 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   }
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
-  loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', buildGlobe);
+  
+  // TEXTURA DE COLOR EN ALTA RESOLUCIÓN (NASA VISIBLE EARTH)
+  // Sustituye el "blue-marble" de baja calidad por una topografía detallada
+  loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.png', 
+    buildGlobe, 
+    undefined, 
+    function(){
+      // En caso de que falle la red del servidor de la NASA, entra este Respaldo (Fallback)
+      loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', buildGlobe);
+    }
+  );
 
   canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
   window.addEventListener('mouseup',function(){drag=false;});
