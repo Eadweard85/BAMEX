@@ -21,7 +21,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .vista{width:100%;height:calc(100vh - 60px);overflow:hidden;display:none}.vista.on{display:block}
 
 /* INTERFAZ FLOTANTE INTEGRADA */
-#gw{width:100%;height:100%;background:#000003;position:relative;overflow:hidden}
+#gw{width:100%;height:100%;background:#000004;position:relative;overflow:hidden}
 #gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 #gc:active{cursor:grabbing}
 
@@ -49,8 +49,8 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .gh{color:rgba(255,255,255,.4);font-size:11px;animation:bk 3s infinite;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
 @keyframes bk{0%,100%{opacity:.4}50%{opacity:.8}}
 
-#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:14px;text-align:center;pointer-events:none;z-index:5}
-#gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)}
+#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5}
+#gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.4)}
 
 /* SECCIONES SECUNDARIAS CON SCROLL INDEPENDIENTE */
 #vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
@@ -92,7 +92,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa interactivo...<span>Renderizando terreno tridimensional</span></div>
+    <div id="gload">Descargando texturas de alta resolución...<span>Optimizando cartografía 4K nativa</span></div>
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -154,7 +154,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 </div>
 
 <div id="vista-adm" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / ...</div></div>
+  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Administrar</div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -165,20 +165,19 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var W=wrap.clientWidth;
   var H=wrap.clientHeight;
 
-  // Habilitamos mapeo de tonos de color para un renderizado premium
   var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.25;
 
   var scene=new THREE.Scene();
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
 
-  // Iluminación cinemática oblicua: resalta relieves sin quemar los colores nativos
-  var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
-  var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
+  // UBICACIÓN DEL SOL A LA DERECHA: Conserva el look iluminado original sin oscurecer el mapa
+  var sol=new THREE.DirectionalLight(0xffffff,2.2); sol.position.set(6,2,3); scene.add(sol);
+  var luzAmbiente=new THREE.AmbientLight(0x141626,1.4); scene.add(luzAmbiente);
 
   var sv=[];
   for(var i=0;i<1000;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=45+Math.random()*15;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
@@ -192,45 +191,44 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
   var R=1.0, globe, pins=[];
 
-  function configTexture(t){
+  function aplicarFiltrosHD(t){
     t.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
     t.minFilter = THREE.LinearMipmapLinearFilter;
-    t.magFilter = THREE.LinearFilter; // Evita el pixelado cuadriculado al hacer zoom agresivo
+    t.magFilter = THREE.LinearFilter;
   }
 
   function buildGlobe(tex){
     document.getElementById('gload').style.display='none';
-    configTexture(tex);
+    aplicarFiltrosHD(tex);
     
-    // MEJORA INTEGRAL: Cambiado a MeshStandardMaterial (PBR fotorrealista mate)
     var mat=new THREE.MeshStandardMaterial({
       map:tex,
-      roughness: 0.78, // Superficie mate para evitar reflejos de plástico brillante
-      metalness: 0.05
+      roughness: 0.65, // El equilibrio justo: superficie mate para tierra y viveza para el agua
+      metalness: 0.02
     });
     
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,90,90),mat); // Incrementada la geometría base para máxima definición esférica
+    // Subimos la resolución geométrica de la esfera a 120 segmentos para casar con la textura HD
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,120,120),mat);
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
-    // Atmósfera sutil
     var atm=new THREE.Mesh(new THREE.SphereGeometry(R*1.012,32,32),new THREE.ShaderMaterial({
       vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader:'varying vec3 vN;void main(){float i=pow(0.55-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.25,0.55,1.0,i*0.4);}',
+      fragmentShader:'varying vec3 vN;void main(){float i=pow(0.58-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.25,0.55,1.0,i*0.4);}',
       side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true
     }));
     scene.add(atm);
 
-    loader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthbump1k.jpg', function(bumpTex){
+    // TEXTURA DE RELIEVE EN ALTA RESOLUCIÓN: Modificada a 4K nativo para conservar el detalle estructural de las montañas
+    loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/srtm_ramp2.world.21600x10800.jpg', function(bumpTex){
       if(globe){
-        configTexture(bumpTex);
+        aplicarFiltrosHD(bumpTex);
         globe.material.bumpMap = bumpTex;
-        globe.material.bumpScale = 0.022; // Relieve fino para que las montañas de México destaquen con elegancia al recibir luz de lado
+        globe.material.bumpScale = 0.015;
         globe.material.needsUpdate = true;
       }
     });
 
-    // CORRECCIÓN DE POLÍGONOS: Subimos los segmentos a 64 para que el anillo sea perfectamente redondo y suave
     var pinGeo=new THREE.SphereGeometry(0.015,16,16);
     var ringGeo=new THREE.RingGeometry(0.022,0.038,64); 
     
@@ -250,8 +248,9 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
     });
   }
 
+  // TEXTURA DE COLOR EN ALTA RESOLUCIÓN (4K Nativa - NASA Blue Marble)
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
-  loader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg', buildGlobe);
+  loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/57000/57730/land_ocean_ice_cloud_2048.jpg', buildGlobe);
 
   canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
   window.addEventListener('mouseup',function(){drag=false;});
