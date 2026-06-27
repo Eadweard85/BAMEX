@@ -21,7 +21,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .vista{width:100%;height:calc(100vh - 60px);overflow:hidden;display:none}.vista.on{display:block}
 
 /* INTERFAZ FLOTANTE INTEGRADA */
-#gw{width:100%;height:100%;background:#000008;position:relative;overflow:hidden}
+#gw{width:100%;height:100%;background:#000003;position:relative;overflow:hidden}
 #gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 #gc:active{cursor:grabbing}
 
@@ -53,7 +53,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 #gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)}
 
 /* SECCIONES SECUNDARIAS CON SCROLL INDEPENDIENTE */
-#vista-com,#vista-det,#vista-don,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
+#vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
 .bc a{color:var(--n);text-decoration:none;cursor:pointer}
@@ -92,7 +92,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa interactivo...<span>Optimizando terreno tridimensional</span></div>
+    <div id="gload">Cargando mapa interactivo...<span>Renderizando terreno tridimensional</span></div>
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -154,7 +154,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 </div>
 
 <div id="vista-adm" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Administrar</div></div>
+  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / ...</div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -165,22 +165,25 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var W=wrap.clientWidth;
   var H=wrap.clientHeight;
 
+  // Habilitamos mapeo de tonos de color para un renderizado premium
   var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
 
   var scene=new THREE.Scene();
-  var camera=new THREE.PerspectiveCamera(40,W/H,0.1,200);
+  var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
 
-  // CORRECCIÓN CRÍTICA DE ILUMINACIÓN: Sol lateral para generar relieve y micro-sombras realistas
-  var sol=new THREE.DirectionalLight(0xfff8f0,2.6); sol.position.set(-5,3,2); scene.add(sol);
-  scene.add(new THREE.AmbientLight(0x1a1a3a,1.8));
+  // Iluminación cinemática oblicua: resalta relieves sin quemar los colores nativos
+  var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
+  var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
 
   var sv=[];
-  for(var i=0;i<1200;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=40+Math.random()*20;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
+  for(var i=0;i<1000;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=45+Math.random()*15;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
   var sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
-  var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.04,transparent:true,opacity:0.7}));
+  var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.035,transparent:true,opacity:0.6}));
   scene.add(stars);
 
   var MEX_Y=0.1658, MEX_X=0.2800;
@@ -189,50 +192,60 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
   var R=1.0, globe, pins=[];
 
+  function configTexture(t){
+    t.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter; // Evita el pixelado cuadriculado al hacer zoom agresivo
+  }
+
   function buildGlobe(tex){
     document.getElementById('gload').style.display='none';
+    configTexture(tex);
     
-    tex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
-    tex.minFilter = THREE.LinearMipmapLinearFilter;
-    
-    // CORRECCIÓN MATÉRIAL: Eliminado el exceso de reflejo plástico especular en continentes
-    var mat=new THREE.MeshPhongMaterial({
+    // MEJORA INTEGRAL: Cambiado a MeshStandardMaterial (PBR fotorrealista mate)
+    var mat=new THREE.MeshStandardMaterial({
       map:tex,
-      shininess:4,
-      specular:new THREE.Color(0x111111)
+      roughness: 0.78, // Superficie mate para evitar reflejos de plástico brillante
+      metalness: 0.05
     });
     
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,85,85),mat);
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,90,90),mat); // Incrementada la geometría base para máxima definición esférica
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
-    var atm=new THREE.Mesh(new THREE.SphereGeometry(R*1.015,32,32),new THREE.ShaderMaterial({
+    // Atmósfera sutil
+    var atm=new THREE.Mesh(new THREE.SphereGeometry(R*1.012,32,32),new THREE.ShaderMaterial({
       vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
-      fragmentShader:'varying vec3 vN;void main(){float i=pow(0.6-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.2,0.5,1.0,i*0.6);}',
+      fragmentShader:'varying vec3 vN;void main(){float i=pow(0.55-dot(vN,vec3(0.,0.,1.)),4.0);gl_FragColor=vec4(0.25,0.55,1.0,i*0.4);}',
       side:THREE.BackSide,blending:THREE.AdditiveBlending,transparent:true
     }));
     scene.add(atm);
 
     loader.load('https://raw.githubusercontent.com/turban/webgl-earth/master/images/earthbump1k.jpg', function(bumpTex){
       if(globe){
-        bumpTex.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
+        configTexture(bumpTex);
         globe.material.bumpMap = bumpTex;
-        globe.material.bumpScale = 0.035; // Incrementado ligeramente para acentuar valles y montañas
+        globe.material.bumpScale = 0.022; // Relieve fino para que las montañas de México destaquen con elegancia al recibir luz de lado
         globe.material.needsUpdate = true;
       }
     });
 
-    var pinGeo=new THREE.SphereGeometry(0.018,12,12);
-    var ringGeo=new THREE.RingGeometry(0.022,0.038,14);
+    // CORRECCIÓN DE POLÍGONOS: Subimos los segmentos a 64 para que el anillo sea perfectamente redondo y suave
+    var pinGeo=new THREE.SphereGeometry(0.015,16,16);
+    var ringGeo=new THREE.RingGeometry(0.022,0.038,64); 
     
     var pDatos=[{lat:19.35,lon:99.45}];
     
     pDatos.forEach(function(c){
       var phi=(90-c.lat)*Math.PI/180, theta=(c.lon+162.59+180)*Math.PI/180;
       var px=-(R+0.012)*Math.sin(phi)*Math.cos(theta), py=(R+0.012)*Math.cos(phi), pz=(R+0.012)*Math.sin(phi)*Math.sin(theta);
-      var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500})); pin.position.set(px,py,pz);
-      var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.7,side:THREE.DoubleSide}));
+      
+      var pin=new THREE.Mesh(pinGeo,new THREE.MeshBasicMaterial({color:0xff5500})); 
+      pin.position.set(px,py,pz);
+      
+      var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:0xff7733,transparent:true,opacity:0.8,side:THREE.DoubleSide}));
       ring.position.set(px,py,pz); ring.lookAt(0,0,0);
+      
       globe.add(pin); globe.add(ring); pins.push({pin:pin,ring:ring});
     });
   }
@@ -242,10 +255,10 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 
   canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
   window.addEventListener('mouseup',function(){drag=false;});
-  window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.005;tX+=(e.clientY-prev.y)*0.005;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.clientX,y:e.clientY};});
-  canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.8,Math.min(3.6,zoomT+e.deltaY*0.0025));},{passive:false});
+  window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.004;tX+=(e.clientY-prev.y)*0.004;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.clientX,y:e.clientY};});
+  canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.6,Math.min(3.4,zoomT+e.deltaY*0.0022));},{passive:false});
 
-  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.8;spin=false;document.getElementById('spb').textContent='▶ Girar';};
+  window.goMex=function(){tY=MEX_Y;tX=MEX_X;zoomT=1.7;spin=false;document.getElementById('spb').textContent='▶ Girar';};
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
   window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
 
@@ -260,11 +273,11 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
     requestAnimationFrame(loop); if(!globe)return;
     var e=(performance.now()-t0)/1000;
     if(intro&&e<2.0){camera.position.z=5.0-(1-Math.pow(1-Math.min(1,e/1.5),3))*2.2;}
-    else{intro=false;zoomC+=(zoomT-zoomC)*0.06;camera.position.z=zoomC;}
-    if(spin&&!drag)tY+=0.0008;
+    else{intro=false;zoomC+=(zoomT-zoomC)*0.07;camera.position.z=zoomC;}
+    if(spin&&!drag)tY+=0.0006;
     cY+=(tY-cY)*0.08;cX+=(tX-cX)*0.08;
     globe.rotation.y=cY; globe.rotation.x=cX;
-    stars.rotation.y=e*0.00002;
+    stars.rotation.y=e*0.00001;
     renderer.render(scene,camera);
   })();
 })();
