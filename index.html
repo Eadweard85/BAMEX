@@ -20,7 +20,7 @@ nav button:hover{background:var(--nc);border-color:var(--n)}
 nav button.on{background:var(--n);border-color:var(--n);color:white}
 .vista{width:100%;height:calc(100vh - 60px);overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ FLOTANTE TOTALMENTE INTEGRADA */
+/* INTERFAZ FLOTANTE INTEGRADA */
 #gw{width:100%;height:100%;background:#000008;position:relative;overflow:hidden}
 #gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
 #gc:active{cursor:grabbing}
@@ -53,7 +53,7 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 #gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.3)}
 
 /* SECCIONES SECUNDARIAS CON SCROLL INDEPENDIENTE */
-#vista-com,#vista-det,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
+#vista-com,#vista-det,#vista-don,#vista-don,#vista-adm{padding:1.5rem;overflow-y:auto}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
 .bc a{color:var(--n);text-decoration:none;cursor:pointer}
@@ -72,24 +72,6 @@ nav button.on{background:var(--n);border-color:var(--n);color:white}
 .tn{font-size:14px;font-weight:600;color:var(--o)}
 .tm{font-size:12px;color:var(--t)}
 .td{font-size:12px;color:var(--t)}
-.dw{max-width:540px;margin:0 auto}
-.don-b{display:flex;gap:8px;margin-bottom:1.25rem}
-.don-b input{flex:1;padding:11px 14px;border:1.5px solid var(--br);border-radius:var(--r);font-size:15px;outline:none}
-.btn-p{padding:11px 18px;background:var(--n);color:#fff;border:none;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer}
-.ag{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.25rem;margin-bottom:1.25rem}
-.ac{background:#fff;border:1px solid var(--br);border-radius:var(--r);padding:1.125rem}
-.act{font-size:14px;font-weight:600;color:var(--o);margin-bottom:.875rem;display:flex;align-items:center;gap:7px}
-.act svg{width:18px;height:18px;fill:var(--n)}
-.fg{margin-bottom:10px}
-.fl{font-size:12px;font-weight:600;color:var(--t);margin-bottom:3px;display:block}
-.fi{width:100%;padding:8px 11px;border:1px solid var(--br);border-radius:8px;font-size:14px;background:#fff}
-.ff{width:100%;padding:7px;border:1.5px dashed var(--br);border-radius:8px;font-size:13px;cursor:pointer}
-.btn-g{width:100%;padding:9px;background:var(--n);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:var(--f);color:var(--t);font-weight:600;padding:9px 11px;text-align:left;border-bottom:1px solid var(--br)}
-td{padding:9px 11px;border-bottom:1px solid var(--br);color:var(--o)}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--v);color:#fff;padding:11px 18px;border-radius:var(--r);font-size:14px;z-index:999;display:none}
 @media(max-width:580px){header{padding:0 1rem}nav button{padding:6px 10px;font-size:12px}.gm{top:15%}.gm h1{font-size:18px}.gst{gap:10px;padding:8px 14px}.gsn{font-size:16px}.gsl{font-size:10px}}
 </style>
 </head>
@@ -200,7 +182,7 @@ td{padding:9px 11px;border-bottom:1px solid var(--br);color:var(--o)}
   var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.04,transparent:true,opacity:0.7}));
   scene.add(stars);
 
-  // EQUILIBRIO DE ENCUADRE: 0.2800 centra a México verticalmente y conserva la inclinación de la foto 2
+  // PERSPECTIVA GENERAL OPTIMIZADA
   var MEX_Y=0.1658, MEX_X=0.2800;
   var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
   var zoomT=2.8, zoomC=2.8;
@@ -230,7 +212,9 @@ td{padding:9px 11px;border-bottom:1px solid var(--br);color:var(--o)}
 
     var pinGeo=new THREE.SphereGeometry(0.018,12,12);
     var ringGeo=new THREE.RingGeometry(0.022,0.038,14);
-    var pDatos=[{lat:19.29,lon:99.65},{lat:19.60,lon:99.01},{lat:19.41,lon:99.03},{lat:19.47,lon:99.24},{lat:19.19,lon:99.76}];
+    
+    // UN SOLO PUNTO CENTRAL CONSOLIDADO EN EL ESTADO DE MÉXICO
+    var pDatos=[{lat:19.35,lon:99.45}];
     
     pDatos.forEach(function(c){
       var phi=(90-c.lat)*Math.PI/180, theta=(c.lon+162.59+180)*Math.PI/180;
