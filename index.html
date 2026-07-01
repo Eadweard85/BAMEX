@@ -7,12 +7,13 @@
 <style>
 :root{--n:#E8640A;--nc:#FFF0E6;--no:#B84D00;--b:#000;--f:#000;--br:rgba(255,255,255,.12);--t:#aaa;--o:#fff;--v:#2E7D5E;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
-body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:var(--f);color:var(--o);font-size:16px;line-height:1.6}
+body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#000;color:var(--o);font-size:16px;line-height:1.6}
 
-/* HEADER CON DEGRADADO SUAVE Y SIN LÍNEAS DE CORTE */
+/* HEADER CON GRADIENTE INTEGRADO OPTIMIZADO */
 header{
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0) 100%);
-  border-bottom: none; /* Eliminada la línea de corte por completo */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0) 100%);
+  border: none !important;
+  outline: none !important;
   padding: 0 2rem;
   display: flex;
   align-items: center;
@@ -43,15 +44,15 @@ nav button:hover{color:#eee}
 nav button.on{color:#fff}
 nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%;height:3px;background:var(--n)}
 
-/* Ajuste de vistas para abarcar toda la pantalla detrás del header */
+/* Ajuste de vistas */
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ FLOTANTE INTEGRADA */
-#gw{width:100%;height:100%;background:#000003;position:relative;overflow:hidden}
-#gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+/* INTERFAZ FLOTANTE INTEGRADA SÚPER LIMPIA */
+#gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
+#gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none;mix-blend-mode:normal}
 #gc:active{cursor:grabbing}
 
-/* Compensación de padding superior para elementos de la UI debido al header degradado */
+/* Compensación de padding superior para elementos de la UI debido al header */
 #gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:105px 1.25rem 1.25rem 1.25rem;z-index:10}
 .gt{display:flex;justify-content:space-between;align-items:flex-start}
 .pn{background:rgba(232,100,10,.9);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,170,60,.25)}
@@ -210,13 +211,17 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var W=wrap.clientWidth;
   var H=wrap.clientHeight;
 
+  // CORRECCIÓN 1: Se desactivó alpha para evitar transparencias residuales que generen líneas fantasmas
   var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
+  renderer.setClearColor(0x000000, 1); // Forzado fondo negro puro absoluto
 
   var scene=new THREE.Scene();
+  scene.background = new THREE.Color(0x000000); // Doble validación de fondo en escena
+  
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
 
@@ -235,11 +240,14 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
   var R=1.0, globe, pins=[];
 
+  // CORRECCIÓN 2: Configuración estricta de repetición y filtros para matar las costuras oscuras (seams)
   function configTexture(t){
     t.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
     t.generateMipmaps = true;
     t.minFilter = THREE.LinearMipmapLinearFilter;
     t.magFilter = THREE.LinearFilter; 
+    t.wrapS = THREE.ClampToEdgeWrapping; // Evita el loop horizontal corrupto
+    t.wrapT = THREE.ClampToEdgeWrapping; // Evita el loop vertical corrupto
   }
 
   function buildGlobe(tex){
@@ -252,7 +260,8 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       metalness: 0.05
     });
     
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),mat); 
+    // Incrementado el detalle de segmentos de la esfera para mejorar cálculo de coordenadas UV
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,256,256),mat); 
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
@@ -293,6 +302,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
   
+  // Textura alternativa de respaldo en alta resolución para mitigar bandas de color
   loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.png', 
     buildGlobe, 
     undefined, 
