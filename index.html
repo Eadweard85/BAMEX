@@ -9,7 +9,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#000;color:var(--o);font-size:16px;line-height:1.6}
 
-/* HEADER INTEGRADO CON GRADIENTE LIMPIO */
+/* HEADER INTEGRADO */
 header{
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0) 100%);
   border: none !important;
@@ -28,7 +28,7 @@ header{
 .logo-container{display:flex;align-items:center;gap:2rem}
 .logo{display:flex;align-items:center;gap:14px;cursor:pointer}
 
-/* LOGOTIPO OFICIAL INSTITUTIONAL - RENDEREADO COMO IMAGEN BLANCA SIN BORDES */
+/* LOGOTIPO OFICIAL INSTITUCIONAL */
 .li-oficial{
   width: 44px;
   height: 44px;
@@ -45,12 +45,12 @@ header{
 .lt{font-size:14px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:0.5px}
 .lt span{display:block;font-weight:400;font-size:11px;color:#bbb}
 
-/* Barra de Búsqueda Integrada */
+/* Barra de Búsqueda */
 .search-box{position:relative;display:flex;align-items:center}
 .search-box input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:9px 12px;color:#fff;font-size:14px;width:220px;transition:all .3s;font-family:inherit;backdrop-filter:blur(6px)}
 .search-box input:focus{outline:none;border-color:var(--n);background:rgba(0,0,0,0.6);box-shadow:0 0 8px rgba(232,100,10,.3)}
 
-/* Navegación Derecha */
+/* Navegación */
 nav{display:flex;gap:1.5rem;align-items:center}
 nav button{background:none;border:none;padding:8px 4px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;transition:color .2s;position:relative}
 nav button:hover{color:#eee}
@@ -60,7 +60,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 /* Ajuste de vistas */
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ DEL MAPA - SEPARACIÓN ESTRUCTURAL ANTILÍNEAS */
+/* INTERFAZ DEL MAPA */
 #gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
 #gc{
   display:block;
@@ -100,7 +100,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
 #gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
-/* SECCIONES SECUNDARIAS CON SCROLL */
+/* SECCIONES SECUNDARIAS */
 #vista-com,#vista-det,#vista-don,#vista-adm{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
@@ -249,10 +249,69 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
   var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
 
-  var sv=[];
-  for(var i=0;i<1000;i++){var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=45+Math.random()*15;sv.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));}
-  var sg=new THREE.BufferGeometry(); sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
-  var stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.035,transparent:true,opacity:0.6}));
+  // CONTROL DE TIEMPO PERSONALIZADO PARA LOS SHADERS
+  var shaderUniforms = {
+    uTime: { value: 0.0 }
+  };
+
+  // GENERACIÓN DE ESTRELLAS CON ATRIBUTOS ALEATORIOS ÚNICOS (Desplazamiento y Velocidad de titileo)
+  var numEstrellas = 1200;
+  var posicionesEstrellas = [];
+  var propiedadesEstrellas = []; // x = velocidad de titileo, y = desfase de tiempo
+
+  for(var i=0; i<numEstrellas; i++){
+    var t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1), r=45+Math.random()*20;
+    posicionesEstrellas.push(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t));
+    
+    // Asignar variaciones dinámicas aleatorias por cada estrella
+    propiedadesEstrellas.push(
+      2.5 + Math.random() * 4.5,  // Velocidad de encendido/apagado (frecuencia)
+      Math.random() * Math.PI * 2 // Desfase inicial para que no titilen todas al mismo tiempo
+    );
+  }
+
+  var sg=new THREE.BufferGeometry(); 
+  sg.setAttribute('position', new THREE.Float32BufferAttribute(posicionesEstrellas, 3));
+  sg.setAttribute('aStarProps', new THREE.Float32BufferAttribute(propiedadesEstrellas, 2));
+
+  // SHADERS GLSL VECTORIALES PARA LOGRAR EL EFECTO INTERMITENTE EFICIENTE
+  var starVS = `
+    uniform float uTime;
+    attribute vec2 aStarProps;
+    varying float vAlpha;
+    void main() {
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+      gl_PointSize = (45.0 / -mvPosition.z) * (0.6 + Math.random() * 0.4);
+      
+      // Función matemática senoidal basada en el tiempo para el ciclo de encendido y apagado
+      float frecuencia = aStarProps.x;
+      float desfase = aStarProps.y;
+      vAlpha = 0.15 + 0.85 * (0.5 + 0.5 * sin(uTime * frecuencia + desfase));
+    }
+  `;
+
+  var starFS = `
+    varying float vAlpha;
+    void main() {
+      // Hacer que los puntos de las estrellas se rendericen circulares y suaves, no cuadrados
+      float dist = length(gl_PointCoord - vec2(0.5));
+      if (dist > 0.5) discard;
+      float suavizado = smoothstep(0.5, 0.2, dist);
+      gl_FragColor = vec4(1.0, 1.0, 1.0, suavizado * vAlpha);
+    }
+  `;
+
+  var materialEstrellas = new THREE.ShaderMaterial({
+    uniforms: shaderUniforms,
+    vertexShader: starVS,
+    fragmentShader: starFS,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+
+  var stars = new THREE.Points(sg, materialEstrellas);
   scene.add(stars);
 
   var MEX_Y=0.1658, MEX_X=0.2800;
@@ -302,7 +361,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
     var pinGeo=new THREE.SphereGeometry(0.015,16,16);
     var ringGeo=new THREE.RingGeometry(0.022,0.038,64); 
-    
     var pDatos=[{lat:19.35,lon:99.45}];
     
     pDatos.forEach(function(c){
@@ -320,7 +378,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   }
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
-  
   loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.png', 
     buildGlobe, 
     undefined, 
@@ -346,14 +403,19 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   var t0=performance.now();
   (function loop(){
-    requestAnimationFrame(loop); if(!globe)return;
+    requestAnimationFrame(loop);
     var e=(performance.now()-t0)/1000;
+    
+    // Inyectar el tiempo actual a las estrellas para procesar su ciclo de brillo
+    shaderUniforms.uTime.value = e;
+
+    if(!globe)return;
     if(intro&&e<2.0){camera.position.z=5.0-(1-Math.pow(1-Math.min(1,e/1.5),3))*2.2;}
     else{intro=false;zoomC+=(zoomT-zoomC)*0.07;camera.position.z=zoomC;}
     if(spin&&!drag)tY+=0.0006;
     cY+=(tY-cY)*0.08;cX+=(tX-cX)*0.08;
     globe.rotation.y=cY; globe.rotation.x=cX;
-    stars.rotation.y=e*0.00001;
+    stars.rotation.y=e*0.00002; // Rotación sutil del fondo cósmico
     renderer.render(scene,camera);
   })();
 })();
