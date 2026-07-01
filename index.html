@@ -59,7 +59,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 /* Ajuste de vistas */
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ DEL MAPA */
+/* INTERFAZ DEL MAPA CÓSMICO */
 #gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
 #gc{
   display:block;
@@ -82,7 +82,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 .gm h1{font-size:24px;font-weight:700;color:#fff;text-shadow:0 2px 15px rgba(0,0,0,0.9), 0 0 20px rgba(232,100,10,.3);line-height:1.25;margin-bottom:4px}
 .gm p{font-size:12px;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,0.8)}
 
-/* BOTONERA Y CONTROLES INFERIORES */
+/* BOTONERA INTERNA */
 .gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px}
 .gst{display:flex;gap:20px;justify-content:center;align-items:center;background:rgba(15,15,25,0.75);padding:10px 22px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 .gsn{font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
@@ -99,27 +99,110 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
 #gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
-/* SECCIONES SECUNDARIAS */
-#vista-com,#vista-det,#vista-don,#vista-adm{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
+/* SECCIÓN DEL MAPA ESTATAL DETALLADO */
+#vista-com{padding:105px 2rem 2rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#05050a;}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
 .bc a{color:var(--n);text-decoration:none;cursor:pointer}
 .bc a:hover{text-decoration:underline}
-.tabs{display:flex;border-bottom:1px solid var(--br);margin-bottom:1.25rem}
-.tab{padding:9px 16px;font-size:14px;cursor:pointer;color:var(--t);border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none}
-.tab.on{color:var(--n);border-bottom-color:var(--n);font-weight:600}
-.filtros{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.filtros input,.filtros select{padding:8px 12px;border:1px solid var(--br);border-radius:var(--r);font-size:14px;background:#111;color:#fff}
-.filtros input{flex:1;min-width:180px}
-.grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.tc{background:#111;border:1px solid var(--br);border-radius:var(--r);overflow:hidden;cursor:pointer}
-.ti{width:100%;height:120px;background:#1a1a1a;display:flex;align-items:center;justify-content:center}
-.ti svg{width:36px;height:36px;fill:var(--n);opacity:.4}
-.tb{padding:.75rem}
-.tn{font-size:14px;font-weight:600;color:#fff}
-.tm{font-size:12px;color:var(--t)}
-.td{font-size:12px;color:var(--t)}
 
+.mapa-contenedor {
+  display: flex;
+  gap: 2rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--br);
+  border-radius: var(--r);
+  padding: 1.5rem;
+  height: calc(100vh - 210px);
+  min-height: 500px;
+}
+.mapa-grafico {
+  flex: 2;
+  background: #09090e;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 10px;
+}
+.mapa-grafico svg {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+}
+.municipio-poligono {
+  fill: #141424;
+  stroke: #2a2a40;
+  stroke-width: 1.5;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.municipio-poligono:hover {
+  fill: rgba(232, 100, 10, 0.25);
+  stroke: var(--n);
+}
+.comunidad-pin {
+  fill: #ff6a00;
+  stroke: #ffffff;
+  stroke-width: 1;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.comunidad-pin:hover {
+  transform: scale(1.4);
+  fill: #ff0000;
+}
+.mapa-sidebar {
+  flex: 1;
+  background: #0c0c14;
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.filtros-mapa input, .filtros-mapa select {
+  width: 100%;
+  padding: 10px;
+  background: #12121f;
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.lista-comunidades {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+}
+.item-comunidad {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.item-comunidad:hover {
+  background: rgba(232, 100, 10, 0.1);
+  border-color: rgba(232, 100, 10, 0.3);
+}
+.item-comunidad h4 { font-size: 14px; color: #fff; margin-bottom: 2px; }
+.item-comunidad p { font-size: 12px; color: var(--t); }
+
+#vista-det,#vista-don,#vista-adm{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
+
+@media(max-width:980px){
+  .mapa-contenedor { flex-direction: column; height: auto; }
+  .mapa-grafico { height: 400px; }
+}
 @media(max-width:820px){
   header{position:relative;background:#000;padding:1rem;height:auto;flex-direction:column;gap:10px;padding-bottom:10px}
   .logo-container{width:100%;justify-content:space-between;gap:1rem}
@@ -128,9 +211,8 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   nav button.on::after{bottom:-5px}
   .vista{height:calc(100vh - 120px)}
   #gui{padding-top:1.25rem}
-  #vista-com,#vista-det,#vista-don,#vista-adm{padding-top:1.5rem;height:calc(100vh - 120px)}
+  #vista-com{padding-top:1.5rem;height:calc(100vh - 120px)}
 }
-@media(max-width:580px){.gm{top:15%}.gm h1{font-size:18px}.gst{gap:10px;padding:8px 14px}.gsn{font-size:16px}.gsl{font-size:10px}}
 </style>
 </head>
 <body>
@@ -159,7 +241,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   </div>
 
   <nav>
-    <button id="nav-com" onclick="ir('com')">Comunidades</button>
+    <button id="nav-com" class="on" onclick="ir('com')">Comunidades</button>
     <button id="nav-don" onclick="ir('don')">Soy donador</button>
     <button id="nav-adm" onclick="ir('adm')">Administrar</button>
   </nav>
@@ -194,7 +276,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
           <div class="gdv"></div>
           <div><div class="gsn" id="sn3">125 T</div><div class="gsl">alimento</div></div>
           <div class="gdv"></div>
-          <div><div class="gsn" id="sn4">9</div><div class="gsl">municipios</div></div>
+          <div><div class="gsn" id="sn4">125</div><div class="gsl">municipios</div></div>
         </div>
         <div class="gbt">
           <button class="bg" onclick="goMex()">📍 Zoom al Estado de México</button>
@@ -209,40 +291,68 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 </div>
 
 <div id="vista-com" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Comunidades</div></div>
-  <div class="tabs">
-    <button class="tab on" id="tl" onclick="tab('l')">Mapa de Municipios y Comunidades</button>
-  </div>
-  <div id="tab-l">
-    <div class="filtros">
-      <input type="text" id="bus" placeholder="Buscar municipio o comunidad..." oninput="filtrar()">
-      <select id="filtro-municipio">
-        <option value="">Todos los municipios</option>
-        <option value="Toluca">Toluca</option>
-        <option value="Metepec">Metepec</option>
-        <option value="Zinacantepec">Zinacantepec</option>
-      </select>
+  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Mapa de Comunidades del Estado de México</div></div>
+  
+  <div class="mapa-contenedor">
+    <div class="mapa-grafico">
+      <svg viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="120,80 220,60 250,130 180,180 110,140" class="municipio-poligono" onclick="verMunicipio('Zona Atlacomulco')"/>
+        <polygon points="180,180 250,130 310,170 290,260 230,280 160,240" class="municipio-poligono" onclick="verMunicipio('Toluca y Alrededores')"/>
+        <polygon points="290,260 330,240 360,280 320,320 270,300" class="municipio-poligono" onclick="verMunicipio('Metepec')"/>
+        <polygon points="160,240 230,280 210,340 140,320" class="municipio-poligono" onclick="verMunicipio('Zinacantepec')"/>
+        <polygon points="140,320 210,340 270,300 320,320 290,420 180,440 100,380" class="municipio-poligono" onclick="verMunicipio('Zona Sur')"/>
+        <polygon points="420,160 490,140 540,200 510,280 440,260 400,200" class="municipio-poligono" onclick="verMunicipio('Zona Oriente')"/>
+
+        <circle cx="220" cy="210" r="7" class="comunidad-pin" onclick="verComunidad('San Cristóbal Huichochitlán', 'Toluca')"/>
+        <circle cx="240" cy="230" r="7" class="comunidad-pin" onclick="verComunidad('San Andrés Cuexcontitlán', 'Toluca')"/>
+        <circle cx="310" cy="275" r="7" class="comunidad-pin" onclick="verComunidad('San Jerónimo Chicahualco', 'Metepec')"/>
+        <circle cx="180" cy="290" r="7" class="comunidad-pin" onclick="verComunidad('San Antonio Acahualco', 'Zinacantepec')"/>
+        <circle cx="460" cy="210" r="7" class="comunidad-pin" onclick="verComunidad('Chalco Centro', 'Zona Oriente')"/>
+      </svg>
     </div>
-    <div style="background:#0a0a12; width:100%; height:65vh; border:1px dashed var(--br); border-radius:var(--r); display:flex; align-items:center; justify-content:center; color:var(--t)">
-      [Aquí se despliega el mapa interno del Estado de México con la ubicación exacta de las comunidades por municipio]
+
+    <div class="mapa-sidebar">
+      <h3>Control de Comunidades</h3>
+      <div class="filtros-mapa">
+        <input type="text" placeholder="Buscar comunidad por nombre..." id="input-bus-com">
+        <select id="select-mun" onchange="alCambiarMunicipio()">
+          <option value="">Todos los Municipios</option>
+          <option value="Toluca">Toluca</option>
+          <option value="Metepec">Metepec</option>
+          <option value="Zinacantepec">Zinacantepec</option>
+          <option value="Zona Oriente">Zona Oriente</option>
+        </select>
+      </div>
+      
+      <div class="lista-comunidades" id="contenedor-lista">
+        <div class="item-comunidad" onclick="verComunidad('San Cristóbal Huichochitlán', 'Toluca')">
+          <h4>San Cristóbal Huichochitlán</h4>
+          <p>Municipio: Toluca · 120 Familias</p>
+        </div>
+        <div class="item-comunidad" onclick="verComunidad('San Andrés Cuexcontitlán', 'Toluca')">
+          <h4>San Andrés Cuexcontitlán</h4>
+          <p>Municipio: Toluca · 95 Familias</p>
+        </div>
+        <div class="item-comunidad" onclick="verComunidad('San Jerónimo Chicahualco', 'Metepec')">
+          <h4>San Jerónimo Chicahualco</h4>
+          <p>Municipio: Metepec · 140 Familias</p>
+        </div>
+        <div class="item-comunidad" onclick="verComunidad('San Antonio Acahualco', 'Zinacantepec')">
+          <h4>San Antonio Acahualco</h4>
+          <p>Municipio: Zinacantepec · 85 Familias</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<div id="vista-det" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / <a onclick="ir('com')">Comunidades</a></div></div>
-</div>
-
-<div id="vista-don" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Portal del donador</div></div>
-</div>
-
-<div id="vista-adm" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / ...</div></div>
-</div>
+<div id="vista-det" class="vista"></div>
+<div id="vista-don" class="vista"></div>
+<div id="vista-adm" class="vista"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+// --- CORE DEL ESCENARIO 3D (GLOBO CÓSMICO) ---
 (function(){
   var wrap=document.getElementById('gw');
   var canvas=document.getElementById('gc');
@@ -324,7 +434,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     var mat=new THREE.MeshStandardMaterial({
       map:tex,
       roughness: 0.75, 
-      metalness: 0.05
+ metalness: 0.05
     });
     
     globe=new THREE.Mesh(new THREE.SphereGeometry(R,256,256),mat); 
@@ -379,17 +489,17 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.004;tX+=(e.clientY-prev.y)*0.004;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.clientX,y:e.clientY};});
   canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.6,Math.min(3.4,zoomT+e.deltaY*0.0022));},{passive:false});
 
-  // CORRECCIÓN: ZOOM FLUIDO Y CAMBIO AUTOMÁTICO DE PANTALLA
+  // BOTÓN DE ZOOM MEJORADO: REALIZA TRANSICIÓN Y CARGA EL MAPA INTERACTIVO ESTATAL
   window.goMex=function(){
     tY=MEX_Y;
     tX=MEX_X;
-    zoomT=1.7; // Genera el acercamiento de cámara en el globo
+    zoomT=1.7; 
     spin=false;
     document.getElementById('spb').textContent='▶ Girar';
     
-    // Esperamos 1.2 segundos para que termine el efecto visual de la cámara antes de cambiar de sección
+    // Hace el cambio automático directo al panel del mapa del Estado de México
     setTimeout(function(){
-      ir('com'); // Llama a la función de enrutamiento interna
+      ir('com'); 
     }, 1200);
   };
 
@@ -421,11 +531,26 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   })();
 })();
 
+// LÓGICA DE CONTROL DE PANTALLAS
 function ir(id){
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
   document.getElementById('vista-'+id).classList.add('on');
   var nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('on');
+}
+
+// LOGICA INTERACTIVA DEL MAPA INTERNO (MOCK DE FUNCIONES DE SELECCIÓN)
+function verMunicipio(nombre) {
+  alert("Cargando información estratégica de la zona: " + nombre);
+}
+
+function verComunidad(nombre, municipio) {
+  alert("Comunidad Seleccionada: " + nombre + "\nUbicada en: " + municipio + "\nListo para actualizar en Salesforce.");
+}
+
+function alCambiarMunicipio() {
+  var m = document.getElementById('select-mun').value;
+  console.log("Filtrando comunidades en mapa para: " + m);
 }
 </script>
 </body>
