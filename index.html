@@ -9,15 +9,15 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:var(--f);color:var(--o);font-size:16px;line-height:1.6}
 
-/* HEADER CON DEGRADADO DE OSCURO A TRANSPARENTE */
+/* HEADER CON DEGRADADO SUAVE Y SIN LÍNEAS DE CORTE */
 header{
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0) 100%);
+  border-bottom: none; /* Eliminada la línea de corte por completo */
   padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 85px; /* Un poco más de aire para lucir el degradado */
+  height: 85px; 
   position: absolute;
   top: 0;
   left: 0;
