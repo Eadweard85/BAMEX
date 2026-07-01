@@ -9,7 +9,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#000;color:var(--o);font-size:16px;line-height:1.6}
 
-/* HEADER CON GRADIENTE INTEGRADO OPTIMIZADO */
+/* HEADER INTEGRADO CON GRADIENTE LIMPIO */
 header{
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0) 100%);
   border: none !important;
@@ -26,9 +26,21 @@ header{
   z-index: 100;
 }
 .logo-container{display:flex;align-items:center;gap:2rem}
-.logo{display:flex;align-items:center;gap:12px;cursor:pointer}
-.li{width:38px;height:38px;background:var(--n);border-radius:8px;display:flex;align-items:center;justify-content:center}
-.li svg{width:22px;height:22px;fill:white}
+.logo{display:flex;align-items:center;gap:14px;cursor:pointer}
+
+/* LOGOTIPO OFICIAL INSTITUCIONAL - ESTILO MONOCROMÁTICO */
+.li-oficial{
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+}
+.li-oficial svg {
+  width: 100%;
+  height: 100%;
+}
 .lt{font-size:14px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:0.5px}
 .lt span{display:block;font-weight:400;font-size:11px;color:#bbb}
 
@@ -47,12 +59,19 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 /* Ajuste de vistas */
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ FLOTANTE INTEGRADA SÚPER LIMPIA */
+/* INTERFAZ DEL MAPA - SEPARACIÓN ESTRUCTURAL ANTILÍNEAS */
 #gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
-#gc{display:block;width:100%;height:100%;cursor:grab;touch-action:none;mix-blend-mode:normal}
+#gc{
+  display:block;
+  width:100%;
+  height:104vh; /* Desplazamiento vertical calculado */
+  margin-top: -2vh; 
+  cursor:grab;
+  touch-action:none;
+}
 #gc:active{cursor:grabbing}
 
-/* Compensación de padding superior para elementos de la UI debido al header */
+/* Elementos UI Flotantes */
 #gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:105px 1.25rem 1.25rem 1.25rem;z-index:10}
 .gt{display:flex;justify-content:space-between;align-items:flex-start}
 .pn{background:rgba(232,100,10,.9);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,170,60,.25)}
@@ -119,7 +138,17 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 <header>
   <div class="logo-container">
     <div class="logo" onclick="ir('inicio')">
-      <div class="li"><svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
+      <div class="li-oficial">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <path d="M50 32 C42 16, 25 18, 25 32 C25 42, 45 40, 50 45 C55 40, 75 42, 75 32 C75 18, 58 16, 50 32 Z" fill="#ffffff"/>
+          <path d="M50 42 C26 42, 12 58, 12 76 C12 92, 32 98, 50 98 C72 98, 88 84, 88 66 C88 52, 76 42, 50 42 Z" fill="#ffffff"/>
+          <path d="M50 48 C32 48, 22 60, 22 74 C22 84, 34 90, 48 90 C56 90, 70 86, 76 74 C82 62, 70 48, 50 48 Z" fill="#000000"/>
+          <path d="M22 74 C34 78, 48 84, 58 72 C64 64, 52 58, 46 64 C38 72, 28 68, 22 74 Z" fill="#ffffff"/>
+          <circle cx="38" cy="58" r="3.5" fill="#ffffff"/>
+          <circle cx="62" cy="58" r="3.5" fill="#ffffff"/>
+          <path d="M38 66 Q50 76 62 66 Z" fill="#ffffff"/>
+        </svg>
+      </div>
       <div class="lt">Banco de Alimentos Cáritas<span>Estado de México</span></div>
     </div>
     
@@ -211,16 +240,15 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var W=wrap.clientWidth;
   var H=wrap.clientHeight;
 
-  // CORRECCIÓN 1: Se desactivó alpha para evitar transparencias residuales que generen líneas fantasmas
   var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,alpha:false,powerPreference:"high-performance"});
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.2;
-  renderer.setClearColor(0x000000, 1); // Forzado fondo negro puro absoluto
+  renderer.setClearColor(0x000000, 1);
 
   var scene=new THREE.Scene();
-  scene.background = new THREE.Color(0x000000); // Doble validación de fondo en escena
+  scene.background = new THREE.Color(0x000000);
   
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
@@ -240,14 +268,13 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var spin=true, drag=false, prev={x:0,y:0}, intro=true;
   var R=1.0, globe, pins=[];
 
-  // CORRECCIÓN 2: Configuración estricta de repetición y filtros para matar las costuras oscuras (seams)
   function configTexture(t){
     t.anisotropy = Math.min(renderer.capabilities.getMaxAnisotropy(), 16);
     t.generateMipmaps = true;
     t.minFilter = THREE.LinearMipmapLinearFilter;
     t.magFilter = THREE.LinearFilter; 
-    t.wrapS = THREE.ClampToEdgeWrapping; // Evita el loop horizontal corrupto
-    t.wrapT = THREE.ClampToEdgeWrapping; // Evita el loop vertical corrupto
+    t.wrapS = THREE.ClampToEdgeWrapping; 
+    t.wrapT = THREE.ClampToEdgeWrapping; 
   }
 
   function buildGlobe(tex){
@@ -260,7 +287,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       metalness: 0.05
     });
     
-    // Incrementado el detalle de segmentos de la esfera para mejorar cálculo de coordenadas UV
     globe=new THREE.Mesh(new THREE.SphereGeometry(R,256,256),mat); 
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
@@ -302,7 +328,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
   
-  // Textura alternativa de respaldo en alta resolución para mitigar bandas de color
   loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.png', 
     buildGlobe, 
     undefined, 
