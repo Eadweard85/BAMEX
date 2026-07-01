@@ -28,19 +28,18 @@ header{
 .logo-container{display:flex;align-items:center;gap:2rem}
 .logo{display:flex;align-items:center;gap:14px;cursor:pointer}
 
-/* LOGOTIPO OFICIAL INSTITUCIONAL */
+/* LOGOTIPO OFICIAL INSTITUTIONAL BAMX CORREGIDO */
 .li-oficial{
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.li-oficial img {
+.li-oficial svg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.6));
+  filter: drop-shadow(0px 2px 5px rgba(0,0,0,0.5));
 }
 .lt{font-size:14px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:0.5px}
 .lt span{display:block;font-weight:400;font-size:11px;color:#bbb}
@@ -140,7 +139,16 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   <div class="logo-container">
     <div class="logo" onclick="ir('inicio')">
       <div class="li-oficial">
-        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M50 32 C42 16, 25 18, 25 32 C25 42, 45 40, 50 45 C55 40, 75 42, 75 32 C75 18, 58 16, 50 32 Z' fill='%23ffffff'/><path d='M50 42 C26 42, 12 58, 12 76 C12 92, 32 98, 50 98 C72 98, 88 84, 88 66 C88 52, 76 42, 50 42 Z' fill='%23ffffff'/><path d='M50 48 C32 48, 22 60, 22 74 C22 84, 34 90, 48 90 C56 90, 70 86, 76 74 C82 62, 70 48, 50 48 Z' fill='%23000000'/><path d='M22 74 C34 78, 48 84, 58 72 C64 64, 52 58, 46 64 C38 72, 28 68, 22 74 Z' fill='%23ffffff'/><circle cx='38' cy='58' r='3.5' fill='%23ffffff'/><circle cx='62' cy='58' r='3.5' fill='%23ffffff'/><path d='M38 66 Q50 76 62 66' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/></svg>" alt="Logo BAMX">
+        <svg viewBox="0 0 340 450" xmlns="http://www.w3.org/2000/svg">
+          <path d="M141 125 C100 80, 50 110, 58 50 C95 40, 145 75, 141 125 Z" fill="#2E7D5E"/>
+          <path d="M152 119 C185 65, 240 85, 215 30 C185 32, 140 75, 152 119 Z" fill="#2E7D5E"/>
+          <path d="M170 115 C265 115, 315 190, 315 270 C315 375, 220 415, 170 415 C120 415, 25 375, 25 270 C25 190, 75 115, 170 115 Z" fill="#D32F2F"/>
+          <path d="M25 270 C25 355, 100 415, 170 415 C240 415, 315 355, 315 270 C315 285, 290 400, 170 400 C75 400, 38 320, 38 270 Z" fill="#FFC107"/>
+          <path d="M38 270 C45 320, 105 370, 175 370 C215 370, 240 340, 210 320 C180 300, 145 315, 120 290 C100 270, 115 250, 135 260 C165 275, 195 240, 155 230 C110 220, 50 240, 38 270 Z" fill="#FFC107"/>
+          <circle cx="115" cy="205" r="14" fill="#FFFFFF"/>
+          <circle cx="210" cy="205" r="14" fill="#FFFFFF"/>
+          <path d="M110 245 Q162 315 215 245 Z" fill="#FFFFFF"/>
+        </svg>
       </div>
       <div class="lt">Banco de Alimentos Cáritas<span>Estado de México</span></div>
     </div>
@@ -237,7 +245,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.3;
   renderer.setClearColor(0x000000, 1);
 
   var scene=new THREE.Scene();
@@ -249,65 +257,52 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
   var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
 
-  var shaderUniforms = {
-    uTime: { value: 0.0 }
-  };
-
-  // SUBIMOS EL TOTAL A 2,500 ESTRELLAS MÁS GRANDES Y NOTABLES
-  var numEstrellas = 2500;
-  var posicionesEstrellas = [];
-  var propiedadesEstrellas = []; 
+  // GENERACIÓN DE ESTRELLAS CON MÉTODO NATIVO ULTRA COMPATIBLE
+  var numEstrellas = 1800;
+  var sg = new THREE.BufferGeometry();
+  var posicionesEstrellas = new Float32Array(numEstrellas * 3);
+  
+  // Guardaremos opacidades base independientes para cada estrella
+  var opacidadesBase = [];
 
   for(var i=0; i<numEstrellas; i++){
-    var t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1), r=40+Math.random()*25;
-    posicionesEstrellas.push(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t));
+    var t = Math.random() * Math.PI * 2;
+    var p = Math.acos(2 * Math.random() - 1);
+    var r = 35 + Math.random() * 25; // Distribución en una esfera lejana alrededor del globo
     
-    propiedadesEstrellas.push(
-      2.0 + Math.random() * 5.0,  // Velocidad de parpadeo
-      Math.random() * Math.PI * 2 // Desfase aleatorio
-    );
+    posicionesEstrellas[i*3] = r * Math.sin(p) * Math.cos(t);
+    posicionesEstrellas[i*3+1] = r * Math.cos(p);
+    posicionesEstrellas[i*3+2] = r * Math.sin(p) * Math.sin(t);
+    
+    opacidadesBase.push({
+      index: i,
+      frecuencia: 1.5 + Math.random() * 3.5,
+      desfase: Math.random() * Math.PI * 2,
+      maxBright: 0.4 + Math.random() * 0.6
+    });
   }
 
-  var sg=new THREE.BufferGeometry(); 
-  sg.setAttribute('position', new THREE.Float32BufferAttribute(posicionesEstrellas, 3));
-  sg.setAttribute('aStarProps', new THREE.Float32BufferAttribute(propiedadesEstrellas, 2));
+  sg.setAttribute('position', new THREE.BufferAttribute(posicionesEstrellas, 3));
 
-  var starVS = `
-    uniform float uTime;
-    attribute vec2 aStarProps;
-    varying float vAlpha;
-    void main() {
-      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-      gl_Position = projectionMatrix * mvPosition;
-      
-      // Tamaño nativo y estable de los puntos según la distancia del plano de la cámara
-      gl_PointSize = (55.0 / -mvPosition.z);
-      
-      float frecuencia = aStarProps.x;
-      float desfase = aStarProps.y;
-      
-      // Rango de opacidad más alto (brillo mínimo del 30% e incrementos intensificados)
-      vAlpha = 0.3 + 0.7 * (0.5 + 0.5 * sin(uTime * frecuencia + desfase));
-    }
-  `;
+  // Canvas 2D interno para pintar una partícula circular suave (evita cuadrados toscos)
+  var pCanvas = document.createElement('canvas');
+  pCanvas.width = 16; pCanvas.height = 16;
+  var ctx = pCanvas.getContext('2d');
+  var grad = ctx.createRadialGradient(8,8,0, 8,8,8);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.3, 'rgba(235,240,255,0.8)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,16,16);
+  var starTexture = new THREE.CanvasTexture(pCanvas);
 
-  var starFS = `
-    varying float vAlpha;
-    void main() {
-      float dist = length(gl_PointCoord - vec2(0.5));
-      if (dist > 0.5) discard;
-      float suavizado = smoothstep(0.5, 0.1, dist);
-      gl_FragColor = vec4(1.0, 1.0, 1.0, suavizado * vAlpha);
-    }
-  `;
-
-  var materialEstrellas = new THREE.ShaderMaterial({
-    uniforms: shaderUniforms,
-    vertexShader: starVS,
-    fragmentShader: starFS,
+  // Material nativo optimizado
+  var materialEstrellas = new THREE.PointsMaterial({
+    size: 0.28,
+    map: starTexture,
     transparent: true,
     blending: THREE.AdditiveBlending,
-    depthWrite: false
+    depthWrite: false,
+    opacity: 1.0
   });
 
   var stars = new THREE.Points(sg, materialEstrellas);
@@ -404,8 +399,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   (function loop(){
     requestAnimationFrame(loop);
     var e=(performance.now()-t0)/1000;
-    
-    shaderUniforms.uTime.value = e;
 
     if(!globe)return;
     if(intro&&e<2.0){camera.position.z=5.0-(1-Math.pow(1-Math.min(1,e/1.5),3))*2.2;}
@@ -413,7 +406,11 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     if(spin&&!drag)tY+=0.0006;
     cY+=(tY-cY)*0.08;cX+=(tX-cX)*0.08;
     globe.rotation.y=cY; globe.rotation.x=cX;
-    stars.rotation.y=e*0.00003; 
+    
+    // Simulación del parpadeo estelar dinámico general variando el tamaño del set de puntos en el tiempo
+    materialEstrellas.size = 0.24 + 0.12 * Math.sin(e * 2.2);
+    stars.rotation.y = e * 0.0018; // Rotación lenta y majestuosa del fondo cósmico
+
     renderer.render(scene,camera);
   })();
 })();
