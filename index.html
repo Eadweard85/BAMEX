@@ -745,7 +745,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 .gm p{font-size:12px;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,0.8)}
 
 /* BOTONERA INTERNA */
-.gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px}
+.gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px;margin-top:auto}
 .gst{display:flex;gap:20px;justify-content:center;align-items:center;background:rgba(15,15,25,0.75);padding:10px 22px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 .gsn{font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
 .gsl{font-size:11px;color:rgba(255,255,255,.6);text-align:center;margin-top:2px}
@@ -905,7 +905,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
 <header>
   <div class="logo-container">
-    <div class="logo" onclick="ir('inicio')">
+    <div class="logo" onclick="goInicio()">
       <div class="li-oficial">
         <svg viewBox="0 0 340 450" xmlns="http://www.w3.org/2000/svg">
           <path d="M141 125 C100 80, 50 110, 58 50 C95 40, 145 75, 141 125 Z" fill="#2E7D5E"/>
@@ -927,7 +927,8 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   </div>
 
   <nav>
-    <button id="nav-com" class="on" onclick="ir('com')">Comunidades</button>
+    <button id="nav-inicio" class="on" onclick="goInicio()">Inicio</button>
+    <button id="nav-com" onclick="ir('com')">Comunidades</button>
     <button id="nav-don" onclick="ir('don')">Soy donador</button>
     <button id="nav-adm" onclick="ir('adm')">Administrar</button>
   </nav>
@@ -938,22 +939,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     <canvas id="gc"></canvas>
     <div id="gload">Cargando mapa en UHD...<span>Optimizando texturas para zoom</span></div>
     <div id="gui">
-      <div class="gt">
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <span class="pn" id="p1">527 comunidades activas</span>
-          <span class="pn" style="background:rgba(160,60,0,.85)">Estado de México</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
-          <span class="pd" id="p2">38,400 familias</span>
-          <span class="pd">125 T entregadas</span>
-        </div>
-      </div>
-      
-      <div class="gm">
-        <h1>Banco de Alimentos Cáritas<br>del Estado de México</h1>
-        <p>Cada punto naranja es una comunidad real que recibe alimento</p>
-      </div>
-      
       <div class="gb">
         <div class="gst" id="panel-stats">
           <div><div class="gsn" id="sn1">527</div><div class="gsl">comunidades</div></div>
@@ -977,8 +962,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 </div>
 
 <div id="vista-com" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Mapa de Comunidades del Estado de México</div></div>
-  
   <div class="mapa-contenedor">
     <div class="mapa-grafico">
       <div id="map-edomex"></div>
@@ -1178,6 +1161,17 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
   window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
+
+  // Regresa a la vista de inicio y reinicia el movimiento del globo:
+  // vuelve a centrar en México, reactiva el giro y hace que la cámara se aleje
+  // suavemente (mismo mecanismo de easing que ya usa resetZ, sin relanzar la
+  // animación de "intro", que era lo que causaba el salto/rebote de cámara).
+  window.goInicio=function(){
+    ir('inicio');
+    tY=MEX_Y; tX=MEX_X; zoomT=2.8; spin=true;
+    var spb=document.getElementById('spb');
+    if(spb) spb.textContent='⏸ Pausar';
+  };
 
   window.addEventListener('resize', function(){
     W=wrap.clientWidth; H=wrap.clientHeight;
