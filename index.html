@@ -860,28 +860,192 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   font-size: 14px;
   margin-bottom: 10px;
 }
-.lista-comunidades {
+.mun-detalle-wrap{
   flex: 1;
   overflow-y: auto;
+  padding-right: 4px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-right: 4px;
 }
-.item-comunidad {
+.mun-placeholder{
+  color: var(--t);
+  font-size: 13.5px;
+  line-height: 1.6;
+  padding: 14px 2px;
+}
+
+/* --- Tarjeta de Detalle Municipal --- */
+.mun-card{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: mcFade .25s ease;
+}
+@keyframes mcFade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+.mun-card-header{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mun-card-title{
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  margin: 0;
+}
+.mun-card-title small{
+  display:block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--t);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 2px;
+}
+.mun-card-status{
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.mun-card-status.atendida{ background: var(--n); color: #fff; }
+.mun-card-status.pendiente{ background: rgba(255,255,255,.08); color: var(--t); border: 1px solid var(--br); }
+
+/* Carrusel de imágenes */
+.mun-carousel{
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #05050a;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.mun-car-track{
+  display: flex;
+  transition: transform .35s ease;
+}
+.mun-car-slide{
+  min-width: 100%;
+  height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background:
+    repeating-linear-gradient(135deg, rgba(232,100,10,.05) 0 10px, transparent 10px 20px),
+    linear-gradient(160deg, #15121c, #0a0a10);
+}
+.mun-car-placeholder-icon{
+  font-size: 26px;
+  opacity: .7;
+}
+.mun-car-caption{
+  font-size: 12px;
+  color: rgba(255,255,255,.75);
+  text-align: center;
+  padding: 0 16px;
+  line-height: 1.4;
+}
+.mun-car-caption small{ color: var(--t); font-size: 10.5px; }
+.mun-car-arrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.15);
+  color: #fff;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: background .2s;
+}
+.mun-car-arrow:hover{ background: rgba(232,100,10,.8); }
+.mun-car-arrow.left{ left: 8px; }
+.mun-car-arrow.right{ right: 8px; }
+.mun-car-dots{
+  position: absolute;
+  bottom: 8px; left: 0; right: 0;
+  display: flex; justify-content: center; gap: 5px;
+}
+.mun-car-dot{
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,.3);
+  transition: background .2s;
+}
+.mun-car-dot.active{ background: var(--n); }
+
+/* Métricas */
+.mun-metrics{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mun-metric{
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.05);
-  padding: 10px;
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.mun-metric-icon{ font-size: 17px; line-height: 1.3; }
+.mun-metric-label{
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--t);
+  margin-bottom: 2px;
+}
+.mun-metric-value{ font-size: 14px; font-weight: 600; color: #fff; }
+.mun-comunidades-list{
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mun-comunidades-list li{
+  font-size: 12px;
+  color: rgba(255,255,255,.75);
+  padding-left: 12px;
+  position: relative;
+}
+.mun-comunidades-list li::before{
+  content:"·";
+  position:absolute; left:0; color: var(--n);
+}
+
+.mun-card-note{
+  font-size: 12px;
+  font-style: italic;
+  color: var(--t);
+  line-height: 1.5;
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top: 12px;
+  margin: 0;
+}
+
+.mun-card-back{
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--t);
+  font-size: 12px;
   cursor: pointer;
-  transition: background 0.2s;
+  padding: 0;
+  margin-bottom: -4px;
 }
-.item-comunidad:hover {
-  background: rgba(232, 100, 10, 0.1);
-  border-color: rgba(232, 100, 10, 0.3);
-}
-.item-comunidad h4 { font-size: 14px; color: #fff; margin-bottom: 2px; }
-.item-comunidad p { font-size: 12px; color: var(--t); }
+.mun-card-back:hover{ color: var(--n); }
 
 #vista-det,#vista-don,#vista-adm{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
 
@@ -968,34 +1132,15 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     </div>
 
     <div class="mapa-sidebar">
-      <h3>Control de Comunidades</h3>
       <div class="filtros-mapa">
-        <input type="text" placeholder="Buscar comunidad por nombre..." id="input-bus-com">
         <select id="select-mun" onchange="alCambiarMunicipio()">
           <option value="">Todos los Municipios (125)</option>
         </select>
       </div>
-      
-      <div class="lista-comunidades" id="contenedor-lista">
-        <div class="item-comunidad" onclick="verComunidad('San Cristóbal Huichochitlán', 'Toluca')">
-          <h4>San Cristóbal Huichochitlán</h4>
-          <p>Municipio: Toluca · 120 Familias</p>
-        </div>
-        <div class="item-comunidad" onclick="verComunidad('San Andrés Cuexcontitlán', 'Toluca')">
-          <h4>San Andrés Cuexcontitlán</h4>
-          <p>Municipio: Toluca · 95 Familias</p>
-        </div>
-        <div class="item-comunidad" onclick="verComunidad('San Jerónimo Chicahualco', 'Metepec')">
-          <h4>San Jerónimo Chicahualco</h4>
-          <p>Municipio: Metepec · 140 Familias</p>
-        </div>
-        <div class="item-comunidad" onclick="verComunidad('San Antonio Acahualco', 'Zinacantepec')">
-          <h4>San Antonio Acahualco</h4>
-          <p>Municipio: Zinacantepec · 85 Familias</p>
-        </div>
-        <div class="item-comunidad" onclick="verComunidad('Chalco Centro', 'Chalco')">
-          <h4>Chalco Centro</h4>
-          <p>Municipio: Chalco · 110 Familias</p>
+
+      <div class="mun-detalle-wrap" id="mun-detalle-wrap">
+        <div class="mun-placeholder" id="mun-placeholder">
+          Selecciona un municipio en el mapa o en la lista para ver su ficha de atención.
         </div>
       </div>
     </div>
@@ -1224,7 +1369,6 @@ function verComunidad(nombre, municipio) {
   if(window.edomexSelectByName){
     window.edomexSelectByName(municipio);
   }
-  alert("Comunidad Seleccionada: " + nombre + "\nUbicada en: " + municipio + "\nListo para actualizar en Salesforce.");
 }
 
 function alCambiarMunicipio() {
@@ -1269,13 +1413,14 @@ function alCambiarMunicipio() {
     return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
   }
 
-  // Comunidades demo (datos de ejemplo) posicionadas en el centroide real de su municipio
+  // Comunidades demo (datos de ejemplo) posicionadas en el centroide real de su municipio.
+  // "familias" son cifras de muestra — reemplazar por datos reales del padrón cuando existan.
   var comunidadesDemo = [
-    {nombre:'San Cristóbal Huichochitlán', municipio:'Toluca', dx:-0.03, dy:0.02},
-    {nombre:'San Andrés Cuexcontitlán', municipio:'Toluca', dx:0.03, dy:-0.02},
-    {nombre:'San Jerónimo Chicahualco', municipio:'Metepec', dx:0, dy:0},
-    {nombre:'San Antonio Acahualco', municipio:'Zinacantepec', dx:0, dy:0},
-    {nombre:'Chalco Centro', municipio:'Chalco', dx:0, dy:0}
+    {nombre:'San Cristóbal Huichochitlán', municipio:'Toluca', dx:-0.03, dy:0.02, familias:120},
+    {nombre:'San Andrés Cuexcontitlán', municipio:'Toluca', dx:0.03, dy:-0.02, familias:95},
+    {nombre:'San Jerónimo Chicahualco', municipio:'Metepec', dx:0, dy:0, familias:140},
+    {nombre:'San Antonio Acahualco', municipio:'Zinacantepec', dx:0, dy:0, familias:85},
+    {nombre:'Chalco Centro', municipio:'Chalco', dx:0, dy:0, familias:110}
   ];
 
   var map, geoLayer, selectedLayer = null, initDone = false;
@@ -1307,7 +1452,13 @@ function alCambiarMunicipio() {
           mouseout: function(){ if(layer !== selectedLayer) geoLayer.resetStyle(layer); },
           click: function(){
             selectLayer(layer, m);
-            layer.bindPopup('<b>'+m.nombre+'</b><br>Clave INEGI: '+m.clave+'<br>Área aprox: '+m.area_km2.toLocaleString('es-MX')+' km²').openPopup();
+            var info = getInfoMunicipio(m.nombre);
+            var estatusTxt = info.atendida ? 'Zona Atendida' : 'Aún sin cobertura';
+            layer.bindPopup(
+              '<b>'+m.nombre+'</b><br>'+
+              estatusTxt+'<br>'+
+              (info.atendida ? info.totalFamilias.toLocaleString('es-MX')+' familias atendidas' : 'Sin familias registradas aún')
+            ).openPopup();
           }
         });
         m._layer = layer;
@@ -1339,12 +1490,129 @@ function alCambiarMunicipio() {
     }
   };
 
+  // Agrega comunidades demo + familias por municipio (a partir de datos reales de nombre,
+  // pero cifras de ejemplo). Para los municipios sin comunidades demo cargadas todavía,
+  // se reporta honestamente 0 / "sin cobertura" en vez de inventar una cifra.
+  function getInfoMunicipio(nombreMunicipio){
+    var lista = comunidadesDemo.filter(function(c){
+      return normalize(c.municipio) === normalize(nombreMunicipio);
+    });
+    var totalFamilias = lista.reduce(function(acc,c){ return acc + c.familias; }, 0);
+    return {
+      comunidades: lista,
+      totalFamilias: totalFamilias,
+      atendida: lista.length > 0
+    };
+  }
+
+  var carState = { index: 0, total: 3 };
+
+  function buildCarouselHtml(nombreMunicipio){
+    var captions = [
+      {icon:'📦', texto:'Entrega de despensas'},
+      {icon:'🧑‍🤝‍🧑', texto:'Equipo en campo'},
+      {icon:'👨‍👩‍👧‍👦', texto:'Familias beneficiarias'}
+    ];
+    carState.index = 0;
+    carState.total = captions.length;
+    var slides = captions.map(function(c, i){
+      return '<div class="mun-car-slide' + (i===0?' active':'') + '">' +
+        '<div class="mun-car-placeholder-icon">' + c.icon + '</div>' +
+        '<div class="mun-car-caption">' + c.texto + '<br><small>' + nombreMunicipio + ' · foto pendiente de cargar</small></div>' +
+      '</div>';
+    }).join('');
+    var dots = captions.map(function(_, i){
+      return '<div class="mun-car-dot' + (i===0?' active':'') + '"></div>';
+    }).join('');
+    return (
+      '<div class="mun-carousel">' +
+        '<button class="mun-car-arrow left" onclick="window.munCarrusel(-1)">&#8249;</button>' +
+        '<div class="mun-car-track" id="mun-car-track">' + slides + '</div>' +
+        '<button class="mun-car-arrow right" onclick="window.munCarrusel(1)">&#8250;</button>' +
+        '<div class="mun-car-dots" id="mun-car-dots">' + dots + '</div>' +
+      '</div>'
+    );
+  }
+
+  window.munCarrusel = function(delta){
+    var track = document.getElementById('mun-car-track');
+    var dotsWrap = document.getElementById('mun-car-dots');
+    if(!track) return;
+    carState.index = (carState.index + delta + carState.total) % carState.total;
+    track.style.transform = 'translateX(-' + (carState.index * 100) + '%)';
+    if(dotsWrap){
+      Array.prototype.forEach.call(dotsWrap.children, function(dot, i){
+        dot.classList.toggle('active', i === carState.index);
+      });
+    }
+  };
+
+  function renderMunicipioCard(m){
+    var wrap = document.getElementById('mun-detalle-wrap');
+    if(!wrap) return;
+    var info = getInfoMunicipio(m.nombre);
+
+    var comunidadesHtml = '';
+    if(info.comunidades.length > 0){
+      comunidadesHtml = '<ul class="mun-comunidades-list">' +
+        info.comunidades.map(function(c){ return '<li>' + c.nombre + '</li>'; }).join('') +
+        '</ul>';
+    } else {
+      comunidadesHtml = '<ul class="mun-comunidades-list"><li>Aún sin comunidades registradas en este municipio</li></ul>';
+    }
+
+    var frecuenciaTxt = info.atendida ? 'Quincenal' : '—';
+
+    wrap.innerHTML =
+      '<div class="mun-card">' +
+        '<button class="mun-card-back" onclick="window.edomexResetView && window.edomexResetView()">&larr; Ver todos los municipios</button>' +
+        '<div class="mun-card-header">' +
+          '<h2 class="mun-card-title"><small>Municipio</small>' + m.nombre + '</h2>' +
+          '<span class="mun-card-status ' + (info.atendida ? 'atendida' : 'pendiente') + '">' +
+            (info.atendida ? 'Zona Atendida' : 'Sin cobertura aún') +
+          '</span>' +
+        '</div>' +
+
+        buildCarouselHtml(m.nombre) +
+
+        '<div class="mun-metrics">' +
+          '<div class="mun-metric">' +
+            '<span class="mun-metric-icon">🏢</span>' +
+            '<div>' +
+              '<div class="mun-metric-label">Comunidades atendidas</div>' +
+              '<div class="mun-metric-value">' + info.comunidades.length + ' comunidad' + (info.comunidades.length === 1 ? '' : 'es') + '</div>' +
+              comunidadesHtml +
+            '</div>' +
+          '</div>' +
+          '<div class="mun-metric">' +
+            '<span class="mun-metric-icon">👥</span>' +
+            '<div>' +
+              '<div class="mun-metric-label">Beneficiarios totales</div>' +
+              '<div class="mun-metric-value">' + info.totalFamilias.toLocaleString('es-MX') + ' familias apoyadas</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mun-metric">' +
+            '<span class="mun-metric-icon">📦</span>' +
+            '<div>' +
+              '<div class="mun-metric-label">Frecuencia</div>' +
+              '<div class="mun-metric-value">' + frecuenciaTxt + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+
+        '<p class="mun-card-note">“Cada punto y zona iluminada representa familias mexiquenses que hoy tienen acceso a una alimentación digna.”</p>' +
+      '</div>';
+  }
+
   function selectLayer(layer, m){
     if(selectedLayer) geoLayer.resetStyle(selectedLayer);
     selectedLayer = layer;
     layer.setStyle(selectStyle);
     layer.bringToFront();
     map.flyToBounds(layer.getBounds(), {padding:[40,40], duration:0.6, maxZoom:10.5});
+    renderMunicipioCard(m);
+    var select = document.getElementById('select-mun');
+    if(select) select.value = m.nombre;
   }
 
   window.edomexSelectByName = function(nombre){
@@ -1358,6 +1626,12 @@ function alCambiarMunicipio() {
     if(!map || !geoLayer) return;
     if(selectedLayer){ geoLayer.resetStyle(selectedLayer); selectedLayer = null; }
     map.flyToBounds(geoLayer.getBounds(), {padding:[10,10], duration:0.6});
+    var wrap = document.getElementById('mun-detalle-wrap');
+    if(wrap){
+      wrap.innerHTML = '<div class="mun-placeholder" id="mun-placeholder">Selecciona un municipio en el mapa o en la lista para ver su ficha de atención.</div>';
+    }
+    var select = document.getElementById('select-mun');
+    if(select) select.value = '';
   };
 })();
 </script>
