@@ -26,7 +26,6 @@ header{
 .logo-container{display:flex;align-items:center;gap:2rem}
 .logo{display:flex;align-items:center;gap:14px;cursor:pointer}
 
-/* LOGOTIPO OFICIAL BAMX FIEL AL PDF */
 .li-oficial{
   width: 48px;
   height: 48px;
@@ -87,7 +86,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
 #gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
-/* SECCIÓN: MAPA DEL ESTADO DE MÉXICO INTERACTIVO REAL */
+/* SECCIÓN: MAPA GEOGRÁFICO REAL EDOMEX */
 #vista-com{padding:105px 2rem 2rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#040408;}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
@@ -102,10 +101,10 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   border-radius: var(--r);
   padding: 1.5rem;
   height: calc(100vh - 210px);
-  min-height: 520px;
+  min-height: 540px;
 }
 .mapa-grafico {
-  flex: 1.8;
+  flex: 1.6;
   background: #08080c;
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.04);
@@ -113,7 +112,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 1.5rem;
+  padding: 1rem;
 }
 .mapa-grafico svg {
   width: 100%;
@@ -121,39 +120,39 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   max-height: 100%;
 }
 
-/* ESTILOS DE LA GEOMETRÍA REAL DE MUNICIPIOS (EDOMEX) */
-.edomex-municipio {
-  fill: #111122;
-  stroke: #31314d;
-  stroke-width: 1.2;
-  transition: all 0.2s ease;
+/* SILUETA GEOGRÁFICA CORREGIDA DEL ESTADO DE MÉXICO */
+.edomex-region {
+  fill: #141426;
+  stroke: #3a3a59;
+  stroke-width: 1.5;
+  transition: all 0.25s ease;
   cursor: pointer;
 }
-.edomex-municipio:hover {
-  fill: rgba(232, 100, 10, 0.22);
-  stroke: var(--n);
-  stroke-width: 1.8;
-}
-.edomex-municipio.active {
-  fill: rgba(232, 100, 10, 0.4);
+.edomex-region:hover {
+  fill: rgba(232, 100, 10, 0.18);
   stroke: var(--n);
   stroke-width: 2;
 }
+.edomex-region.active {
+  fill: rgba(232, 100, 10, 0.35);
+  stroke: var(--n);
+  stroke-width: 2.2;
+}
 
-/* INDICADORES DE COMUNIDADES (PINS FLOTANTES) */
+/* MARCADORES DE COMUNIDADES (PINS) */
 .comunidad-nodo {
-  fill: #ff6a00;
+  fill: #ff7300;
   stroke: #fff;
-  stroke-width: 1.5;
+  stroke-width: 1.8;
   cursor: pointer;
   transition: transform 0.2s, fill 0.2s;
 }
 .comunidad-nodo:hover {
-  transform: scale(1.5);
+  transform: scale(1.4) translate(-2px, -2px);
   fill: #ff2200;
 }
 
-/* ELEMENTOS DEL PANEL DE CONTROL LATERAL */
+/* PANEL LATERAL */
 .mapa-sidebar {
   flex: 1;
   background: #0b0b12;
@@ -181,7 +180,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 4px;
 }
 .item-comunidad {
   background: rgba(255,255,255,0.02);
@@ -195,12 +193,16 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   background: rgba(232, 100, 10, 0.12);
   border-color: rgba(232, 100, 10, 0.3);
 }
+.item-comunidad.active-item {
+  background: rgba(232, 100, 10, 0.2);
+  border-color: var(--n);
+}
 .item-comunidad h4 { font-size: 14px; color: #fff; margin-bottom: 2px; }
 .item-comunidad p { font-size: 12px; color: var(--t); }
 
 #info-flotante-com {
   position: absolute;
-  background: rgba(5,5,10,0.92);
+  background: rgba(5,5,10,0.95);
   border: 1px solid var(--n);
   padding: 8px 12px;
   border-radius: 6px;
@@ -208,12 +210,12 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   pointer-events: none;
   display: none;
   z-index: 50;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
 @media(max-width:980px){
   .mapa-contenedor { flex-direction: column; height: auto; }
-  .mapa-grafico { height: 450px; }
+  .mapa-grafico { height: 480px; }
 }
 </style>
 </head>
@@ -236,7 +238,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       </div>
       <div class="lt">Banco de Alimentos Cáritas<span>Estado de México</span></div>
     </div>
-    <div class="search-box"><input type="text" placeholder="Buscar globalmente..." id="global-search"></div>
+    <div class="search-box"><input type="text" placeholder="Buscar..." id="global-search"></div>
   </div>
   <nav>
     <button id="nav-com" onclick="ir('com')">Comunidades</button>
@@ -248,7 +250,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa en UHD...<span>Optimizando texturas para zoom</span></div>
+    <div id="gload">Cargando mapa...<span>Inicializando interfaz</span></div>
     <div id="gui">
       <div class="gt">
         <div style="display:flex;flex-direction:column;gap:5px">
@@ -263,7 +265,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       
       <div class="gm">
         <h1>Banco de Alimentos Cáritas<br>del Estado de México</h1>
-        <p>Cada punto naranja es una comunidad real que recibe alimento</p>
+        <p>Monitoreo geográfico y cobertura de distribución institucional</p>
       </div>
       
       <div class="gb">
@@ -273,55 +275,56 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
           <div><div class="gsn">38,400</div><div class="gsl">familias</div></div>
           <div class="gdv"></div>
           <div><div class="gsn">125 T</div><div class="gsl">alimento</div></div>
-          <div class="gdv"></div>
-          <div><div class="gsn">125</div><div class="gsl">municipios</div></div>
         </div>
         <div class="gbt">
-          <button class="bg" onclick="goMex()">📍 Zoom al Estado de México</button>
+          <button class="bg" onclick="goMex()">📍 Ver Mapa del Estado</button>
           <button class="bq" id="spb" onclick="toggleSpin()">⏸ Pausar</button>
-          <button class="bq" onclick="resetZ()">↺ Alejar</button>
         </div>
-        <p class="gh">Arrastra para girar · rueda del mouse para zoom</p>
       </div>
     </div>
   </div>
 </div>
 
 <div id="vista-com" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Mapa de Distribución de Comunidades</div></div>
+  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Cobertura y Distribución Geográfica Real</div></div>
   
   <div class="mapa-contenedor">
     <div class="mapa-grafico">
       <div id="info-flotante-com"></div>
       
-      <svg viewBox="0 0 650 500" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 700 600" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 400 330 Q 420 300, 450 320 T 470 370 Q 430 410, 390 380 Z" fill="#040408" stroke="#1f1f33" stroke-dasharray="4"/>
+        <text x="415" y="360" fill="#333" font-size="11" font-weight="bold">CDMX</text>
+
         <g id="capa-edomex">
-          <path d="M140,60 L240,40 L290,90 L340,70 L360,110 L310,160 L240,160 L180,210 L120,170 Z" class="edomex-municipio" id="region-norte" onclick="seleccionarRegion('Zona Norte / Altiplano', this)"/>
+          <path d="M 180 120 L 290 80 L 400 130 L 410 180 L 440 210 L 370 240 L 330 220 L 260 260 L 200 240 L 150 170 Z" class="edomex-region" id="reg-norte" onclick="clickRegion('Región Norte / Altiplano', this)"/>
           
-          <path d="M180,210 L240,160 L310,160 L330,190 L390,200 L400,240 L370,290 L290,320 L220,310 L150,260 Z" class="edomex-municipio" id="region-toluca" onclick="seleccionarRegion('Valle de Toluca', this)"/>
+          <path d="M 200 240 L 260 260 L 330 220 L 370 240 L 400 330 L 380 390 L 310 390 L 270 340 L 180 320 L 160 280 Z" class="edomex-region" id="reg-toluca" onclick="clickRegion('Valle de Toluca / Centro', this)"/>
           
-          <path d="M150,260 L220,310 L290,320 L310,360 L360,350 L350,450 L250,460 L170,420 L90,400 L95,310 Z" class="edomex-municipio" id="region-sur" onclick="seleccionarRegion('Zona Sur / Tierra Caliente', this)"/>
+          <path d="M 180 320 L 270 340 L 310 390 L 380 390 L 380 440 L 430 440 L 390 540 L 290 540 L 210 500 L 90 470 L 100 370 Z" class="edomex-region" id="reg-sur" onclick="clickRegion('Región Sur / Tierra Caliente', this)"/>
           
-          <path d="M430,150 L500,120 L560,150 L590,210 L560,280 L480,290 L440,240 L450,190 Z" class="edomex-municipio" id="region-oriente" onclick="seleccionarRegion('Zona Conurbada / Oriente', this)"/>
+          <path d="M 440 210 L 490 160 L 530 180 L 580 230 L 590 320 L 560 410 L 510 420 L 470 370 L 450 320 Q 420 300, 400 330 Z" class="edomex-region" id="reg-oriente" onclick="clickRegion('Región Conurbada Oriente', this)"/>
         </g>
 
         <g id="capa-pins">
-          <circle cx="210" cy="220" r="6.5" class="comunidad-nodo" data-name="San Cristóbal Huichochitlán" data-mun="Toluca" onclick="infoCom(this)"/>
-          <circle cx="235" cy="200" r="6.5" class="comunidad-nodo" data-name="San Andrés Cuexcontitlán" data-mun="Toluca" onclick="infoCom(this)"/>
-          <circle cx="260" cy="245" r="6.5" class="comunidad-nodo" data-name="San Jerónimo Chicahualco" data-mun="Metepec" onclick="infoCom(this)"/>
-          <circle cx="185" cy="250" r="6.5" class="comunidad-nodo" data-name="San Antonio Acahualco" data-mun="Zinacantepec" onclick="infoCom(this)"/>
-          <circle cx="280" cy="215" r="6.5" class="comunidad-nodo" data-name="San Pedro Totoltepec" data-mun="Toluca" onclick="infoCom(this)"/>
-          <circle cx="510" cy="230" r="6.5" class="comunidad-nodo" data-name="Santa Catarina" data-mun="Chalco" onclick="infoCom(this)"/>
-          <circle cx="280" cy="380" r="6.5" class="comunidad-nodo" data-name="San José Tenería" data-mun="Tenancingo" onclick="infoCom(this)"/>
-          <circle cx="190" cy="90" r="6.5" class="comunidad-nodo" data-name="San Pedro del Rosal" data-mun="Atlacomulco" onclick="infoCom(this)"/>
+          <circle cx="280" cy="300" r="7" class="comunidad-nodo" data-id="1" data-name="San Cristóbal Huichochitlán" data-mun="Toluca" data-fam="120" onclick="clickPin(this)"/>
+          <circle cx="295" cy="285" r="7" class="comunidad-nodo" data-id="2" data-name="San Andrés Cuexcontitlán" data-mun="Toluca" data-fam="95" onclick="clickPin(this)"/>
+          <circle cx="320" cy="320" r="7" class="comunidad-nodo" data-id="3" data-name="San Jerónimo Chicahualco" data-mun="Metepec" data-fam="140" onclick="clickPin(this)"/>
+          <circle cx="250" cy="315" r="7" class="comunidad-nodo" data-id="4" data-name="San Antonio Acahualco" data-mun="Zinacantepec" data-fam="85" onclick="clickPin(this)"/>
+          
+          <circle cx="520" cy="350" r="7" class="comunidad-nodo" data-id="5" data-name="Santa Catarina" data-mun="Chalco" data-fam="210" onclick="clickPin(this)"/>
+          
+          <circle cx="330" cy="450" r="7" class="comunidad-nodo" data-id="6" data-name="San José Tenería" data-mun="Tenancingo" data-fam="130" onclick="clickPin(this)"/>
+          
+          <circle cx="260" cy="140" r="7" class="comunidad-nodo" data-id="7" data-name="San Pedro del Rosal" data-mun="Atlacomulco" data-fam="75" onclick="clickPin(this)"/>
         </g>
       </svg>
     </div>
 
     <div class="mapa-sidebar">
-      <h3 id="titulo-sidebar">Filtro de Ubicaciones</h3>
+      <h3 id="titulo-sidebar">Edomex Cobertura</h3>
       <div class="filtros-mapa">
-        <input type="text" placeholder="Buscar comunidad por nombre..." id="bus-com" oninput="filtrarComunidades()">
+        <input type="text" placeholder="Buscar comunidad..." id="bus-com" oninput="filtrarComunidades()">
         <select id="select-filtro-mun" onchange="filtrarComunidades()">
           <option value="">Todos los Municipios</option>
           <option value="Toluca">Toluca</option>
@@ -334,35 +337,31 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       </div>
       
       <div class="lista-comunidades" id="lista-comunidades-dinamica">
-        <div class="item-comunidad" data-m="Toluca" onclick="resaltarPin(210, 220, 'San Cristóbal Huichochitlán')">
+        <div class="item-comunidad" data-id="1" data-m="Toluca" onclick="seleccionarItemLista(1)">
           <h4>San Cristóbal Huichochitlán</h4>
           <p>Municipio: Toluca · 120 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Toluca" onclick="resaltarPin(235, 200, 'San Andrés Cuexcontitlán')">
+        <div class="item-comunidad" data-id="2" data-m="Toluca" onclick="seleccionarItemLista(2)">
           <h4>San Andrés Cuexcontitlán</h4>
           <p>Municipio: Toluca · 95 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Metepec" onclick="resaltarPin(260, 245, 'San Jerónimo Chicahualco')">
+        <div class="item-comunidad" data-id="3" data-m="Metepec" onclick="seleccionarItemLista(3)">
           <h4>San Jerónimo Chicahualco</h4>
           <p>Municipio: Metepec · 140 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Zinacantepec" onclick="resaltarPin(185, 250, 'San Antonio Acahualco')">
+        <div class="item-comunidad" data-id="4" data-m="Zinacantepec" onclick="seleccionarItemLista(4)">
           <h4>San Antonio Acahualco</h4>
           <p>Municipio: Zinacantepec · 85 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Toluca" onclick="resaltarPin(280, 215, 'San Pedro Totoltepec')">
-          <h4>San Pedro Totoltepec</h4>
-          <p>Municipio: Toluca · 110 Familias</p>
-        </div>
-        <div class="item-comunidad" data-m="Chalco" onclick="resaltarPin(510, 230, 'Santa Catarina')">
+        <div class="item-comunidad" data-id="5" data-m="Chalco" onclick="seleccionarItemLista(5)">
           <h4>Santa Catarina</h4>
           <p>Municipio: Chalco · 210 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Tenancingo" onclick="resaltarPin(280, 380, 'San José Tenería')">
+        <div class="item-comunidad" data-id="6" data-m="Tenancingo" onclick="seleccionarItemLista(6)">
           <h4>San José Tenería</h4>
           <p>Municipio: Tenancingo · 130 Familias</p>
         </div>
-        <div class="item-comunidad" data-m="Atlacomulco" onclick="resaltarPin(190, 90, 'San Pedro del Rosal')">
+        <div class="item-comunidad" data-id="7" data-m="Atlacomulco" onclick="seleccionarItemLista(7)">
           <h4>San Pedro del Rosal</h4>
           <p>Municipio: Atlacomulco · 75 Familias</p>
         </div>
@@ -376,7 +375,7 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// --- MOTOR 3D DEL GLOBO ---
+// --- GLOBO INTERACTIVO ---
 (function(){
   var wrap=document.getElementById('gw');
   var canvas=document.getElementById('gc');
@@ -386,7 +385,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   renderer.setSize(W,H);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.3;
 
   var scene=new THREE.Scene();
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
@@ -395,18 +393,18 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
   var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
 
-  var numEstrellas = 1500;
+  var numEstrellas = 1000;
   var sg = new THREE.BufferGeometry();
   var posicionesEstrellas = new Float32Array(numEstrellas * 3);
   for(var i=0; i<numEstrellas; i++){
-    var t = Math.random() * Math.PI * 2; var p = Math.acos(2 * Math.random() - 1); var r = 40 + Math.random() * 20;
+    var t = Math.random() * Math.PI * 2; var p = Math.acos(2 * Math.random() - 1); var r = 50;
     posicionesEstrellas[i*3] = r * Math.sin(p) * Math.cos(t);
     posicionesEstrellas[i*3+1] = r * Math.cos(p);
     posicionesEstrellas[i*3+2] = r * Math.sin(p) * Math.sin(t);
   }
   sg.setAttribute('position', new THREE.BufferAttribute(posicionesEstrellas, 3));
-  var materialEstrellas = new THREE.PointsMaterial({size: 0.25, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false});
-  var stars = new THREE.Points(sg, materialEstrellas); scene.add(stars);
+  var stars = new THREE.Points(sg, new THREE.PointsMaterial({size: 0.2, transparent: true, blending: THREE.AdditiveBlending}));
+  scene.add(stars);
 
   var MEX_Y=0.1658, MEX_X=0.2800;
   var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
@@ -416,14 +414,12 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   function buildGlobe(tex){
     document.getElementById('gload').style.display='none';
-    tex.anisotropy = 8;
     var mat=new THREE.MeshStandardMaterial({map:tex, roughness: 0.7});
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,128,128),mat);
+    globe=new THREE.Mesh(new THREE.SphereGeometry(R,64,64),mat);
     globe.rotation.y=cY; globe.rotation.x=cX;
     scene.add(globe);
 
-    // Pin marcador en Toluca / Edomex
-    var pin=new THREE.Mesh(new THREE.SphereGeometry(0.016,16,16), new THREE.MeshBasicMaterial({color:0xff5500}));
+    var pin=new THREE.Mesh(new THREE.SphereGeometry(0.015,16,16), new THREE.MeshBasicMaterial({color:0xff5500}));
     var phi=(90-19.35)*Math.PI/180, theta=(99.45+162.59+180)*Math.PI/180;
     pin.position.set(-(R+0.01)*Math.sin(phi)*Math.cos(theta), (R+0.01)*Math.cos(phi), (R+0.01)*Math.sin(phi)*Math.sin(theta));
     globe.add(pin);
@@ -438,24 +434,22 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
   window.goMex=function(){
     tY=MEX_Y; tX=MEX_X; zoomT=1.7; spin=false;
-    document.getElementById('spb').textContent='▶ Girar';
-    setTimeout(function(){ ir('com'); }, 1200);
+    setTimeout(function(){ ir('com'); }, 1000);
   };
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
-  window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;};
 
   (function loop(){
     requestAnimationFrame(loop);
     if(!globe)return;
     zoomC+=(zoomT-zoomC)*0.08; camera.position.z=zoomC;
-    if(spin&&!drag)tY+=0.0006;
+    if(spin&&!drag)tY+=0.0005;
     cY+=(tY-cY)*0.08; cX+=(tX-cX)*0.08;
     globe.rotation.y=cY; globe.rotation.x=cX;
     renderer.render(scene,camera);
   })();
 })();
 
-// --- CONTROL DE VISTAS ---
+// --- MANEJO DE INTERFAZ Y EVENTOS ---
 function ir(id){
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
@@ -463,23 +457,35 @@ function ir(id){
   var nb=document.getElementById('nav-'+id); if(nb)nb.classList.add('on');
 }
 
-// --- INTERACTIVIDAD DEL MAPA REAL ---
-function seleccionarRegion(nombre, el) {
-  document.querySelectorAll('.edomex-municipio').forEach(p => p.classList.remove('active'));
+function clickRegion(nombre, el) {
+  document.querySelectorAll('.edomex-region').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('titulo-sidebar').textContent = nombre;
 }
 
-function infoCom(el) {
+function clickPin(el) {
   var box = document.getElementById('info-flotante-com');
-  box.innerHTML = "<strong>" + el.getAttribute('data-name') + "</strong><br>Mun: " + el.getAttribute('data-mun');
+  var name = el.getAttribute('data-name');
+  var mun = el.getAttribute('data-mun');
+  var fam = el.getAttribute('data-fam');
+  var id = el.getAttribute('data-id');
+  
+  box.innerHTML = `<strong>${name}</strong><br>Municipio: ${mun}<br>Beneficiarios: ${fam} familias`;
   box.style.display = "block";
   box.style.left = (el.getBoundingClientRect().left - el.parentElement.parentElement.getBoundingClientRect().left + 15) + "px";
-  box.style.top = (el.getBoundingClientRect().top - el.parentElement.parentElement.getBoundingClientRect().top - 40) + "px";
+  box.style.top = (el.getBoundingClientRect().top - el.parentElement.parentElement.getBoundingClientRect().top - 50) + "px";
+
+  document.querySelectorAll('.item-comunidad').forEach(item => item.classList.remove('active-item'));
+  var targetItem = document.querySelector(`.item-comunidad[data-id="${id}"]`);
+  if(targetItem) {
+    targetItem.classList.add('active-item');
+    targetItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
-function resaltarPin(cx, cy, nombre) {
-  alert("Ubicando la comunidad de '" + nombre + "' directamente en el mapa vectorizado.");
+function seleccionarItemLista(id) {
+  var nodo = document.querySelector(`.comunidad-nodo[data-id="${id}"]`);
+  if(nodo) clickPin(nodo);
 }
 
 function filtrarComunidades() {
@@ -493,11 +499,7 @@ function filtrarComunidades() {
     var cumpleBus = texto.includes(bus);
     var cumpleSel = (sel === "" || mun === sel);
     
-    if(cumpleBus && cumpleSel) {
-      item.style.display = "block";
-    } else {
-      item.style.display = "none";
-    }
+    item.style.display = (cumpleBus && cumpleSel) ? "block" : "none";
   });
 }
 </script>
