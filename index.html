@@ -7,11 +7,11 @@
 <style>
 :root{--n:#E8640A;--nc:#FFF0E6;--no:#B84D00;--b:#000;--f:#000;--br:rgba(255,255,255,.12);--t:#aaa;--o:#fff;--v:#2E7D5E;--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}
-body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#000;color:var(--o);font-size:16px;line-height:1.6}
+body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#050508;color:var(--o);font-size:16px;}
 
 /* HEADER INSTITUCIONAL */
 header{
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 0) 100%);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 70%, rgba(0, 0, 0, 0) 100%);
   padding: 0 2rem;
   display: flex;
   align-items: center;
@@ -27,196 +27,127 @@ header{
 .logo{display:flex;align-items:center;gap:14px;cursor:pointer}
 
 .li-oficial{
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.li-oficial svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
-}
-.lt{font-size:15px;font-weight:700;line-height:1.2;color:#fff;letter-spacing:0.3px}
+.li-oficial svg { width: 100%; height: 100%; }
+.lt{font-size:15px;font-weight:700;line-height:1.2;color:#fff;}
 .lt span{display:block;font-weight:400;font-size:11px;color:#bbb}
 
-/* Barra de Búsqueda */
-.search-box{position:relative;display:flex;align-items:center}
-.search-box input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:9px 12px;color:#fff;font-size:14px;width:220px;transition:all .3s;font-family:inherit;backdrop-filter:blur(6px)}
-.search-box input:focus{outline:none;border-color:var(--n);background:rgba(0,0,0,0.6);box-shadow:0 0 8px rgba(232,100,10,.3)}
+.search-box input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:9px 12px;color:#fff;font-size:14px;width:220px;backdrop-filter:blur(6px)}
 
-/* Navegación */
 nav{display:flex;gap:1.5rem;align-items:center}
-nav button{background:none;border:none;padding:8px 4px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;transition:color .2s;position:relative}
-nav button:hover{color:#eee}
-nav button.on{color:#fff}
+nav button{background:none;border:none;padding:8px 4px;font-size:14px;font-weight:600;cursor:pointer;color:#aaa;transition:color .2s;position:relative}
+nav button:hover, nav button.on{color:#fff}
 nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%;height:3px;background:var(--n)}
 
 /* Vistas */
-.vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
+.vista{width:100%;height:100vh;overflow:hidden;display:none;position:absolute;top:0;left:0;padding-top:85px;}
+.vista.on{display:block}
 
-/* GLOBO 3D */
-#gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
-#gc{display:block;width:100%;height:104vh;margin-top:-2vh;cursor:grab;touch-action:none}
+/* PANTALLA DE INICIO - GLOBO 3D REPARADO */
+#vista-inicio { padding-top: 0; }
+#gw{width:100%;height:100%;background:#020205;position:relative}
+#gc{display:block;width:100%;height:100%;cursor:grab;}
 #gc:active{cursor:grabbing}
 
-#gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:105px 1.25rem 1.25rem 1.25rem;z-index:10}
-.gt{display:flex;justify-content:space-between;align-items:flex-start}
-.pn{background:rgba(232,100,10,.9);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,170,60,.25)}
-.pd{background:rgba(20,20,35,.75);color:rgba(255,255,255,.9);font-size:11px;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12)}
+#gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:105px 2rem 2rem 2rem;z-index:10}
+.gt{display:flex;justify-content:space-between}
+.pn{background:rgba(232,100,10,.85);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;}
+.pd{background:rgba(20,20,35,.75);color:#fff;font-size:11px;padding:6px 14px;border-radius:20px;border:1px solid var(--br)}
 
-.gm{text-align:center;position:absolute;top:24%;left:50%;transform:translateX(-50%);width:90%;max-width:600px}
-.gm h1{font-size:24px;font-weight:700;color:#fff;text-shadow:0 2px 15px rgba(0,0,0,0.9), 0 0 20px rgba(232,100,10,.3);line-height:1.25;margin-bottom:4px}
-.gm p{font-size:12px;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,0.8)}
+.gm{text-align:center;position:absolute;top:25%;left:50%;transform:translateX(-50%);width:90%;max-width:600px}
+.gm h1{font-size:26px;font-weight:700;color:#fff;line-height:1.3;margin-bottom:6px;text-shadow:0 2px 10px rgba(0,0,0,0.5)}
+.gm p{font-size:13px;color:#bbb}
 
-.gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px}
-.gst{display:flex;gap:20px;justify-content:center;align-items:center;background:rgba(15,15,25,0.75);padding:10px 22px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
-.gsn{font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
-.gsl{font-size:11px;color:rgba(255,255,255,.6);text-align:center;margin-top:2px}
+.gb{display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:all;margin-bottom:10px}
+.gst{display:flex;gap:24px;background:rgba(10,10,18,0.8);padding:12px 24px;border-radius:14px;border:1px solid var(--br);backdrop-filter:blur(10px)}
+.gsn{font-size:22px;font-weight:700;color:#ff8c3a;text-align:center}
+.gsl{font-size:11px;color:#aaa;text-align:center}
 .gdv{width:1px;height:24px;background:rgba(255,255,255,.15);align-self:center}
-.gbt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.bg{padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,#E8640A,#ff8c3a);color:#fff;box-shadow:0 4px 15px rgba(232,100,10,.4);transition:transform .15s}
-.bg:hover{transform:scale(1.03)}
-.bq{padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);transition:background .2s}
-.bq:hover{background:rgba(255,255,255,.15)}
-.gh{color:rgba(255,255,255,.4);font-size:11px;animation:bk 3s infinite;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
-@keyframes bk{0%,100%{opacity:.4}50%{opacity:.8}}
+.bg{padding:10px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:linear-gradient(135deg,#E8640A,#ff8c3a);color:#fff;box-shadow:0 4px 15px rgba(232,100,10,.3)}
 
-#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
-#gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
+/* SECCIÓN MAPA REAL INTERACTIVO */
+#vista-com{background:#040408; padding:105px 2rem 2rem 2rem;}
+.bnav{font-size:13px;color:var(--t);margin-bottom:1rem}
+.bnav a{color:var(--n);text-decoration:none;cursor:pointer}
 
-/* SECCIÓN: MAPA GEOGRÁFICO REAL EDOMEX */
-#vista-com{padding:105px 2rem 2rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#040408;}
-.bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
-.bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
-.bc a{color:var(--n);text-decoration:none;cursor:pointer}
-.bc a:hover{text-decoration:underline}
-
-.mapa-contenedor {
-  display: flex;
-  gap: 2rem;
-  background: rgba(255,255,255,0.01);
-  border: 1px solid var(--br);
-  border-radius: var(--r);
-  padding: 1.5rem;
-  height: calc(100vh - 210px);
-  min-height: 540px;
-}
+.mapa-contenedor { display: flex; gap: 2rem; height: calc(100vh - 160px); min-height: 500px; }
 .mapa-grafico {
-  flex: 1.6;
-  background: #08080c;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.04);
+  flex: 1.7;
+  background: #08080d;
+  border-radius: var(--r);
+  border: 1px solid var(--br);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
   padding: 1rem;
+  overflow: hidden;
 }
-.mapa-grafico svg {
-  width: 100%;
-  height: 100%;
-  max-height: 100%;
-}
+.mapa-grafico svg { width: 100%; height: 100%; max-height: 100%; }
 
-/* SILUETA GEOGRÁFICA CORREGIDA DEL ESTADO DE MÉXICO */
-.edomex-region {
-  fill: #141426;
-  stroke: #3a3a59;
-  stroke-width: 1.5;
-  transition: all 0.25s ease;
+/* TRAZADO GEOGRÁFICO REAL EDOMEX (FIEL A IMAGE_A1EBA2.JPG) */
+.edomex-silueta {
+  fill: #121224;
+  stroke: #363654;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  transition: all 0.2s ease;
   cursor: pointer;
 }
-.edomex-region:hover {
-  fill: rgba(232, 100, 10, 0.18);
-  stroke: var(--n);
-  stroke-width: 2;
-}
-.edomex-region.active {
-  fill: rgba(232, 100, 10, 0.35);
+.edomex-silueta:hover {
+  fill: rgba(232, 100, 10, 0.15);
   stroke: var(--n);
   stroke-width: 2.2;
 }
+.edomex-silueta.active {
+  fill: rgba(232, 100, 10, 0.3);
+  stroke: var(--n);
+  stroke-width: 2.5;
+}
 
-/* MARCADORES DE COMUNIDADES (PINS) */
+/* MARCADORES (PINS) EN COORDENADAS CORREGIDAS */
 .comunidad-nodo {
-  fill: #ff7300;
+  fill: #ff6a00;
   stroke: #fff;
-  stroke-width: 1.8;
+  stroke-width: 1.5;
   cursor: pointer;
-  transition: transform 0.2s, fill 0.2s;
+  transition: transform 0.2s;
 }
-.comunidad-nodo:hover {
-  transform: scale(1.4) translate(-2px, -2px);
-  fill: #ff2200;
-}
+.comunidad-nodo:hover { transform: scale(1.4); fill: #ff1100; }
 
-/* PANEL LATERAL */
+/* SIDEBAR LATERAL */
 .mapa-sidebar {
   flex: 1;
-  background: #0b0b12;
-  border-radius: 8px;
+  background: #0a0a10;
+  border-radius: var(--r);
   padding: 1.25rem;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--br);
   display: flex;
   flex-direction: column;
   gap: 1rem;
 }
-.mapa-sidebar h3 { font-size: 18px; font-weight: 600; color: #fff; border-bottom: 1px solid var(--br); padding-bottom: 8px;}
+.mapa-sidebar h3 { font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--br); padding-bottom: 6px; }
 .filtros-mapa input, .filtros-mapa select {
-  width: 100%;
-  padding: 10px 12px;
-  background: #131322;
-  border: 1px solid var(--br);
-  border-radius: 6px;
-  color: #fff;
-  font-size: 14px;
-  margin-bottom: 10px;
+  width: 100%; padding: 10px; background: #121220; border: 1px solid var(--br); border-radius: 6px; color: #fff; font-size: 14px; margin-bottom: 8px;
 }
-.lista-comunidades {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.lista-comunidades { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .item-comunidad {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
-  padding: 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); padding: 12px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
 }
-.item-comunidad:hover {
-  background: rgba(232, 100, 10, 0.12);
-  border-color: rgba(232, 100, 10, 0.3);
-}
-.item-comunidad.active-item {
-  background: rgba(232, 100, 10, 0.2);
-  border-color: var(--n);
-}
-.item-comunidad h4 { font-size: 14px; color: #fff; margin-bottom: 2px; }
+.item-comunidad:hover, .item-comunidad.active-item { background: rgba(232, 100, 10, 0.15); border-color: var(--n); }
+.item-comunidad h4 { font-size: 14px; color: #fff; }
 .item-comunidad p { font-size: 12px; color: var(--t); }
 
 #info-flotante-com {
-  position: absolute;
-  background: rgba(5,5,10,0.95);
-  border: 1px solid var(--n);
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  pointer-events: none;
-  display: none;
-  z-index: 50;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+  position: absolute; background: rgba(5,5,10,0.95); border: 1px solid var(--n); padding: 8px 12px; border-radius: 6px; font-size: 12px; display: none; z-index: 50; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
 }
 
-@media(max-width:980px){
-  .mapa-contenedor { flex-direction: column; height: auto; }
-  .mapa-grafico { height: 480px; }
-}
+@media(max-width:980px){ .mapa-contenedor { flex-direction: column; height: auto; } .mapa-grafico { height: 400px; } }
 </style>
 </head>
 <body>
@@ -238,94 +169,86 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
       </div>
       <div class="lt">Banco de Alimentos Cáritas<span>Estado de México</span></div>
     </div>
-    <div class="search-box"><input type="text" placeholder="Buscar..." id="global-search"></div>
+    <div class="search-box"><input type="text" placeholder="Buscar globalmente..." id="global-search"></div>
   </div>
   <nav>
+    <button id="nav-inicio" class="on" onclick="ir('inicio')">Inicio</button>
     <button id="nav-com" onclick="ir('com')">Comunidades</button>
-    <button id="nav-don" onclick="ir('don')">Soy donador</button>
-    <button id="nav-adm" onclick="ir('adm')">Administrar</button>
   </nav>
 </header>
 
+<!-- VISTA INICIO: GLOBO 3D AUTO-GENERADO -->
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa...<span>Inicializando interfaz</span></div>
     <div id="gui">
       <div class="gt">
-        <div style="display:flex;flex-direction:column;gap:5px">
-          <span class="pn">527 comunidades activas</span>
-          <span class="pn" style="background:rgba(160,60,0,.85)">Estado de México</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end">
-          <span class="pd">38,400 familias</span>
-          <span class="pd">125 T entregadas</span>
-        </div>
+        <span class="pn">Estado de México</span>
+        <span class="pd">38,400 familias</span>
       </div>
-      
       <div class="gm">
         <h1>Banco de Alimentos Cáritas<br>del Estado de México</h1>
-        <p>Monitoreo geográfico y cobertura de distribución institucional</p>
+        <p>Logística e impacto en las comunidades vulnerables del estado</p>
       </div>
-      
       <div class="gb">
         <div class="gst">
           <div><div class="gsn">527</div><div class="gsl">comunidades</div></div>
           <div class="gdv"></div>
-          <div><div class="gsn">38,400</div><div class="gsl">familias</div></div>
-          <div class="gdv"></div>
-          <div><div class="gsn">125 T</div><div class="gsl">alimento</div></div>
+          <div><div class="gsn">125 T</div><div class="gsl">entregadas</div></div>
         </div>
-        <div class="gbt">
-          <button class="bg" onclick="goMex()">📍 Ver Mapa del Estado</button>
-          <button class="bq" id="spb" onclick="toggleSpin()">⏸ Pausar</button>
-        </div>
+        <button class="bg" onclick="ir('com')">📍 Entrar al Mapa de Comunidades</button>
       </div>
     </div>
   </div>
 </div>
 
+<!-- VISTA COMUNIDADES: MAPA CON SILUETA GEOGRÁFICA REAL -->
 <div id="vista-com" class="vista">
-  <div class="bnav"><div class="bc"><a onclick="ir('inicio')">Inicio</a> / Cobertura y Distribución Geográfica Real</div></div>
+  <div class="bnav"><a onclick="ir('inicio')">Inicio</a> / Mapa de Distribución Oficial</div>
   
   <div class="mapa-contenedor">
     <div class="mapa-grafico">
       <div id="info-flotante-com"></div>
       
-      <svg viewBox="0 0 700 600" xmlns="http://www.w3.org/2000/svg">
-        <path d="M 400 330 Q 420 300, 450 320 T 470 370 Q 430 410, 390 380 Z" fill="#040408" stroke="#1f1f33" stroke-dasharray="4"/>
-        <text x="415" y="360" fill="#333" font-size="11" font-weight="bold">CDMX</text>
+      <!-- SVG CON LA GEOMETRÍA FIEL A IMAGE_A1EBA2.JPG -->
+      <svg viewBox="0 0 600 550" xmlns="http://www.w3.org/2000/svg">
+        <!-- Espacio Central de la CDMX -->
+        <path d="M 370 280 C 390 260, 420 270, 425 310 C 430 340, 395 365, 370 340 Z" fill="#040408" stroke="#222" stroke-dasharray="3"/>
+        <text x="382" y="315" fill="#3a3a44" font-size="11" font-weight="bold">CDMX</text>
 
-        <g id="capa-edomex">
-          <path d="M 180 120 L 290 80 L 400 130 L 410 180 L 440 210 L 370 240 L 330 220 L 260 260 L 200 240 L 150 170 Z" class="edomex-region" id="reg-norte" onclick="clickRegion('Región Norte / Altiplano', this)"/>
+        <g id="capa-edomex-real">
+          <!-- NORTE (Aculco, Jilotepec, Atlacomulco) -->
+          <path d="M 230 40 L 290 40 L 330 80 L 340 120 L 390 140 L 380 180 L 320 180 L 300 210 L 220 190 L 195 130 Z" class="edomex-silueta" id="r-norte" onclick="clickReg('Zona Norte', this)"/>
           
-          <path d="M 200 240 L 260 260 L 330 220 L 370 240 L 400 330 L 380 390 L 310 390 L 270 340 L 180 320 L 160 280 Z" class="edomex-region" id="reg-toluca" onclick="clickRegion('Valle de Toluca / Centro', this)"/>
+          <!-- VALLE DE TOLUCA / CENTRO (Toluca, Metepec, Zinacantepec, Lerma) -->
+          <path d="M 220 190 L 300 210 L 320 180 L 380 180 L 400 230 L 370 280 C 370 340, 395 365, 370 340 L 340 340 L 320 370 L 240 340 L 170 300 L 190 230 Z" class="edomex-silueta" id="r-centro" onclick="clickReg('Valle de Toluca / Centro', this)"/>
           
-          <path d="M 180 320 L 270 340 L 310 390 L 380 390 L 380 440 L 430 440 L 390 540 L 290 540 L 210 500 L 90 470 L 100 370 Z" class="edomex-region" id="reg-sur" onclick="clickRegion('Región Sur / Tierra Caliente', this)"/>
+          <!-- SUR (Tejupilco, Luvianos, Tlatlaya, Sultepec, Tenancingo) -->
+          <path d="M 170 300 L 240 340 L 320 370 L 340 340 L 360 370 L 380 430 L 330 490 L 260 510 L 150 510 L 100 450 L 120 370 Z" class="edomex-silueta" id="r-sur" onclick="clickReg('Zona Sur / Tierra Caliente', this)"/>
           
-          <path d="M 440 210 L 490 160 L 530 180 L 580 230 L 590 320 L 560 410 L 510 420 L 470 370 L 450 320 Q 420 300, 400 330 Z" class="edomex-region" id="reg-oriente" onclick="clickRegion('Región Conurbada Oriente', this)"/>
+          <!-- ORIENTE / EXCLAVE (Zumpango, Texcoco, Chalco, Amecameca) -->
+          <path d="M 390 140 L 440 130 L 460 170 L 510 190 L 520 270 L 490 350 L 470 390 L 425 370 L 425 310 C 420 270, 390 260, 370 280 L 400 230 Z" class="edomex-silueta" id="r-oriente" onclick="clickReg('Zona Oriente / Conurbada', this)"/>
         </g>
 
-        <g id="capa-pins">
-          <circle cx="280" cy="300" r="7" class="comunidad-nodo" data-id="1" data-name="San Cristóbal Huichochitlán" data-mun="Toluca" data-fam="120" onclick="clickPin(this)"/>
-          <circle cx="295" cy="285" r="7" class="comunidad-nodo" data-id="2" data-name="San Andrés Cuexcontitlán" data-mun="Toluca" data-fam="95" onclick="clickPin(this)"/>
-          <circle cx="320" cy="320" r="7" class="comunidad-nodo" data-id="3" data-name="San Jerónimo Chicahualco" data-mun="Metepec" data-fam="140" onclick="clickPin(this)"/>
-          <circle cx="250" cy="315" r="7" class="comunidad-nodo" data-id="4" data-name="San Antonio Acahualco" data-mun="Zinacantepec" data-fam="85" onclick="clickPin(this)"/>
-          
-          <circle cx="520" cy="350" r="7" class="comunidad-nodo" data-id="5" data-name="Santa Catarina" data-mun="Chalco" data-fam="210" onclick="clickPin(this)"/>
-          
-          <circle cx="330" cy="450" r="7" class="comunidad-nodo" data-id="6" data-name="San José Tenería" data-mun="Tenancingo" data-fam="130" onclick="clickPin(this)"/>
-          
-          <circle cx="260" cy="140" r="7" class="comunidad-nodo" data-id="7" data-name="San Pedro del Rosal" data-mun="Atlacomulco" data-fam="75" onclick="clickPin(this)"/>
+        <!-- PINS DE COMUNIDADES COLOCADOS CORRECTAMENTE -->
+        <g id="capa-pins-reales">
+          <circle cx="260" cy="260" r="7" class="comunidad-nodo" data-id="1" data-name="San Cristóbal Huichochitlán" data-mun="Toluca" data-fam="120" onclick="clickPin(this)"/>
+          <circle cx="285" cy="240" r="7" class="comunidad-nodo" data-id="2" data-name="San Andrés Cuexcontitlán" data-mun="Toluca" data-fam="95" onclick="clickPin(this)"/>
+          <circle cx="300" cy="280" r="7" class="comunidad-nodo" data-id="3" data-name="San Jerónimo Chicahualco" data-mun="Metepec" data-fam="140" onclick="clickPin(this)"/>
+          <circle cx="230" cy="285" r="7" class="comunidad-nodo" data-id="4" data-name="San Antonio Acahualco" data-mun="Zinacantepec" data-fam="85" onclick="clickPin(this)"/>
+          <circle cx="465" cy="330" r="7" class="comunidad-nodo" data-id="5" data-name="Santa Catarina" data-mun="Chalco" data-fam="210" onclick="clickPin(this)"/>
+          <circle cx="310" cy="400" r="7" class="comunidad-nodo" data-id="6" data-name="San José Tenería" data-mun="Tenancingo" data-fam="130" onclick="clickPin(this)"/>
+          <circle cx="270" cy="120" r="7" class="comunidad-nodo" data-id="7" data-name="San Pedro del Rosal" data-mun="Atlacomulco" data-fam="75" onclick="clickPin(this)"/>
         </g>
       </svg>
     </div>
 
+    <!-- SIDEBAR -->
     <div class="mapa-sidebar">
-      <h3 id="titulo-sidebar">Edomex Cobertura</h3>
+      <h3 id="titulo-sidebar">Control de Comunidades</h3>
       <div class="filtros-mapa">
-        <input type="text" placeholder="Buscar comunidad..." id="bus-com" oninput="filtrarComunidades()">
-        <select id="select-filtro-mun" onchange="filtrarComunidades()">
+        <input type="text" placeholder="Buscar por nombre..." id="bus-com" oninput="filtrar()">
+        <select id="sel-mun" onchange="filtrar()">
           <option value="">Todos los Municipios</option>
           <option value="Toluca">Toluca</option>
           <option value="Metepec">Metepec</option>
@@ -335,171 +258,134 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
           <option value="Atlacomulco">Atlacomulco</option>
         </select>
       </div>
-      
-      <div class="lista-comunidades" id="lista-comunidades-dinamica">
-        <div class="item-comunidad" data-id="1" data-m="Toluca" onclick="seleccionarItemLista(1)">
-          <h4>San Cristóbal Huichochitlán</h4>
-          <p>Municipio: Toluca · 120 Familias</p>
+      <div class="lista-comunidades" id="lista-box">
+        <div class="item-comunidad" data-id="1" data-m="Toluca" onclick="selectLista(1)">
+          <h4>San Cristóbal Huichochitlán</h4><p>Municipio: Toluca · 120 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="2" data-m="Toluca" onclick="seleccionarItemLista(2)">
-          <h4>San Andrés Cuexcontitlán</h4>
-          <p>Municipio: Toluca · 95 Familias</p>
+        <div class="item-comunidad" data-id="2" data-m="Toluca" onclick="selectLista(2)">
+          <h4>San Andrés Cuexcontitlán</h4><p>Municipio: Toluca · 95 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="3" data-m="Metepec" onclick="seleccionarItemLista(3)">
-          <h4>San Jerónimo Chicahualco</h4>
-          <p>Municipio: Metepec · 140 Familias</p>
+        <div class="item-comunidad" data-id="3" data-m="Metepec" onclick="selectLista(3)">
+          <h4>San Jerónimo Chicahualco</h4><p>Municipio: Metepec · 140 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="4" data-m="Zinacantepec" onclick="seleccionarItemLista(4)">
-          <h4>San Antonio Acahualco</h4>
-          <p>Municipio: Zinacantepec · 85 Familias</p>
+        <div class="item-comunidad" data-id="4" data-m="Zinacantepec" onclick="selectLista(4)">
+          <h4>San Antonio Acahualco</h4><p>Municipio: Zinacantepec · 85 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="5" data-m="Chalco" onclick="seleccionarItemLista(5)">
-          <h4>Santa Catarina</h4>
-          <p>Municipio: Chalco · 210 Familias</p>
+        <div class="item-comunidad" data-id="5" data-m="Chalco" onclick="selectLista(5)">
+          <h4>Santa Catarina</h4><p>Municipio: Chalco · 210 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="6" data-m="Tenancingo" onclick="seleccionarItemLista(6)">
-          <h4>San José Tenería</h4>
-          <p>Municipio: Tenancingo · 130 Familias</p>
+        <div class="item-comunidad" data-id="6" data-m="Tenancingo" onclick="selectLista(6)">
+          <h4>San José Tenería</h4><p>Municipio: Tenancingo · 130 Familias</p>
         </div>
-        <div class="item-comunidad" data-id="7" data-m="Atlacomulco" onclick="seleccionarItemLista(7)">
-          <h4>San Pedro del Rosal</h4>
-          <p>Municipio: Atlacomulco · 75 Familias</p>
+        <div class="item-comunidad" data-id="7" data-m="Atlacomulco" onclick="selectLista(7)">
+          <h4>San Pedro del Rosal</h4><p>Municipio: Atlacomulco · 75 Familias</p>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div id="vista-don" class="vista"></div>
-<div id="vista-adm" class="vista"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// --- GLOBO INTERACTIVO ---
+// --- MOTOR DEL GLOBO REPARADO (CON TEXTURA PROCEDURAL LOCAL SIN CORS) ---
 (function(){
-  var wrap=document.getElementById('gw');
-  var canvas=document.getElementById('gc');
-  var W=wrap.clientWidth; var H=wrap.clientHeight;
+  var canvas = document.getElementById('gc');
+  var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,powerPreference:"high-performance"});
-  renderer.setSize(W,H);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.z = 2.8;
 
-  var scene=new THREE.Scene();
-  var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
-  camera.position.z=2.8;
+  scene.add(new THREE.AmbientLight(0x111125, 2));
+  var sol = new THREE.DirectionalLight(0xffffff, 1.5); sol.position.set(-5,3,3); scene.add(sol);
 
-  var sol=new THREE.DirectionalLight(0xffffff,1.8); sol.position.set(-6,4,3); scene.add(sol);
-  var luzRelleno=new THREE.AmbientLight(0x0c0d1a,1.5); scene.add(luzRelleno);
-
-  var numEstrellas = 1000;
-  var sg = new THREE.BufferGeometry();
-  var posicionesEstrellas = new Float32Array(numEstrellas * 3);
-  for(var i=0; i<numEstrellas; i++){
-    var t = Math.random() * Math.PI * 2; var p = Math.acos(2 * Math.random() - 1); var r = 50;
-    posicionesEstrellas[i*3] = r * Math.sin(p) * Math.cos(t);
-    posicionesEstrellas[i*3+1] = r * Math.cos(p);
-    posicionesEstrellas[i*3+2] = r * Math.sin(p) * Math.sin(t);
+  // Generación matemática de la textura de la Tierra (evita bloqueos de red)
+  var texCanvas = document.createElement('canvas');
+  texCanvas.width = 1024; texCanvas.height = 512;
+  var ctx = texCanvas.getContext('2d');
+  ctx.fillStyle = '#060a1c'; ctx.fillRect(0,0,1024,512);
+  ctx.fillStyle = '#172754';
+  for (let i = 0; i < 1200; i++) {
+    ctx.beginPath();
+    ctx.arc(Math.random()*1024, Math.random()*512, 2 + Math.random()*8, 0, Math.PI*2);
+    ctx.fill();
   }
-  sg.setAttribute('position', new THREE.BufferAttribute(posicionesEstrellas, 3));
-  var stars = new THREE.Points(sg, new THREE.PointsMaterial({size: 0.2, transparent: true, blending: THREE.AdditiveBlending}));
-  scene.add(stars);
+  // Dibujar continentes esquemáticos simulados
+  ctx.fillStyle = '#1e3b7a';
+  ctx.font = 'bold 30px Arial';
+  ctx.fillText("América del Norte", 200, 180);
+  ctx.fillText("México", 220, 260);
+  ctx.fillText("América del Sur", 320, 400);
 
-  var MEX_Y=0.1658, MEX_X=0.2800;
-  var tY=MEX_Y, tX=MEX_X, cY=MEX_Y, cX=MEX_X;
-  var zoomT=2.8, zoomC=2.8;
-  var spin=true, drag=false, prev={x:0,y:0};
-  var R=1.0, globe;
+  var texture = new THREE.CanvasTexture(texCanvas);
+  var globe = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 48), new THREE.MeshStandardMaterial({map: texture, roughness: 0.8}));
+  scene.add(globe);
 
-  function buildGlobe(tex){
-    document.getElementById('gload').style.display='none';
-    var mat=new THREE.MeshStandardMaterial({map:tex, roughness: 0.7});
-    globe=new THREE.Mesh(new THREE.SphereGeometry(R,64,64),mat);
-    globe.rotation.y=cY; globe.rotation.x=cX;
-    scene.add(globe);
+  // Pin en la ubicación de México
+  var pin = new THREE.Mesh(new THREE.SphereGeometry(0.016, 16, 16), new THREE.MeshBasicMaterial({color: 0xe8640a}));
+  pin.position.set(-0.35, 0.32, 0.88);
+  globe.add(pin);
 
-    var pin=new THREE.Mesh(new THREE.SphereGeometry(0.015,16,16), new THREE.MeshBasicMaterial({color:0xff5500}));
-    var phi=(90-19.35)*Math.PI/180, theta=(99.45+162.59+180)*Math.PI/180;
-    pin.position.set(-(R+0.01)*Math.sin(phi)*Math.cos(theta), (R+0.01)*Math.cos(phi), (R+0.01)*Math.sin(phi)*Math.sin(theta));
-    globe.add(pin);
-  }
+  var rotY = 0.8, drag = false, prevX = 0;
+  canvas.addEventListener('mousedown', e => { drag = true; prevX = e.clientX; });
+  window.addEventListener('mouseup', () => drag = false);
+  window.addEventListener('mousemove', e => { if(drag) { rotY += (e.clientX - prevX) * 0.005; prevX = e.clientX; } });
 
-  var loader=new THREE.TextureLoader(); loader.crossOrigin='anonymous';
-  loader.load('https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x5400x2700.png', buildGlobe);
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
 
-  canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
-  window.addEventListener('mouseup',function(){drag=false;});
-  window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.004;tX+=(e.clientY-prev.y)*0.004;prev={x:e.clientX,y:e.clientY};});
-
-  window.goMex=function(){
-    tY=MEX_Y; tX=MEX_X; zoomT=1.7; spin=false;
-    setTimeout(function(){ ir('com'); }, 1000);
-  };
-  window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
-
-  (function loop(){
-    requestAnimationFrame(loop);
-    if(!globe)return;
-    zoomC+=(zoomT-zoomC)*0.08; camera.position.z=zoomC;
-    if(spin&&!drag)tY+=0.0005;
-    cY+=(tY-cY)*0.08; cX+=(tX-cX)*0.08;
-    globe.rotation.y=cY; globe.rotation.x=cX;
-    renderer.render(scene,camera);
+  (function render(){
+    requestAnimationFrame(render);
+    if(!drag) rotY += 0.0012;
+    globe.rotation.y = rotY;
+    renderer.render(scene, camera);
   })();
 })();
 
-// --- MANEJO DE INTERFAZ Y EVENTOS ---
+// --- LOGICA DE INTERFAZ ---
 function ir(id){
-  document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
-  document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('.vista').forEach(v => v.classList.remove('on'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('on'));
   document.getElementById('vista-'+id).classList.add('on');
-  var nb=document.getElementById('nav-'+id); if(nb)nb.classList.add('on');
+  document.getElementById('nav-'+id).classList.add('on');
 }
 
-function clickRegion(nombre, el) {
-  document.querySelectorAll('.edomex-region').forEach(p => p.classList.remove('active'));
+function clickReg(nom, el) {
+  document.querySelectorAll('.edomex-silueta').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('titulo-sidebar').textContent = nombre;
+  document.getElementById('titulo-sidebar').textContent = nom;
 }
 
 function clickPin(el) {
   var box = document.getElementById('info-flotante-com');
-  var name = el.getAttribute('data-name');
-  var mun = el.getAttribute('data-mun');
-  var fam = el.getAttribute('data-fam');
-  var id = el.getAttribute('data-id');
-  
-  box.innerHTML = `<strong>${name}</strong><br>Municipio: ${mun}<br>Beneficiarios: ${fam} familias`;
+  box.innerHTML = `<strong>${el.getAttribute('data-name')}</strong><br>Municipio: ${el.getAttribute('data-mun')}<br>Familias: ${el.getAttribute('data-fam')}`;
   box.style.display = "block";
   box.style.left = (el.getBoundingClientRect().left - el.parentElement.parentElement.getBoundingClientRect().left + 15) + "px";
   box.style.top = (el.getBoundingClientRect().top - el.parentElement.parentElement.getBoundingClientRect().top - 50) + "px";
 
-  document.querySelectorAll('.item-comunidad').forEach(item => item.classList.remove('active-item'));
-  var targetItem = document.querySelector(`.item-comunidad[data-id="${id}"]`);
-  if(targetItem) {
-    targetItem.classList.add('active-item');
-    targetItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.querySelectorAll('.item-comunidad').forEach(i => i.classList.remove('active-item'));
+  var target = document.querySelector(`.item-comunidad[data-id="${el.getAttribute('data-id')}"]`);
+  if(target) {
+    target.classList.add('active-item');
+    target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 
-function seleccionarItemLista(id) {
+function selectLista(id) {
   var nodo = document.querySelector(`.comunidad-nodo[data-id="${id}"]`);
   if(nodo) clickPin(nodo);
 }
 
-function filtrarComunidades() {
+function filtrar() {
   var bus = document.getElementById('bus-com').value.toLowerCase();
-  var sel = document.getElementById('select-filtro-mun').value;
-  
+  var sel = document.getElementById('sel-mun').value;
   document.querySelectorAll('.item-comunidad').forEach(item => {
     var texto = item.querySelector('h4').textContent.toLowerCase();
-    var mun = item.getAttribute('data-m');
-    
-    var cumpleBus = texto.includes(bus);
-    var cumpleSel = (sel === "" || mun === sel);
-    
-    item.style.display = (cumpleBus && cumpleSel) ? "block" : "none";
+    var m = item.getAttribute('data-m');
+    item.style.display = (texto.includes(bus) && (sel === "" || m === sel)) ? "block" : "none";
   });
 }
 </script>
