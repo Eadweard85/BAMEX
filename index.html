@@ -50,8 +50,6 @@
 .leaflet-marker-shadow {
 	display: block;
 	}
-/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
-/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
 .leaflet-container .leaflet-overlay-pane svg {
 	max-width: none !important;
 	max-height: none !important;
@@ -68,7 +66,6 @@
 	}
 
 .leaflet-container img.leaflet-tile {
-	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
 	mix-blend-mode: plus-lighter;
 }
 
@@ -78,7 +75,6 @@
 	}
 .leaflet-container.leaflet-touch-drag {
 	-ms-touch-action: pinch-zoom;
-	/* Fallback for FF which doesn't support pinch-zoom */
 	touch-action: none;
 	touch-action: pinch-zoom;
 }
@@ -106,7 +102,6 @@
 	     box-sizing: border-box;
 	z-index: 800;
 	}
-/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
 .leaflet-overlay-pane svg {
 	-moz-user-select: none;
 	}
@@ -139,7 +134,7 @@
 .leaflet-control {
 	position: relative;
 	z-index: 800;
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: visiblePainted;
 	pointer-events: auto;
 	}
 .leaflet-top,
@@ -245,7 +240,6 @@ svg.leaflet-zoom-animated {
 	cursor:         grabbing;
 	}
 
-/* marker & overlays interactivity */
 .leaflet-marker-icon,
 .leaflet-marker-shadow,
 .leaflet-image-layer,
@@ -258,7 +252,7 @@ svg.leaflet-zoom-animated {
 .leaflet-image-layer.leaflet-interactive,
 .leaflet-pane > svg path.leaflet-interactive,
 svg.leaflet-image-layer.leaflet-interactive path {
-	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: visiblePainted;
 	pointer-events: auto;
 	}
 
@@ -409,8 +403,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	margin: 5px -10px 5px -6px;
 	}
 
-/* Default icon URLs */
-.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+.leaflet-default-icon-path {
 	background-image: url(images/marker-icon.png);
 	}
 
@@ -580,7 +573,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 
 /* Tooltip */
-/* Base styles for the element that has a tooltip */
 .leaflet-tooltip {
 	position: absolute;
 	padding: 6px;
@@ -660,7 +652,6 @@ svg.leaflet-image-layer.leaflet-interactive path {
 /* Printing */
 
 @media print {
-	/* Prevent printers from removing background-images of controls. */
 	.leaflet-control {
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
@@ -690,7 +681,6 @@ header{
 .logo-container{display:flex;align-items:center;gap:2rem}
 .logo{display:flex;align-items:center;gap:14px;cursor:pointer}
 
-/* LOGOTIPO OFICIAL INSTITUTIONAL BAMX */
 .li-oficial{
   width: 46px;
   height: 46px;
@@ -706,22 +696,18 @@ header{
 .lt{font-size:14px;font-weight:700;line-height:1.3;color:#fff;letter-spacing:0.5px}
 .lt span{display:block;font-weight:400;font-size:11px;color:#bbb}
 
-/* Barra de Búsqueda */
 .search-box{position:relative;display:flex;align-items:center}
 .search-box input{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,.18);border-radius:4px;padding:9px 12px;color:#fff;font-size:14px;width:220px;transition:all .3s;font-family:inherit;backdrop-filter:blur(6px)}
 .search-box input:focus{outline:none;border-color:var(--n);background:rgba(0,0,0,0.6);box-shadow:0 0 8px rgba(232,100,10,.3)}
 
-/* Navegación */
 nav{display:flex;gap:1.5rem;align-items:center}
 nav button{background:none;border:none;padding:8px 4px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;transition:color .2s;position:relative}
 nav button:hover{color:#eee}
 nav button.on{color:#fff}
 nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%;height:3px;background:var(--n)}
 
-/* Ajuste de vistas */
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-/* INTERFAZ DEL MAPA CÓSMICO */
 #gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
 #gc{
   display:block;
@@ -733,18 +719,15 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 }
 #gc:active{cursor:grabbing}
 
-/* Elementos UI Flotantes */
 #gui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:105px 1.25rem 1.25rem 1.25rem;z-index:10}
 .gt{display:flex;justify-content:space-between;align-items:flex-start}
 .pn{background:rgba(232,100,10,.9);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,170,60,.25)}
 .pd{background:rgba(20,20,35,.75);color:rgba(255,255,255,.9);font-size:11px;padding:6px 14px;border-radius:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.12)}
 
-/* PANEL CENTRAL */
 .gm{text-align:center;position:absolute;top:24%;left:50%;transform:translateX(-50%);width:90%;max-width:600px}
 .gm h1{font-size:24px;font-weight:700;color:#fff;text-shadow:0 2px 15px rgba(0,0,0,0.9), 0 0 20px rgba(232,100,10,.3);line-height:1.25;margin-bottom:4px}
 .gm p{font-size:12px;color:rgba(255,255,255,.6);text-shadow:0 1px 4px rgba(0,0,0,0.8)}
 
-/* BOTONERA INTERNA */
 .gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px;margin-top:auto}
 .gst{display:flex;gap:20px;justify-content:center;align-items:center;background:rgba(15,15,25,0.75);padding:10px 22px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
 .gsn{font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
@@ -761,7 +744,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
 #gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
-/* SECCIÓN DEL MAPA ESTATAL DETALLADO */
 #vista-com{padding:105px 2rem 2rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#05050a;}
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
@@ -1285,12 +1267,22 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     }
   );
 
+  // Único añadido: si por lo que sea (red lenta, textura caída) el globo no ha
+  // aparecido en 8s, simplemente se apaga el texto de "Cargando..." para que
+  // no se quede pegado ahí para siempre. No toca la carga de texturas en sí,
+  // así que no puede introducir errores nuevos en el flujo normal.
+  setTimeout(function(){
+    var gload = document.getElementById('gload');
+    if(gload && gload.style.display !== 'none'){
+      gload.style.display = 'none';
+    }
+  }, 8000);
+
   canvas.addEventListener('mousedown',function(e){drag=true;prev={x:e.clientX,y:e.clientY};});
   window.addEventListener('mouseup',function(){drag=false;});
   window.addEventListener('mousemove',function(e){if(!drag||!globe)return;tY+=(e.clientX-prev.x)*0.004;tX+=(e.clientY-prev.y)*0.004;tX=Math.max(-1.3,Math.min(1.3,tX));prev={x:e.clientX,y:e.clientY};});
   canvas.addEventListener('wheel',function(e){e.preventDefault();zoomT=Math.max(1.6,Math.min(3.4,zoomT+e.deltaY*0.0022));},{passive:false});
 
-  // BOTÓN DE ZOOM MEJORADO: REALIZA TRANSICIÓN Y CARGA EL MAPA INTERACTIVO ESTATAL
   window.goMex=function(){
     tY=MEX_Y;
     tX=MEX_X;
@@ -1298,7 +1290,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
     spin=false;
     document.getElementById('spb').textContent='▶ Girar';
     
-    // Hace el cambio automático directo al panel del mapa del Estado de México
     setTimeout(function(){
       ir('com'); 
     }, 1200);
@@ -1307,10 +1298,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   window.toggleSpin=function(){spin=!spin;document.getElementById('spb').textContent=spin?'⏸ Pausar':'▶ Girar';};
   window.resetZ=function(){tY=MEX_Y;tX=MEX_X;zoomT=2.8;spin=true;document.getElementById('spb').textContent='⏸ Pausar';};
 
-  // Regresa a la vista de inicio y reinicia el movimiento del globo:
-  // vuelve a centrar en México, reactiva el giro y hace que la cámara se aleje
-  // suavemente (mismo mecanismo de easing que ya usa resetZ, sin relanzar la
-  // animación de "intro", que era lo que causaba el salto/rebote de cámara).
   window.goInicio=function(){
     ir('inicio');
     tY=MEX_Y; tX=MEX_X; zoomT=2.8; spin=true;
@@ -1478,7 +1465,6 @@ function alCambiarMunicipio() {
 
     map.fitBounds(geoLayer.getBounds(), {padding:[10,10]});
 
-    // Pines de comunidades demo (datos de ejemplo, no ubicación exacta de calle)
     comunidadesDemo.forEach(function(c){
       var m = metaByName[normalize(c.municipio)];
       if(!m) return;
@@ -1488,7 +1474,6 @@ function alCambiarMunicipio() {
       mk.on('click', function(){ verComunidad(c.nombre, c.municipio); });
     });
 
-    // Poblar el select de municipios con los 125 nombres reales
     var select = document.getElementById('select-mun');
     if(select && select.options.length <= 1){
       meta.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre, 'es'); })
@@ -1501,9 +1486,6 @@ function alCambiarMunicipio() {
     }
   };
 
-  // Agrega comunidades demo + familias por municipio (a partir de datos reales de nombre,
-  // pero cifras de ejemplo). Para los municipios sin comunidades demo cargadas todavía,
-  // se reporta honestamente 0 / "sin cobertura" en vez de inventar una cifra.
   function getInfoMunicipio(nombreMunicipio){
     var lista = comunidadesDemo.filter(function(c){
       return normalize(c.municipio) === normalize(nombreMunicipio);
