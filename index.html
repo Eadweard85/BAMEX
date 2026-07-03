@@ -754,7 +754,6 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   display: flex;
   gap: 2rem;
   background: rgba(255,255,255,0.02);
-  border: 1px solid var(--br);
   border-radius: var(--r);
   padding: 1.5rem;
   height: calc(100vh - 210px);
@@ -764,12 +763,11 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   flex: 2;
   background: #09090e;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.05);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  padding: 10px;
+  overflow: hidden;
 }
 #map-edomex{
   width: 100%;
@@ -1031,6 +1029,135 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
 #vista-det,#vista-don,#vista-adm{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
 
+/* --- Panel de Administración --- */
+.admin-wrap{ max-width: 760px; margin: 0 auto; }
+
+.admin-login-card{
+  max-width: 380px;
+  margin: 4vh auto 0;
+  background: #0c0c14;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 28px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-login-card h2{ font-size: 19px; margin-bottom: 4px; }
+.admin-login-hint{ color: var(--t); font-size: 12.5px; margin-bottom: 14px; }
+.admin-login-card label{ font-size: 11.5px; color: var(--t); text-transform: uppercase; letter-spacing: .04em; margin-top: 8px; }
+.admin-login-card input{
+  width: 100%;
+  padding: 10px;
+  background: #12121f;
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.admin-login-btn{ margin-top: 16px; width: 100%; }
+.admin-login-error{ color: #ff6b6b; font-size: 12.5px; margin-top: 10px; display: none; }
+.admin-login-error.show{ display: block; }
+.admin-login-note{ color: var(--t); font-size: 10.5px; margin-top: 14px; line-height: 1.4; border-top: 1px solid rgba(255,255,255,.06); padding-top: 10px; }
+
+.admin-panel{ display: none; flex-direction: column; gap: 24px; }
+.admin-panel.show{ display: flex; }
+.admin-login-card.hide{ display: none; }
+
+.admin-panel-header{ display: flex; align-items: center; justify-content: space-between; }
+.admin-panel-header h2{ font-size: 20px; }
+
+.admin-form{
+  background: #0c0c14;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.admin-form h3{ font-size: 15px; margin-bottom: 10px; }
+.admin-form label{ font-size: 11.5px; color: var(--t); text-transform: uppercase; letter-spacing: .04em; margin-top: 12px; }
+.admin-form input[type="text"],
+.admin-form input[type="number"],
+.admin-form select{
+  width: 100%;
+  padding: 10px;
+  background: #12121f;
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  margin-top: 4px;
+}
+.admin-form input[type="file"]{ margin-top: 6px; font-size: 12.5px; color: var(--t); }
+.admin-mapa-hint{ font-size: 11.5px; color: var(--t); line-height: 1.5; margin-top: 6px; }
+.admin-buscar-direccion{ display: flex; gap: 8px; margin-top: 8px; }
+.admin-buscar-direccion input{
+  flex: 1;
+  padding: 10px;
+  background: #12121f;
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13.5px;
+}
+.admin-buscar-direccion button{ flex-shrink: 0; }
+#com-mapa-picker{
+  height: 220px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid var(--br);
+}
+.admin-mapa-coords{ font-size: 11px; color: var(--t); margin-top: 6px; font-family: 'IBM Plex Mono', monospace; }
+.admin-fotos-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+.admin-foto-slot{ background: #12121f; border: 1px solid var(--br); border-radius: 8px; padding: 10px; }
+.admin-foto-slot span{ display: block; font-size: 11px; color: var(--t); margin-bottom: 6px; }
+.admin-foto-slot input[type="file"]{ width: 100%; font-size: 11px; }
+.admin-fotos-preview{ display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.admin-fotos-preview img{ width: 64px; height: 64px; object-fit: cover; border-radius: 6px; border: 1px solid var(--br); }
+.admin-foto-thumb{ display: flex; flex-direction: column; align-items: center; gap: 4px; width: 68px; }
+.admin-foto-thumb span{ font-size: 9.5px; color: var(--t); text-align: center; line-height: 1.2; }
+.admin-form-actions{ display: flex; gap: 10px; margin-top: 18px; }
+.admin-hidden{ display: none; }
+
+.admin-lista-wrap h3{ font-size: 15px; margin-bottom: 10px; }
+.admin-com-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.admin-com-item b{ font-size: 14px; }
+.admin-com-item span{ font-size: 12px; color: var(--t); }
+.admin-com-actions{ display: flex; gap: 6px; flex-shrink: 0; }
+.admin-com-actions button{
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--br);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.admin-com-actions button:hover{ background: rgba(232,100,10,.25); }
+.admin-empty{ color: var(--t); font-size: 13px; }
+
+/* Fotos reales en el carrusel de la ficha municipal */
+.mun-car-slide-photo{ padding: 0 !important; position: relative; background: #000 !important; }
+.mun-car-slide-photo img{ width: 100%; height: 100%; object-fit: cover; }
+.mun-car-caption-overlay{
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.75), transparent);
+  color: #fff; font-size: 11.5px; padding: 16px 10px 8px;
+}
+
 @media(max-width:980px){
   .mapa-contenedor { flex-direction: column; height: auto; }
   .mapa-grafico { height: 400px; }
@@ -1131,7 +1258,87 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 
 <div id="vista-det" class="vista"></div>
 <div id="vista-don" class="vista"></div>
-<div id="vista-adm" class="vista"></div>
+<div id="vista-adm" class="vista">
+  <div class="admin-wrap">
+
+    <div id="admin-login-wrap" class="admin-login-card">
+      <h2>Acceso administrador</h2>
+      <p class="admin-login-hint">Ingresa tus credenciales para gestionar las comunidades atendidas.</p>
+      <label>Usuario</label>
+      <input type="text" id="admin-user" autocomplete="username" placeholder="admin">
+      <label>Contraseña</label>
+      <input type="password" id="admin-pass" autocomplete="current-password" placeholder="••••••••">
+      <button class="bg admin-login-btn" onclick="intentarLoginAdmin()">Entrar</button>
+      <p id="admin-login-error" class="admin-login-error">Usuario o contraseña incorrectos.</p>
+      <p class="admin-login-note">Acceso de demostración — no usar como único método de protección en producción.</p>
+    </div>
+
+    <div id="admin-panel-wrap" class="admin-panel">
+      <div class="admin-panel-header">
+        <h2>Panel de administración</h2>
+        <button class="bq" onclick="cerrarSesionAdmin()">Cerrar sesión</button>
+      </div>
+
+      <form id="form-comunidad" class="admin-form">
+        <h3 id="form-comunidad-titulo">Agregar comunidad</h3>
+        <input type="hidden" id="com-edit-id">
+
+        <label>Nombre de la comunidad</label>
+        <input type="text" id="com-nombre" required placeholder="Ej. San Cristóbal Huichochitlán">
+
+        <label>Municipio</label>
+        <select id="com-municipio" required></select>
+
+        <label>Ubicación exacta en el mapa</label>
+        <p class="admin-mapa-hint">Busca una dirección o haz clic directamente en el mapa para marcar el punto exacto donde está la comunidad. También puedes arrastrar el pin para ajustarlo.</p>
+        <div class="admin-buscar-direccion">
+          <input type="text" id="com-buscar-direccion" placeholder="Buscar dirección, colonia o lugar...">
+          <button type="button" class="bq" onclick="buscarDireccionAdmin()">Buscar</button>
+        </div>
+        <div id="com-mapa-picker"></div>
+        <p class="admin-mapa-coords" id="com-mapa-coords">Sin ubicación marcada todavía.</p>
+
+        <label>Familias atendidas</label>
+        <input type="number" id="com-familias" min="0" required placeholder="Ej. 120">
+
+        <label>Frecuencia de entrega</label>
+        <select id="com-frecuencia">
+          <option>Quincenal</option>
+          <option>Mensual</option>
+          <option>Semanal</option>
+        </select>
+
+        <label>Fotografías (opcional, una por categoría)</label>
+        <div class="admin-fotos-grid">
+          <div class="admin-foto-slot">
+            <span>Familias beneficiarias</span>
+            <input type="file" accept="image/*" onchange="manejarFotoCategoria(this.files[0], 'Familias beneficiarias')">
+          </div>
+          <div class="admin-foto-slot">
+            <span>Entrega de despensas</span>
+            <input type="file" accept="image/*" onchange="manejarFotoCategoria(this.files[0], 'Entrega de despensas')">
+          </div>
+          <div class="admin-foto-slot">
+            <span>Equipo en campo</span>
+            <input type="file" accept="image/*" onchange="manejarFotoCategoria(this.files[0], 'Equipo en campo')">
+          </div>
+        </div>
+        <div id="com-fotos-preview" class="admin-fotos-preview"></div>
+
+        <div class="admin-form-actions">
+          <button type="submit" class="bg">Guardar comunidad</button>
+          <button type="button" id="com-cancelar-edicion" class="bq admin-hidden" onclick="resetFormComunidad()">Cancelar edición</button>
+        </div>
+      </form>
+
+      <div class="admin-lista-wrap">
+        <h3>Comunidades registradas</h3>
+        <div id="admin-lista-comunidades"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
@@ -1352,6 +1559,9 @@ function ir(id){
       if(window.initEdomexMap) window.initEdomexMap();
     }, 60);
   }
+  if(id === 'adm'){
+    if(window.mostrarAdmin) window.mostrarAdmin();
+  }
 }
 
 // LOGICA INTERACTIVA DEL MAPA INTERNO (conectada al mapa real de municipios)
@@ -1397,6 +1607,55 @@ function alCambiarMunicipio() {
 </script>
 
 <script>
+// --- ALMACÉN COMPARTIDO DE COMUNIDADES (localStorage) ---
+// Usado tanto por el mapa (para pintar los pines y calcular métricas)
+// como por el panel de Administrar (para leer/escribir los registros).
+window.ComunidadesStore = (function(){
+  var KEY = 'bamx_comunidades_v1';
+
+  function idNuevo(){
+    return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function semilla(){
+    // Mismos 5 registros de ejemplo que ya traía el proyecto, ahora editables
+    // desde el panel de Administrar en vez de estar fijos en el código.
+    return [
+      {id:idNuevo(), nombre:'San Cristóbal Huichochitlán', municipio:'Toluca', familias:120, frecuencia:'Quincenal', fotos:[]},
+      {id:idNuevo(), nombre:'San Andrés Cuexcontitlán', municipio:'Toluca', familias:95, frecuencia:'Quincenal', fotos:[]},
+      {id:idNuevo(), nombre:'San Jerónimo Chicahualco', municipio:'Metepec', familias:140, frecuencia:'Quincenal', fotos:[]},
+      {id:idNuevo(), nombre:'San Antonio Acahualco', municipio:'Zinacantepec', familias:85, frecuencia:'Quincenal', fotos:[]},
+      {id:idNuevo(), nombre:'Chalco Centro', municipio:'Chalco', familias:110, frecuencia:'Quincenal', fotos:[]}
+    ];
+  }
+
+  function cargar(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw) return JSON.parse(raw);
+    } catch(e){
+      console.warn('No se pudo leer el almacenamiento local:', e);
+    }
+    var s = semilla();
+    guardar(s);
+    return s;
+  }
+
+  function guardar(lista){
+    try{
+      localStorage.setItem(KEY, JSON.stringify(lista));
+      return true;
+    } catch(e){
+      alert('No se pudo guardar: el almacenamiento del navegador está lleno. Intenta usar menos fotos o de menor tamaño.');
+      return false;
+    }
+  }
+
+  return { cargar: cargar, guardar: guardar, idNuevo: idNuevo };
+})();
+</script>
+
+<script>
 // --- MAPA REAL DEL ESTADO DE MÉXICO (125 municipios, límites oficiales INEGI) ---
 (function(){
   var geo = JSON.parse(document.getElementById('geo-data').textContent);
@@ -1411,21 +1670,60 @@ function alCambiarMunicipio() {
     return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
   }
 
-  // Comunidades demo (datos de ejemplo) posicionadas en el centroide real de su municipio.
-  // "familias" son cifras de muestra — reemplazar por datos reales del padrón cuando existan.
-  var comunidadesDemo = [
-    {nombre:'San Cristóbal Huichochitlán', municipio:'Toluca', dx:-0.03, dy:0.02, familias:120},
-    {nombre:'San Andrés Cuexcontitlán', municipio:'Toluca', dx:0.03, dy:-0.02, familias:95},
-    {nombre:'San Jerónimo Chicahualco', municipio:'Metepec', dx:0, dy:0, familias:140},
-    {nombre:'San Antonio Acahualco', municipio:'Zinacantepec', dx:0, dy:0, familias:85},
-    {nombre:'Chalco Centro', municipio:'Chalco', dx:0, dy:0, familias:110}
-  ];
-
-  var map, geoLayer, selectedLayer = null, initDone = false;
+  var map, geoLayer, comunidadesLayer, selectedLayer = null, selectedMunicipioMeta = null, initDone = false;
 
   var baseStyle = { fillColor:'#141424', color:'#2a2a40', weight:1.3, fillOpacity:0.85 };
   var hoverStyle = { fillColor:'rgba(232,100,10,0.25)', color:'#E8640A', weight:2, fillOpacity:0.55 };
   var selectStyle = { fillColor:'#E8640A', color:'#ffb066', weight:2.5, fillOpacity:0.55 };
+
+  // Dibuja (o redibuja) los pines de comunidades a partir de lo que haya
+  // guardado en el almacén compartido. Se llama al iniciar el mapa y cada
+  // vez que se agrega/edita/elimina una comunidad desde Administrar.
+  function pintarMarcadoresComunidades(){
+    if(!comunidadesLayer) return;
+    comunidadesLayer.clearLayers();
+    var todas = window.ComunidadesStore.cargar();
+
+    // Las comunidades con lat/lng guardadas (marcadas a mano en el mapa del
+    // panel de Administrar) van exactamente donde se colocaron. Las que
+    // vienen de antes de tener esa función caen de vuelta al viejo
+    // comportamiento: repartidas alrededor del centro de su municipio.
+    var sinUbicacionExacta = [];
+    todas.forEach(function(c){
+      if(typeof c.lat === 'number' && typeof c.lng === 'number'){
+        var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
+        var mk = L.marker([c.lat, c.lng], {icon:icon}).addTo(comunidadesLayer);
+        mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
+        mk.on('click', function(){ verComunidad(c.nombre, c.municipio); });
+      } else {
+        sinUbicacionExacta.push(c);
+      }
+    });
+
+    var porMunicipio = {};
+    sinUbicacionExacta.forEach(function(c){
+      var key = normalize(c.municipio);
+      porMunicipio[key] = porMunicipio[key] || [];
+      porMunicipio[key].push(c);
+    });
+
+    Object.keys(porMunicipio).forEach(function(key){
+      var m = metaByName[key];
+      if(!m) return;
+      var grupo = porMunicipio[key];
+      grupo.forEach(function(c, i){
+        var rad = grupo.length > 1 ? 0.02 : 0;
+        var ang = (i / grupo.length) * Math.PI * 2;
+        var lat = m.lat + Math.sin(ang) * rad;
+        var lon = m.lon + Math.cos(ang) * rad;
+        var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
+        var mk = L.marker([lat, lon], {icon:icon}).addTo(comunidadesLayer);
+        mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
+        mk.on('click', function(){ verComunidad(c.nombre, c.municipio); });
+      });
+    });
+  }
+  window.refreshComunidadesMarkers = pintarMarcadoresComunidades;
 
   window.initEdomexMap = function(){
     if(initDone){ map.invalidateSize(); return; }
@@ -1465,14 +1763,8 @@ function alCambiarMunicipio() {
 
     map.fitBounds(geoLayer.getBounds(), {padding:[10,10]});
 
-    comunidadesDemo.forEach(function(c){
-      var m = metaByName[normalize(c.municipio)];
-      if(!m) return;
-      var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
-      var mk = L.marker([m.lat + c.dy, m.lon + c.dx], {icon:icon}).addTo(map);
-      mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
-      mk.on('click', function(){ verComunidad(c.nombre, c.municipio); });
-    });
+    comunidadesLayer = L.layerGroup().addTo(map);
+    pintarMarcadoresComunidades();
 
     var select = document.getElementById('select-mun');
     if(select && select.options.length <= 1){
@@ -1487,10 +1779,11 @@ function alCambiarMunicipio() {
   };
 
   function getInfoMunicipio(nombreMunicipio){
-    var lista = comunidadesDemo.filter(function(c){
+    var todas = window.ComunidadesStore.cargar();
+    var lista = todas.filter(function(c){
       return normalize(c.municipio) === normalize(nombreMunicipio);
     });
-    var totalFamilias = lista.reduce(function(acc,c){ return acc + c.familias; }, 0);
+    var totalFamilias = lista.reduce(function(acc,c){ return acc + (parseInt(c.familias,10) || 0); }, 0);
     return {
       comunidades: lista,
       totalFamilias: totalFamilias,
@@ -1500,23 +1793,51 @@ function alCambiarMunicipio() {
 
   var carState = { index: 0, total: 3 };
 
-  function buildCarouselHtml(nombreMunicipio){
-    var captions = [
-      {icon:'📦', texto:'Entrega de despensas'},
-      {icon:'🧑‍🤝‍🧑', texto:'Equipo en campo'},
-      {icon:'👨‍👩‍👧‍👦', texto:'Familias beneficiarias'}
-    ];
-    carState.index = 0;
-    carState.total = captions.length;
-    var slides = captions.map(function(c, i){
-      return '<div class="mun-car-slide' + (i===0?' active':'') + '">' +
-        '<div class="mun-car-placeholder-icon">' + c.icon + '</div>' +
-        '<div class="mun-car-caption">' + c.texto + '<br><small>' + nombreMunicipio + ' · foto pendiente de cargar</small></div>' +
-      '</div>';
-    }).join('');
-    var dots = captions.map(function(_, i){
-      return '<div class="mun-car-dot' + (i===0?' active':'') + '"></div>';
-    }).join('');
+  function buildCarouselHtml(nombreMunicipio, comunidadesDelMunicipio){
+    var fotos = [];
+    (comunidadesDelMunicipio || []).forEach(function(c){
+      (c.fotos || []).forEach(function(f){
+        if(typeof f === 'string'){
+          // Formato antiguo (antes de tener categorías): solo el nombre de la comunidad
+          fotos.push({src:f, caption:c.nombre});
+        } else {
+          fotos.push({src:f.src, caption:f.categoria + ' · ' + c.nombre});
+        }
+      });
+    });
+
+    var slides, dots;
+    if(fotos.length > 0){
+      carState.index = 0;
+      carState.total = fotos.length;
+      slides = fotos.map(function(f, i){
+        return '<div class="mun-car-slide mun-car-slide-photo' + (i===0?' active':'') + '">' +
+          '<img src="' + f.src + '" alt="' + f.caption + '">' +
+          '<div class="mun-car-caption-overlay">' + f.caption + '</div>' +
+        '</div>';
+      }).join('');
+      dots = fotos.map(function(_, i){
+        return '<div class="mun-car-dot' + (i===0?' active':'') + '"></div>';
+      }).join('');
+    } else {
+      var captions = [
+        {icon:'👨‍👩‍👧‍👦', texto:'Familias beneficiarias'},
+        {icon:'📦', texto:'Entrega de despensas'},
+        {icon:'🧑‍🤝‍🧑', texto:'Equipo en campo'}
+      ];
+      carState.index = 0;
+      carState.total = captions.length;
+      slides = captions.map(function(c, i){
+        return '<div class="mun-car-slide' + (i===0?' active':'') + '">' +
+          '<div class="mun-car-placeholder-icon">' + c.icon + '</div>' +
+          '<div class="mun-car-caption">' + c.texto + '<br><small>' + nombreMunicipio + ' · foto pendiente de cargar</small></div>' +
+        '</div>';
+      }).join('');
+      dots = captions.map(function(_, i){
+        return '<div class="mun-car-dot' + (i===0?' active':'') + '"></div>';
+      }).join('');
+    }
+
     return (
       '<div class="mun-carousel">' +
         '<button class="mun-car-arrow left" onclick="window.munCarrusel(-1)">&#8249;</button>' +
@@ -1554,7 +1875,10 @@ function alCambiarMunicipio() {
       comunidadesHtml = '<ul class="mun-comunidades-list"><li>Aún sin comunidades registradas en este municipio</li></ul>';
     }
 
-    var frecuenciaTxt = info.atendida ? 'Quincenal' : '—';
+    var frecuenciasUnicas = info.comunidades
+      .map(function(c){ return c.frecuencia; })
+      .filter(function(v, i, a){ return v && a.indexOf(v) === i; });
+    var frecuenciaTxt = !info.atendida ? '—' : (frecuenciasUnicas.length === 1 ? frecuenciasUnicas[0] : 'Variable');
 
     wrap.innerHTML =
       '<div class="mun-card">' +
@@ -1566,7 +1890,7 @@ function alCambiarMunicipio() {
           '</span>' +
         '</div>' +
 
-        buildCarouselHtml(m.nombre) +
+        buildCarouselHtml(m.nombre, info.comunidades) +
 
         '<div class="mun-metrics">' +
           '<div class="mun-metric">' +
@@ -1600,6 +1924,7 @@ function alCambiarMunicipio() {
   function selectLayer(layer, m){
     if(selectedLayer) geoLayer.resetStyle(selectedLayer);
     selectedLayer = layer;
+    selectedMunicipioMeta = m;
     layer.setStyle(selectStyle);
     layer.bringToFront();
     map.flyToBounds(layer.getBounds(), {padding:[40,40], duration:0.6, maxZoom:10.5});
@@ -1607,6 +1932,12 @@ function alCambiarMunicipio() {
     var select = document.getElementById('select-mun');
     if(select) select.value = m.nombre;
   }
+
+  // Si la ficha de un municipio está abierta cuando se guarda un cambio desde
+  // Administrar, esto la vuelve a dibujar con los datos frescos.
+  window.refrescarFichaAbierta = function(){
+    if(selectedMunicipioMeta) renderMunicipioCard(selectedMunicipioMeta);
+  };
 
   window.edomexSelectByName = function(nombre){
     var m = metaByName[normalize(nombre)];
@@ -1618,6 +1949,7 @@ function alCambiarMunicipio() {
   window.edomexResetView = function(){
     if(!map || !geoLayer) return;
     if(selectedLayer){ geoLayer.resetStyle(selectedLayer); selectedLayer = null; }
+    selectedMunicipioMeta = null;
     map.flyToBounds(geoLayer.getBounds(), {padding:[10,10], duration:0.6});
     var wrap = document.getElementById('mun-detalle-wrap');
     if(wrap){
@@ -1626,6 +1958,321 @@ function alCambiarMunicipio() {
     var select = document.getElementById('select-mun');
     if(select) select.value = '';
   };
+})();
+</script>
+
+<script>
+// --- PANEL DE ADMINISTRACIÓN (login + alta/edición/baja de comunidades) ---
+// Aviso: esto es un candado del lado del cliente, útil para uso interno o
+// demostración. No es seguridad real — cualquiera que vea el código fuente
+// de la página puede leer el usuario y la contraseña. Para producción con
+// varias personas administrando, esto debería vivir en un backend real.
+(function(){
+  var ADMIN_USER = 'admin';
+  var ADMIN_PASS = 'bamx2025';
+  var SESSION_KEY = 'bamx_admin_ok';
+  var CATEGORIAS_FOTO = ['Familias beneficiarias', 'Entrega de despensas', 'Equipo en campo'];
+
+  var meta = JSON.parse(document.getElementById('meta-data').textContent);
+  var metaPorNombre = {};
+  meta.forEach(function(m){ metaPorNombre[m.nombre] = m; });
+
+  var selectMunicipio = document.getElementById('com-municipio');
+  meta.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre, 'es'); })
+    .forEach(function(m){
+      var opt = document.createElement('option');
+      opt.value = m.nombre;
+      opt.textContent = m.nombre;
+      selectMunicipio.appendChild(opt);
+    });
+
+  window.mostrarAdmin = function(){
+    var logueado = sessionStorage.getItem(SESSION_KEY) === '1';
+    document.getElementById('admin-login-wrap').classList.toggle('hide', logueado);
+    document.getElementById('admin-panel-wrap').classList.toggle('show', logueado);
+    if(logueado){
+      refrescarListaAdmin();
+      // El mapa selector necesita el contenedor visible para medir su tamaño
+      // correctamente, por eso se inicializa/ajusta justo aquí.
+      setTimeout(function(){
+        if(!pickerMap){
+          var centro = pickerLatLng || {lat:19.35, lng:-99.65};
+          initPickerMap(centro.lat, centro.lng, !pickerLatLng);
+        } else {
+          pickerMap.invalidateSize();
+        }
+      }, 60);
+    }
+  };
+
+  window.intentarLoginAdmin = function(){
+    var u = document.getElementById('admin-user').value.trim();
+    var p = document.getElementById('admin-pass').value;
+    var err = document.getElementById('admin-login-error');
+    if(u === ADMIN_USER && p === ADMIN_PASS){
+      sessionStorage.setItem(SESSION_KEY, '1');
+      err.classList.remove('show');
+      document.getElementById('admin-pass').value = '';
+      window.mostrarAdmin();
+    } else {
+      err.classList.add('show');
+    }
+  };
+
+  window.cerrarSesionAdmin = function(){
+    sessionStorage.removeItem(SESSION_KEY);
+    window.mostrarAdmin();
+  };
+
+  // --- Mapa selector de ubicación exacta ---
+  var pickerMap = null, pickerMarker = null, pickerLatLng = null;
+
+  function initPickerMap(lat, lng, sinMarcarAun){
+    pickerMap = L.map('com-mapa-picker', { zoomControl:true, attributionControl:true }).setView([lat, lng], 12);
+    pickerMap.attributionControl.setPrefix('');
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(pickerMap);
+    pickerMap.on('click', function(e){
+      colocarPickerMarker(e.latlng.lat, e.latlng.lng);
+    });
+    if(!sinMarcarAun){
+      colocarPickerMarker(lat, lng);
+    }
+  }
+
+  function colocarPickerMarker(lat, lng){
+    pickerLatLng = {lat:lat, lng:lng};
+    if(!pickerMarker){
+      pickerMarker = L.marker([lat, lng], {draggable:true}).addTo(pickerMap);
+      pickerMarker.on('dragend', function(){
+        var p = pickerMarker.getLatLng();
+        pickerLatLng = {lat:p.lat, lng:p.lng};
+        actualizarTextoCoords();
+      });
+    } else {
+      pickerMarker.setLatLng([lat, lng]);
+    }
+    actualizarTextoCoords();
+  }
+
+  function actualizarTextoCoords(){
+    var el = document.getElementById('com-mapa-coords');
+    if(!el) return;
+    if(pickerLatLng){
+      el.textContent = 'Ubicación marcada: ' + pickerLatLng.lat.toFixed(5) + ', ' + pickerLatLng.lng.toFixed(5);
+    } else {
+      el.textContent = 'Sin ubicación marcada todavía.';
+    }
+  }
+
+  function recentrarPickerEnMunicipio(nombreMunicipio){
+    var m = metaPorNombre[nombreMunicipio];
+    if(!m || !pickerMap) return;
+    pickerMap.setView([m.lat, m.lon], 11);
+  }
+
+  selectMunicipio.addEventListener('change', function(){
+    // Solo recentra automáticamente si todavía no se ha marcado un punto,
+    // para no mover un pin que el usuario ya colocó a propósito.
+    if(!pickerLatLng) recentrarPickerEnMunicipio(selectMunicipio.value);
+  });
+
+  // Geocodificación con el servicio público y gratuito de OpenStreetMap
+  // (Nominatim). Funciona bien para direcciones y lugares conocidos; si no
+  // encuentra el lugar, siempre se puede marcar el punto a mano en el mapa.
+  window.buscarDireccionAdmin = function(){
+    var q = document.getElementById('com-buscar-direccion').value.trim();
+    if(!q) return;
+    var municipio = selectMunicipio.value;
+    var consulta = q + (municipio ? ', ' + municipio : '') + ', Estado de México, México';
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' + encodeURIComponent(consulta);
+
+    fetch(url).then(function(res){ return res.json(); }).then(function(data){
+      if(!data || !data.length){
+        alert('No se encontró esa dirección. Puedes marcar el punto directamente en el mapa.');
+        return;
+      }
+      var lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
+      if(!pickerMap) initPickerMap(lat, lon, true);
+      pickerMap.setView([lat, lon], 15);
+      colocarPickerMarker(lat, lon);
+    }).catch(function(){
+      alert('No se pudo buscar la dirección (revisa tu conexión a internet). Puedes marcar el punto directamente en el mapa.');
+    });
+  };
+
+  // --- Manejo de fotos por categoría (se comprimen a JPEG antes de guardarlas) ---
+  window.__fotosPendientes = {};
+  CATEGORIAS_FOTO.forEach(function(cat){ window.__fotosPendientes[cat] = null; });
+
+  function redimensionarImagen(file, maxAncho, cb){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var escala = Math.min(1, maxAncho / img.width);
+        var w = Math.round(img.width * escala);
+        var h = Math.round(img.height * escala);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function pintarPreviewFotos(){
+    var preview = document.getElementById('com-fotos-preview');
+    preview.innerHTML = '';
+    CATEGORIAS_FOTO.forEach(function(cat){
+      var src = window.__fotosPendientes[cat];
+      if(!src) return;
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-foto-thumb';
+      var img = document.createElement('img');
+      img.src = src;
+      var label = document.createElement('span');
+      label.textContent = cat;
+      wrap.appendChild(img);
+      wrap.appendChild(label);
+      preview.appendChild(wrap);
+    });
+  }
+
+  window.manejarFotoCategoria = function(file, categoria){
+    if(!file) return;
+    redimensionarImagen(file, 900, function(dataUrl){
+      window.__fotosPendientes[categoria] = dataUrl;
+      pintarPreviewFotos();
+    });
+  };
+
+  // --- Alta / edición / baja de comunidades ---
+  function normalizarTexto(s){
+    return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  }
+
+  window.resetFormComunidad = function(){
+    document.getElementById('form-comunidad').reset();
+    document.getElementById('com-edit-id').value = '';
+    window.__fotosPendientes = {};
+    CATEGORIAS_FOTO.forEach(function(cat){ window.__fotosPendientes[cat] = null; });
+    pintarPreviewFotos();
+    pickerLatLng = null;
+    if(pickerMarker && pickerMap){ pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+    if(pickerMap) pickerMap.setView([19.35, -99.65], 8);
+    actualizarTextoCoords();
+    document.getElementById('com-cancelar-edicion').classList.add('admin-hidden');
+    document.getElementById('form-comunidad-titulo').textContent = 'Agregar comunidad';
+  };
+
+  window.editarComunidadAdmin = function(id){
+    var lista = window.ComunidadesStore.cargar();
+    var c = lista.filter(function(x){ return x.id === id; })[0];
+    if(!c) return;
+    document.getElementById('com-edit-id').value = c.id;
+    document.getElementById('com-nombre').value = c.nombre;
+    document.getElementById('com-municipio').value = c.municipio;
+    document.getElementById('com-familias').value = c.familias;
+    document.getElementById('com-frecuencia').value = c.frecuencia;
+
+    window.__fotosPendientes = {};
+    CATEGORIAS_FOTO.forEach(function(cat){ window.__fotosPendientes[cat] = null; });
+    (c.fotos || []).forEach(function(f, i){
+      if(typeof f === 'string'){
+        // Formato antiguo sin categoría: se reparte en el orden de las categorías
+        var cat = CATEGORIAS_FOTO[i] || CATEGORIAS_FOTO[0];
+        window.__fotosPendientes[cat] = f;
+      } else if(f && f.categoria){
+        window.__fotosPendientes[f.categoria] = f.src;
+      }
+    });
+    pintarPreviewFotos();
+
+    if(typeof c.lat === 'number' && typeof c.lng === 'number'){
+      if(!pickerMap) initPickerMap(c.lat, c.lng);
+      else { pickerMap.setView([c.lat, c.lng], 14); colocarPickerMarker(c.lat, c.lng); }
+    } else {
+      pickerLatLng = null;
+      if(pickerMarker && pickerMap){ pickerMap.removeLayer(pickerMarker); pickerMarker = null; }
+      recentrarPickerEnMunicipio(c.municipio);
+      actualizarTextoCoords();
+    }
+
+    document.getElementById('com-cancelar-edicion').classList.remove('admin-hidden');
+    document.getElementById('form-comunidad-titulo').textContent = 'Editar comunidad';
+    document.getElementById('form-comunidad').scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  window.eliminarComunidadAdmin = function(id){
+    if(!confirm('¿Eliminar esta comunidad? Esta acción no se puede deshacer.')) return;
+    var lista = window.ComunidadesStore.cargar().filter(function(c){ return c.id !== id; });
+    window.ComunidadesStore.guardar(lista);
+    refrescarListaAdmin();
+    if(window.refreshComunidadesMarkers) window.refreshComunidadesMarkers();
+    if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
+  };
+
+  function refrescarListaAdmin(){
+    var lista = window.ComunidadesStore.cargar();
+    var cont = document.getElementById('admin-lista-comunidades');
+    if(lista.length === 0){
+      cont.innerHTML = '<p class="admin-empty">Aún no hay comunidades registradas.</p>';
+      return;
+    }
+    cont.innerHTML = lista.map(function(c){
+      var ubicacionTxt = (typeof c.lat === 'number') ? '📍 ubicación exacta' : '📍 aprox. (sin marcar)';
+      return '<div class="admin-com-item">' +
+        '<div><b>' + c.nombre + '</b><br><span>' + c.municipio + ' · ' + (c.familias || 0) + ' familias · ' + (c.frecuencia || '—') + ' · ' + ubicacionTxt + '</span></div>' +
+        '<div class="admin-com-actions">' +
+          '<button onclick="editarComunidadAdmin(\'' + c.id + '\')">Editar</button>' +
+          '<button onclick="eliminarComunidadAdmin(\'' + c.id + '\')">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('form-comunidad').addEventListener('submit', function(ev){
+    ev.preventDefault();
+    var id = document.getElementById('com-edit-id').value;
+    var nombre = document.getElementById('com-nombre').value.trim();
+    var municipio = document.getElementById('com-municipio').value;
+    var familias = parseInt(document.getElementById('com-familias').value, 10) || 0;
+    var frecuencia = document.getElementById('com-frecuencia').value;
+    var fotos = CATEGORIAS_FOTO
+      .filter(function(cat){ return window.__fotosPendientes[cat]; })
+      .map(function(cat){ return {categoria:cat, src:window.__fotosPendientes[cat]}; });
+
+    if(!nombre || !municipio){ return; }
+
+    var registro = { nombre:nombre, municipio:municipio, familias:familias, frecuencia:frecuencia, fotos:fotos };
+    if(pickerLatLng){
+      registro.lat = pickerLatLng.lat;
+      registro.lng = pickerLatLng.lng;
+    }
+
+    var lista = window.ComunidadesStore.cargar();
+    if(id){
+      var idx = -1;
+      lista.forEach(function(c, i){ if(c.id === id) idx = i; });
+      if(idx > -1){
+        lista[idx] = Object.assign({}, lista[idx], registro, {id:id});
+      }
+    } else {
+      registro.id = window.ComunidadesStore.idNuevo();
+      lista.push(registro);
+    }
+    window.ComunidadesStore.guardar(lista);
+    window.resetFormComunidad();
+    refrescarListaAdmin();
+    if(window.refreshComunidadesMarkers) window.refreshComunidadesMarkers();
+    if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
+  });
 })();
 </script>
 
