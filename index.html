@@ -2210,8 +2210,10 @@ window.ComunidadesStore = (function(){
 // --- PANEL DE ADMINISTRACIÓN (login + alta/edición/baja de comunidades) ---
 // El acceso se valida con cuentas reales de Supabase Authentication
 // (supabaseClient.auth.signInWithPassword) — ya no es una contraseña fija
-// escrita en el código. El botón "Administrar" del menú, además, solo
-// aparece si la URL trae ?modo=secreto, para no anunciarlo al público.
+// escrita en el código. El botón "Administrar" NUNCA se muestra en el menú
+// (ni con el link secreto) — la única puerta de entrada es la URL con
+// ?modo=secreto, y en cuanto se detecta, se borra de la barra de
+// direcciones al instante para no dejar ningún rastro visible.
 // IMPORTANTE: esto solo protege la interfaz. La protección de fondo real
 // vive en las políticas de Row Level Security de la tabla "Comunidades" en
 // Supabase — asegúrate de que la escritura ahí también exija estar
@@ -2219,16 +2221,18 @@ window.ComunidadesStore = (function(){
 (function(){
   var CATEGORIAS_FOTO = ['Familias beneficiarias', 'Entrega de despensas', 'Equipo en campo'];
 
-  // Con ?modo=secreto en la URL: revela el botón "Administrar" en el menú
-  // Y manda directo a esa pantalla (no se queda en Inicio esperando un clic).
+  // Con ?modo=secreto en la URL: borra ese parámetro de inmediato (para que
+  // nunca se vea en la barra de direcciones, ni siquiera un instante) y
+  // manda directo al login. El botón "Administrar" del menú se queda oculto
+  // siempre — la única forma de entrar es repitiendo este link.
   // El setTimeout es a propósito: espera a que el resto de este script
   // termine de definir mostrarAdmin() antes de llamar a ir('adm').
   (function(){
     var params = new URLSearchParams(window.location.search);
     if(params.get('modo') === 'secreto'){
+      var urlLimpia = window.location.pathname + window.location.hash;
+      history.replaceState(null, '', urlLimpia);
       setTimeout(function(){
-        var navAdm = document.getElementById('nav-adm');
-        if(navAdm) navAdm.style.display = '';
         ir('adm');
       }, 0);
     }
