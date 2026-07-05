@@ -2219,12 +2219,19 @@ window.ComunidadesStore = (function(){
 (function(){
   var CATEGORIAS_FOTO = ['Familias beneficiarias', 'Entrega de despensas', 'Equipo en campo'];
 
-  // Solo muestra el acceso "Administrar" en el menú si la URL trae
-  // ?modo=secreto — así el público en general ni se entera de que existe.
+  // Con ?modo=secreto en la URL: revela el botón "Administrar" en el menú
+  // Y manda directo a esa pantalla (no se queda en Inicio esperando un clic).
+  // El setTimeout es a propósito: espera a que el resto de este script
+  // termine de definir mostrarAdmin() antes de llamar a ir('adm').
   (function(){
     var params = new URLSearchParams(window.location.search);
-    var navAdm = document.getElementById('nav-adm');
-    if(navAdm && params.get('modo') === 'secreto') navAdm.style.display = '';
+    if(params.get('modo') === 'secreto'){
+      setTimeout(function(){
+        var navAdm = document.getElementById('nav-adm');
+        if(navAdm) navAdm.style.display = '';
+        ir('adm');
+      }, 0);
+    }
   })();
 
   var meta = JSON.parse(document.getElementById('meta-data').textContent);
