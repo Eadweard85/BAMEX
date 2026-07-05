@@ -1099,6 +1099,22 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
   font-size: 14px;
   margin-top: 4px;
 }
+.admin-pass-wrap{ position: relative; }
+.admin-pass-wrap input{ padding-right: 42px; }
+.admin-pass-toggle{
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 6px;
+  opacity: .6;
+  line-height: 1;
+}
+.admin-pass-toggle:hover{ opacity: 1; }
 .admin-login-btn{ margin-top: 16px; width: 100%; }
 .admin-login-error{ color: #ff6b6b; font-size: 12.5px; margin-top: 10px; display: none; }
 .admin-login-error.show{ display: block; }
@@ -1312,7 +1328,10 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
         <label>Correo electrónico</label>
         <input type="email" id="admin-user" autocomplete="username" placeholder="tucorreo@ejemplo.com" required>
         <label>Contraseña</label>
-        <input type="password" id="admin-pass" autocomplete="current-password" placeholder="••••••••" required>
+        <div class="admin-pass-wrap">
+          <input type="password" id="admin-pass" autocomplete="current-password" placeholder="••••••••" required>
+          <button type="button" class="admin-pass-toggle" id="admin-pass-toggle" onclick="toggleVerContrasena()" aria-label="Mostrar contraseña">👁</button>
+        </div>
         <button type="submit" class="bg admin-login-btn">Entrar</button>
         <p id="admin-login-error" class="admin-login-error">Correo o contraseña incorrectos.</p>
       </form>
@@ -1700,8 +1719,8 @@ function alCambiarMunicipio() {
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = "https://pvjlcsxggbnhtuogtuio.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_UB0Zdik6-oW6s5NOLdeVfg_8sfjIGSM";
+  const SUPABASE_URL = "https://aqrvfccdkigfvqaoirpp.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_3WgmUyNraIpbRAUS-lIvBw_UfQ_UMhL";
 
   // Conexión global a Supabase. Se llama "supabaseClient" (no "supabase")
   // para no chocar con el objeto global "supabase" que carga la librería del CDN.
@@ -2319,6 +2338,15 @@ window.ComunidadesStore = (function(){
         }
       }, 60);
     }
+  };
+
+  window.toggleVerContrasena = function(){
+    var campo = document.getElementById('admin-pass');
+    var boton = document.getElementById('admin-pass-toggle');
+    var visible = campo.type === 'text';
+    campo.type = visible ? 'password' : 'text';
+    boton.textContent = visible ? '👁' : '🙈';
+    boton.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
   };
 
   window.intentarLoginAdmin = async function(){
