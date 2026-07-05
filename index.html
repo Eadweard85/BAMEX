@@ -1627,11 +1627,22 @@ nav button.on::after{content:'';position:absolute;bottom:-22px;left:0;width:100%
 })();
 
 // LÓGICA DE CONTROL DE PANTALLAS
-function ir(id){
+// --- RUTEO POR HASH (para que Atrás/Adelante del navegador funcionen de verdad) ---
+// Cada sección tiene su propia URL real: #inicio, #comunidades, #donador y
+// #login. Cambiar de sección cambia el hash de la URL (lo que sí crea una
+// entrada en el historial del navegador); y si el hash cambia por otro medio
+// (el usuario usa Atrás/Adelante, o pega un link con #comunidades directo),
+// la vista se actualiza sola para quedar en sincronía.
+var RUTA_POR_ID = { inicio:'inicio', com:'comunidades', don:'donador', adm:'login' };
+var ID_POR_RUTA = { inicio:'inicio', comunidades:'com', donador:'don', login:'adm' };
+
+function mostrarVista(id){
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
-  document.getElementById('vista-'+id).classList.add('on');
-  var nb=document.getElementById('nav-'+id);if(nb)nb.classList.add('on');
+  var vista = document.getElementById('vista-'+id);
+  if(!vista) return;
+  vista.classList.add('on');
+  var nb=document.getElementById('nav-'+id); if(nb) nb.classList.add('on');
 
   // Pausa el render 3D del globo salvo cuando realmente estamos viéndolo
   if(window.setGlobeActive) window.setGlobeActive(id === 'inicio');
@@ -1650,6 +1661,29 @@ function ir(id){
     if(window.mostrarAdmin) window.mostrarAdmin();
   }
 }
+
+function ir(id){
+  var ruta = RUTA_POR_ID[id] || id;
+  if(window.location.hash.replace('#','') === ruta){
+    mostrarVista(id); // ya estamos en esa ruta; solo asegura que la vista esté sincronizada
+  } else {
+    window.location.hash = ruta; // dispara 'hashchange', que llama a mostrarVista()
+  }
+}
+
+window.addEventListener('hashchange', function(){
+  var ruta = window.location.hash.replace('#','');
+  mostrarVista(ID_POR_RUTA[ruta] || 'inicio');
+});
+
+// Si se entra directo con un link tipo tusitio.com/#comunidades o /#login,
+// respeta esa ruta desde el primer momento.
+(function(){
+  var ruta = window.location.hash.replace('#','');
+  if(ID_POR_RUTA[ruta] && ID_POR_RUTA[ruta] !== 'inicio'){
+    mostrarVista(ID_POR_RUTA[ruta]);
+  }
+})();
 
 // Botón "Ver en grande" del mapa de Comunidades: lo pone en pantalla completa
 // para apreciar mejor las comunidades, sin perder ninguna funcionalidad.
@@ -2227,35 +2261,19 @@ window.ComunidadesStore = (function(){
 
 <script>
 // --- PANEL DE ADMINISTRACIÓN (login + alta/edición/baja de comunidades) ---
+// --- PANEL DE ADMINISTRACIÓN (login.html) ---
 // El acceso se valida con cuentas reales de Supabase Authentication
 // (supabaseClient.auth.signInWithPassword) — ya no es una contraseña fija
 // escrita en el código. El botón "Administrar" NUNCA se muestra en el menú
-// (ni con el link secreto) — la única puerta de entrada es la URL con
-// ?modo=secreto, y en cuanto se detecta, se borra de la barra de
-// direcciones al instante para no dejar ningún rastro visible.
+// — la única puerta de entrada es la URL con #login (ej. tusitio.com/#login),
+// que ahora es una ruta real (funciona con Atrás/Adelante como el resto del
+// sitio, en vez de un parámetro que se borraba al instante).
 // IMPORTANTE: esto solo protege la interfaz. La protección de fondo real
 // vive en las políticas de Row Level Security de la tabla "Comunidades" en
 // Supabase — asegúrate de que la escritura ahí también exija estar
 // autenticado (auth.uid() is not null), no solo "true".
 (function(){
   var CATEGORIAS_FOTO = ['Familias beneficiarias', 'Entrega de despensas', 'Equipo en campo'];
-
-  // Con ?modo=secreto en la URL: borra ese parámetro de inmediato (para que
-  // nunca se vea en la barra de direcciones, ni siquiera un instante) y
-  // manda directo al login. El botón "Administrar" del menú se queda oculto
-  // siempre — la única forma de entrar es repitiendo este link.
-  // El setTimeout es a propósito: espera a que el resto de este script
-  // termine de definir mostrarAdmin() antes de llamar a ir('adm').
-  (function(){
-    var params = new URLSearchParams(window.location.search);
-    if(params.get('modo') === 'secreto'){
-      var urlLimpia = window.location.pathname + window.location.hash;
-      history.replaceState(null, '', urlLimpia);
-      setTimeout(function(){
-        ir('adm');
-      }, 0);
-    }
-  })();
 
   var meta = JSON.parse(document.getElementById('meta-data').textContent);
   var metaPorNombre = {};
@@ -2385,6 +2403,13 @@ window.ComunidadesStore = (function(){
     var vista = document.getElementById('vista-adm');
     if(vista && vista.classList.contains('on')) window.mostrarAdmin();
   });
+
+  // Si la página se abrió directo en #login (link directo, o el usuario le
+  // dio "Adelante" hasta llegar aquí), la vista ya se puso visible antes de
+  // que esta función existiera — así que la revisamos una vez más ahora.
+  if(window.location.hash.replace('#','') === 'login'){
+    window.mostrarAdmin();
+  }
 
   // --- Mapa selector de ubicación exacta ---
   var pickerMap = null, pickerMarker = null, pickerLatLng = null;
