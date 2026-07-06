@@ -1619,9 +1619,9 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
         <p class="admin-mapa-hint" id="com-catalogo-hint">Elige primero el municipio para ver sus localidades reales (catálogo INEGI).</p>
 
         <label>Ubicación exacta en el mapa</label>
-        <p class="admin-mapa-hint">Si eliges una localidad del catálogo, el punto se coloca solo. Si no aparece en la lista, busca una dirección o haz clic directamente en el mapa — también puedes arrastrar el pin para ajustarlo.</p>
+        <p class="admin-mapa-hint">Si eliges una localidad del catálogo, el punto se coloca solo. Si no aparece en la lista, pega aquí un link de Google Maps, unas coordenadas (lat, lng) o escribe una dirección — también puedes hacer clic o arrastrar el pin directamente en el mapa.</p>
         <div class="admin-buscar-direccion">
-          <input type="text" id="com-buscar-direccion" placeholder="Buscar dirección, colonia o lugar...">
+          <input type="text" id="com-buscar-direccion" placeholder="Pega un link de Google Maps, coordenadas o una dirección...">
           <button type="button" class="bq" onclick="buscarDireccionAdmin()">Buscar</button>
         </div>
         <div id="com-mapa-picker"></div>
@@ -2932,9 +2932,55 @@ window.ComunidadesStore = (function(){
 
   document.getElementById('com-nombre').addEventListener('input', intentarAutoubicarPorNombre);
 
+  function irACoordenadas(lat, lon, zoom){
+    if(!pickerMap) initPickerMap(lat, lon, true);
+    pickerMap.setView([lat, lon], zoom || 16);
+    colocarPickerMarker(lat, lon);
+  }
+
+  function extraerCoordsDeTexto(texto){
+    // 1) Coordenadas sueltas: "19.28841, -99.65392" (con o sin paréntesis/espacios)
+    var mSimple = texto.match(/^\(?\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*\)?$/);
+    if(mSimple){
+      var lat = parseFloat(mSimple[1]), lon = parseFloat(mSimple[2]);
+      if(Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return {lat:lat, lon:lon};
+    }
+
+    // 2) Links de Google Maps con formato .../@lat,lon,zoom
+    var mArroba = texto.match(/@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/);
+    if(mArroba) return {lat:parseFloat(mArroba[1]), lon:parseFloat(mArroba[2])};
+
+    // 3) Links de Google Maps con formato !3dLAT!4dLON (aparece en links de "lugar" con nombre)
+    var mBang = texto.match(/!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/);
+    if(mBang) return {lat:parseFloat(mBang[1]), lon:parseFloat(mBang[2])};
+
+    // 4) Parámetros ?q=lat,lon o &ll=lat,lon o &center=lat,lon
+    var mParam = texto.match(/[?&](?:q|ll|center)=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/);
+    if(mParam) return {lat:parseFloat(mParam[1]), lon:parseFloat(mParam[2])};
+
+    return null;
+  }
+
   window.buscarDireccionAdmin = function(){
     var q = document.getElementById('com-buscar-direccion').value.trim();
     if(!q) return;
+
+    // ¿Trae coordenadas o un link de Google Maps con coordenadas incluidas?
+    var coords = extraerCoordsDeTexto(q);
+    if(coords){
+      irACoordenadas(coords.lat, coords.lon, 16);
+      return;
+    }
+
+    // ¿Es un link (de Maps u otro) pero sin coordenadas visibles en la URL?
+    // Esto pasa con links cortos (maps.app.goo.gl, goo.gl/maps) que redirigen
+    // y no podemos "seguir" desde el navegador por restricciones de CORS.
+    if(/^https?:\/\//i.test(q)){
+      alert('Ese link no incluye coordenadas visibles (posiblemente es un link corto).\n\nEn Google Maps, abre el lugar y usa "Compartir" → copia el link largo (con "@lat,lon" o "!3d...!4d..."), o copia directamente las coordenadas que aparecen al buscar el lugar.');
+      return;
+    }
+
+    // De lo contrario, se trata como dirección/lugar de texto normal.
     var municipio = selectMunicipio.value;
     var consulta = q + (municipio ? ', ' + municipio : '') + ', Estado de México, México';
     var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' + encodeURIComponent(consulta);
@@ -2945,9 +2991,7 @@ window.ComunidadesStore = (function(){
         return;
       }
       var lat = parseFloat(data[0].lat), lon = parseFloat(data[0].lon);
-      if(!pickerMap) initPickerMap(lat, lon, true);
-      pickerMap.setView([lat, lon], 15);
-      colocarPickerMarker(lat, lon);
+      irACoordenadas(lat, lon, 15);
     }).catch(function(){
       alert('No se pudo buscar la dirección (revisa tu conexión a internet). Puedes marcar el punto directamente en el mapa.');
     });
