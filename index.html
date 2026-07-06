@@ -1275,6 +1275,58 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .admin-hidden{ display: none; }
 
 .admin-lista-wrap h3{ font-size: 15px; margin-bottom: 10px; }
+.admin-import-wrap{
+  background: #0c0c14;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+}
+.admin-import-wrap h3{ font-size: 15px; margin-bottom: 6px; }
+.admin-import-resumen{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.admin-import-badge{
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--br);
+  background: rgba(255,255,255,.04);
+}
+.admin-import-badge b{ font-family: 'IBM Plex Mono', monospace; }
+.admin-import-badge.ok{ border-color: rgba(90,200,120,.4); color: #7fe0a0; }
+.admin-import-badge.warn{ border-color: rgba(232,180,10,.4); color: #f0cf6a; }
+.admin-import-badge.err{ border-color: rgba(255,90,90,.4); color: #ff8a8a; }
+.admin-import-tabla-wrap{
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--br);
+  border-radius: 8px;
+  margin-bottom: 4px;
+}
+.admin-import-tabla{ width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.admin-import-tabla th{
+  text-align: left;
+  position: sticky;
+  top: 0;
+  background: #14141f;
+  padding: 8px 10px;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--t);
+  border-bottom: 1px solid var(--br);
+}
+.admin-import-tabla td{ padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.admin-import-tabla tr.fila-ok td{ color: #d8ffe4; }
+.admin-import-tabla tr.fila-warn td{ color: #f0cf6a; }
+.admin-import-tabla tr.fila-err td{ color: #ff8a8a; }
+.admin-import-estado{ font-size: 11px; }
+.admin-import-progreso{ font-size: 12px; color: var(--t); margin-top: 10px; font-family: 'IBM Plex Mono', monospace; }
 .admin-com-item{
   display: flex;
   align-items: center;
@@ -1604,6 +1656,32 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
       <div class="admin-panel-header">
         <h2>Panel de administración</h2>
         <button class="bq" onclick="cerrarSesionAdmin()">Cerrar sesión</button>
+      </div>
+
+      <div class="admin-import-wrap">
+        <h3>Importar comunidades desde Excel</h3>
+        <p class="admin-mapa-hint">
+          Sube un archivo <b>.xlsx o .csv</b> con una fila por comunidad y estas columnas (el orden no importa,
+          los nombres de columna se detectan solos): <b>Municipio</b>, <b>Comunidad</b> (o "Nombre") y <b>Familias</b>.
+          La frecuencia se pondrá como "Quincenal" para todas. Si el municipio + nombre coinciden con el catálogo
+          INEGI, la ubicación en el mapa se coloca sola; si no, se importa igual pero sin ubicación exacta
+          (la puedes marcar después desde "Editar", con el buscador de arriba). Si una comunidad ya existe
+          (mismo nombre + municipio), se actualiza en vez de duplicarse.
+        </p>
+        <input type="file" id="import-archivo" accept=".xlsx,.xls,.csv">
+        <div class="admin-form-actions">
+          <button type="button" class="bq" onclick="analizarArchivoImportacion()">Analizar archivo</button>
+        </div>
+
+        <div id="import-resultado" class="admin-hidden">
+          <div id="import-resumen" class="admin-import-resumen"></div>
+          <div id="import-tabla-wrap" class="admin-import-tabla-wrap"></div>
+          <div class="admin-form-actions">
+            <button type="button" class="bg" id="import-confirmar-btn" onclick="confirmarImportacion()">Confirmar importación</button>
+            <button type="button" class="bq" onclick="cancelarImportacion()">Cancelar</button>
+          </div>
+          <p id="import-progreso" class="admin-import-progreso"></p>
+        </div>
       </div>
 
       <form id="form-comunidad" class="admin-form">
@@ -2121,6 +2199,7 @@ function alCambiarMunicipio() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
   const SUPABASE_URL = "https://aqrvfccdkigfvqaoirpp.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_3WgmUyNraIpbRAUS-lIvBw_UfQ_UMhL";
@@ -4010,6 +4089,234 @@ var OpenLocationCode = function () {};
       '</div>';
     }).join('');
   }
+
+  // ------------------------------------------------------------------
+  // IMPORTACIÓN MASIVA DESDE EXCEL/CSV
+  // ------------------------------------------------------------------
+  var __importFilasProcesadas = [];
+
+  function indiceColumna(headers, patrones){
+    for(var i = 0; i < headers.length; i++){
+      var h = normalizarTextoCat(String(headers[i] || ''));
+      for(var j = 0; j < patrones.length; j++){
+        if(h.indexOf(patrones[j]) !== -1) return i;
+      }
+    }
+    return -1;
+  }
+
+  function leerArchivoComoFilas(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(e){
+        try{
+          var wb = XLSX.read(e.target.result, {type:'array'});
+          var hoja = wb.Sheets[wb.SheetNames[0]];
+          var filas = XLSX.utils.sheet_to_json(hoja, {header:1, defval:''});
+          resolve(filas);
+        } catch(err){ reject(err); }
+      };
+      reader.onerror = function(){ reject(new Error('No se pudo leer el archivo.')); };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  window.analizarArchivoImportacion = async function(){
+    var input = document.getElementById('import-archivo');
+    var file = input.files[0];
+    if(!file){ alert('Primero elige un archivo .xlsx o .csv'); return; }
+
+    var filas;
+    try{
+      filas = await leerArchivoComoFilas(file);
+    } catch(err){
+      alert('No se pudo leer el archivo: ' + (err && err.message ? err.message : err));
+      return;
+    }
+    if(!filas.length){ alert('El archivo está vacío.'); return; }
+
+    var headers = filas[0];
+    var idxMunicipio = indiceColumna(headers, ['municipio']);
+    var idxNombre = indiceColumna(headers, ['comunidad', 'localidad', 'nombre']);
+    var idxFamilias = indiceColumna(headers, ['familias']);
+
+    if(idxMunicipio === -1 || idxNombre === -1){
+      alert('No encontré las columnas de "Municipio" y/o "Comunidad/Nombre" en la primera fila del archivo. Revisa los encabezados.');
+      return;
+    }
+
+    var existentes = window.ComunidadesStore.cargar();
+    var existentesPorClave = {};
+    existentes.forEach(function(c){
+      var clave = normalizarTextoCat(c.municipio) + '||' + normalizarTextoCat(c.nombre);
+      existentesPorClave[clave] = c;
+    });
+
+    var procesadas = [];
+    for(var i = 1; i < filas.length; i++){
+      var fila = filas[i];
+      if(!fila || fila.every(function(v){ return String(v).trim() === ''; })) continue;
+
+      var municipioTexto = String(fila[idxMunicipio] || '').trim();
+      var nombreTexto = String(fila[idxNombre] || '').trim();
+      var familiasTexto = idxFamilias > -1 ? String(fila[idxFamilias] || '').trim() : '';
+
+      var item = { fila: i + 1, municipioTexto: municipioTexto, nombreTexto: nombreTexto };
+
+      if(!nombreTexto){
+        item.estado = 'error'; item.motivo = 'Falta el nombre de la comunidad';
+        procesadas.push(item); continue;
+      }
+      if(!municipioTexto){
+        item.estado = 'error'; item.motivo = 'Falta el municipio';
+        procesadas.push(item); continue;
+      }
+
+      var objetivoMun = normalizarTextoCat(municipioTexto);
+      var municipioReal = Object.keys(metaPorNombre).filter(function(n){ return normalizarTextoCat(n) === objetivoMun; })[0];
+      if(!municipioReal){
+        item.estado = 'error'; item.motivo = 'Municipio no reconocido: "' + municipioTexto + '"';
+        procesadas.push(item); continue;
+      }
+      item.municipio = municipioReal;
+
+      var familias = parseInt(familiasTexto, 10);
+      item.familias = isNaN(familias) ? 0 : familias;
+
+      var m = metaPorNombre[municipioReal];
+      var listaLocalidades = localidadesPorMunicipio[m.clave] || [];
+      var objetivoNom = normalizarTextoCat(nombreTexto);
+      var matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
+      if(matchCat){
+        item.nombre = matchCat.n;
+        item.lat = matchCat.lat;
+        item.lng = matchCat.lng;
+        item.estado = 'ok';
+        item.motivo = 'Ubicación real encontrada en el catálogo INEGI';
+      } else {
+        item.nombre = nombreTexto;
+        item.estado = 'warn';
+        item.motivo = 'Sin coincidencia en el catálogo — se importará sin ubicación exacta';
+      }
+
+      var claveExistente = normalizarTextoCat(item.municipio) + '||' + normalizarTextoCat(item.nombre);
+      var existente = existentesPorClave[claveExistente];
+      if(existente){
+        item.idExistente = existente.id;
+        item.accion = 'actualizar';
+        if((item.lat === undefined || item.lat === null) && typeof existente.lat === 'number'){
+          item.lat = existente.lat;
+          item.lng = existente.lng;
+        }
+      } else {
+        item.accion = 'crear';
+      }
+
+      procesadas.push(item);
+    }
+
+    __importFilasProcesadas = procesadas;
+    pintarResultadoImportacion(procesadas);
+  };
+
+  function pintarResultadoImportacion(procesadas){
+    var wrap = document.getElementById('import-resultado');
+    wrap.classList.remove('admin-hidden');
+
+    var ok = procesadas.filter(function(x){ return x.estado === 'ok'; }).length;
+    var warn = procesadas.filter(function(x){ return x.estado === 'warn'; }).length;
+    var err = procesadas.filter(function(x){ return x.estado === 'error'; }).length;
+    var nuevas = procesadas.filter(function(x){ return x.estado !== 'error' && x.accion === 'crear'; }).length;
+    var actualiza = procesadas.filter(function(x){ return x.estado !== 'error' && x.accion === 'actualizar'; }).length;
+
+    document.getElementById('import-resumen').innerHTML =
+      '<span class="admin-import-badge ok"><b>' + ok + '</b> con ubicación exacta</span>' +
+      '<span class="admin-import-badge warn"><b>' + warn + '</b> sin ubicación (se importan igual)</span>' +
+      '<span class="admin-import-badge err"><b>' + err + '</b> con error (no se importan)</span>' +
+      '<span class="admin-import-badge"><b>' + nuevas + '</b> nuevas · <b>' + actualiza + '</b> actualizarían una existente</span>';
+
+    var filasHtml = procesadas.map(function(x){
+      var claseFila = x.estado === 'ok' ? 'fila-ok' : (x.estado === 'warn' ? 'fila-warn' : 'fila-err');
+      var accionTxt = x.estado === 'error' ? '—' : (x.accion === 'actualizar' ? 'Actualizar' : 'Crear');
+      return '<tr class="' + claseFila + '">' +
+        '<td>' + x.fila + '</td>' +
+        '<td>' + (x.nombre || x.nombreTexto || '') + '</td>' +
+        '<td>' + (x.municipio || x.municipioTexto || '') + '</td>' +
+        '<td>' + (x.estado === 'error' ? '—' : x.familias) + '</td>' +
+        '<td>' + accionTxt + '</td>' +
+        '<td class="admin-import-estado">' + x.motivo + '</td>' +
+      '</tr>';
+    }).join('');
+
+    document.getElementById('import-tabla-wrap').innerHTML =
+      '<table class="admin-import-tabla"><thead><tr>' +
+        '<th>Fila</th><th>Comunidad</th><th>Municipio</th><th>Familias</th><th>Acción</th><th>Detalle</th>' +
+      '</tr></thead><tbody>' + filasHtml + '</tbody></table>';
+
+    var confirmarBtn = document.getElementById('import-confirmar-btn');
+    var importables = procesadas.filter(function(x){ return x.estado !== 'error'; }).length;
+    confirmarBtn.disabled = importables === 0;
+    confirmarBtn.textContent = 'Confirmar importación (' + importables + ')';
+    document.getElementById('import-progreso').textContent = '';
+  }
+
+  window.confirmarImportacion = async function(){
+    var importables = __importFilasProcesadas.filter(function(x){ return x.estado !== 'error'; });
+    if(!importables.length) return;
+
+    var confirmarBtn = document.getElementById('import-confirmar-btn');
+    var progreso = document.getElementById('import-progreso');
+    confirmarBtn.disabled = true;
+
+    var hechas = 0, nuevas = 0, actualizadas = 0, fallidas = 0;
+    for(var i = 0; i < importables.length; i++){
+      var item = importables[i];
+      progreso.textContent = 'Importando ' + (i + 1) + ' / ' + importables.length + '...';
+
+      var registro = {
+        nombre: item.nombre,
+        municipio: item.municipio,
+        familias: item.familias,
+        frecuencia: 'Quincenal',
+        fotos: []
+      };
+      if(typeof item.lat === 'number' && typeof item.lng === 'number'){
+        registro.lat = item.lat;
+        registro.lng = item.lng;
+      }
+
+      try{
+        if(item.accion === 'actualizar'){
+          await window.ComunidadesStore.actualizar(item.idExistente, registro);
+          actualizadas++;
+        } else {
+          await window.ComunidadesStore.agregar(registro);
+          nuevas++;
+        }
+      } catch(err){
+        fallidas++;
+      }
+      hechas++;
+    }
+
+    progreso.textContent = 'Listo: ' + hechas + ' procesadas · ' + nuevas + ' nuevas · ' +
+      actualizadas + ' actualizadas' + (fallidas ? ' · ' + fallidas + ' fallaron' : '') + '.';
+    confirmarBtn.disabled = false;
+    confirmarBtn.textContent = 'Confirmar importación';
+
+    refrescarListaAdmin();
+    if(window.refreshComunidadesMarkers) window.refreshComunidadesMarkers();
+    if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
+  };
+
+  window.cancelarImportacion = function(){
+    __importFilasProcesadas = [];
+    document.getElementById('import-resultado').classList.add('admin-hidden');
+    document.getElementById('import-archivo').value = '';
+    document.getElementById('import-tabla-wrap').innerHTML = '';
+    document.getElementById('import-resumen').innerHTML = '';
+    document.getElementById('import-progreso').textContent = '';
+  };
 
   document.getElementById('form-comunidad').addEventListener('submit', async function(ev){
     ev.preventDefault();
