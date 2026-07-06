@@ -3762,6 +3762,52 @@ var OpenLocationCode = function () {};
     });
   }
 
+  // A partir de una coordenada resuelta (link, plus code, coords o dirección),
+  // intenta reconocer el municipio y la comunidad/localidad reales y llenar
+  // esos campos solos. Es un plus del buscador: si en cambio el usuario elige
+  // el municipio y escribe el nombre a mano (flujo de siempre), esta función
+  // nunca se llama y nada cambia.
+  function autocompletarMunicipioYComunidad(lat, lon){
+    var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat +
+      '&lon=' + lon + '&zoom=16&addressdetails=1&accept-language=es';
+    return fetch(url).then(function(res){ return res.json(); }).then(function(data){
+      var addr = data && data.address;
+      if(!addr) return;
+
+      // Buscar coincidencia de municipio contra el catálogo cargado (metaPorNombre)
+      var candidatosMunicipio = [addr.municipality, addr.county, addr.city, addr.town, addr.state_district]
+        .filter(Boolean);
+      var nombresDisponibles = Object.keys(metaPorNombre);
+      var municipioEncontrado = null;
+      for(var i = 0; i < candidatosMunicipio.length && !municipioEncontrado; i++){
+        var objetivo = normalizarTextoCat(candidatosMunicipio[i]);
+        municipioEncontrado = nombresDisponibles.filter(function(n){
+          return normalizarTextoCat(n) === objetivo;
+        })[0] || null;
+      }
+      if(!municipioEncontrado) return;
+
+      selectMunicipio.value = municipioEncontrado;
+      poblarDatalistLocalidades(municipioEncontrado);
+
+      // Buscar coincidencia de comunidad/localidad dentro de ese municipio
+      var m = metaPorNombre[municipioEncontrado];
+      var lista = localidadesPorMunicipio[m.clave] || [];
+      var candidatosComunidad = [addr.village, addr.hamlet, addr.suburb, addr.town, addr.neighbourhood, addr.city_district]
+        .filter(Boolean);
+      var comunidadEncontrada = null;
+      for(var j = 0; j < candidatosComunidad.length && !comunidadEncontrada; j++){
+        var objetivoC = normalizarTextoCat(candidatosComunidad[j]);
+        var matchCat = lista.filter(function(l){ return normalizarTextoCat(l.n) === objetivoC; })[0];
+        if(matchCat) comunidadEncontrada = matchCat.n;
+      }
+      if(!comunidadEncontrada) comunidadEncontrada = candidatosComunidad[0] || null;
+      if(comunidadEncontrada){
+        document.getElementById('com-nombre').value = comunidadEncontrada;
+      }
+    }).catch(function(){ /* si falla, el usuario llena esos campos a mano, como siempre */ });
+  }
+
   window.buscarDireccionAdmin = function(){
     var q = document.getElementById('com-buscar-direccion').value.trim();
     if(!q) return;
@@ -3779,11 +3825,16 @@ var OpenLocationCode = function () {};
       alert('No se pudo ubicar ese dato.\n\nPuedes pegar: un Plus Code (ej. "MRRX+H6, tu municipio"), coordenadas (lat, lon), un link de Google Maps, o simplemente escribir la dirección. También puedes marcar el punto directamente en el mapa.');
     }
 
+    function ubicarYCompletar(lat, lon, zoom){
+      irACoordenadas(lat, lon, zoom);
+      autocompletarMunicipioYComunidad(lat, lon);
+    }
+
     // 1) ¿Trae coordenadas directas, o un link de Google Maps con
     //    coordenadas incluidas en la propia URL?
     var coords = extraerCoordsDeTexto(q);
     if(coords){
-      irACoordenadas(coords.lat, coords.lon, 16);
+      ubicarYCompletar(coords.lat, coords.lon, 16);
       return;
     }
 
@@ -3792,7 +3843,7 @@ var OpenLocationCode = function () {};
     var plusCode = extraerPlusCodeDeTexto(q);
     if(plusCode){
       conBotonOcupado(resolverPlusCode(plusCode, q)).then(function(coordsResueltas){
-        if(coordsResueltas) irACoordenadas(coordsResueltas.lat, coordsResueltas.lon, 17);
+        if(coordsResueltas) ubicarYCompletar(coordsResueltas.lat, coordsResueltas.lon, 17);
         else fallarConAyuda();
       });
       return;
@@ -3803,7 +3854,7 @@ var OpenLocationCode = function () {};
     //    resolverlo automáticamente antes de rendirnos.
     if(/^https?:\/\//i.test(q)){
       conBotonOcupado(resolverLinkCorto(q)).then(function(coordsResueltas){
-        if(coordsResueltas) irACoordenadas(coordsResueltas.lat, coordsResueltas.lon, 16);
+        if(coordsResueltas) ubicarYCompletar(coordsResueltas.lat, coordsResueltas.lon, 16);
         else fallarConAyuda();
       });
       return;
@@ -3818,7 +3869,7 @@ var OpenLocationCode = function () {};
       if(data && data.length) return {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
       return null;
     }).catch(function(){ return null; })).then(function(coordsResueltas){
-      if(coordsResueltas) irACoordenadas(coordsResueltas.lat, coordsResueltas.lon, 15);
+      if(coordsResueltas) ubicarYCompletar(coordsResueltas.lat, coordsResueltas.lon, 15);
       else fallarConAyuda();
     });
   };
