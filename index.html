@@ -1287,36 +1287,88 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .lightbox-nav.izq{ left: 20px; }
 .lightbox-nav.der{ right: 20px; }
 
-/* Galería de comunidades */
-.galeria-wrap{ max-width: 1200px; margin: 0 auto; }
-.galeria-header{ margin-bottom: 28px; }
-.galeria-header h1{ font-size: 26px; margin-bottom: 8px; }
-.galeria-header p{ color: var(--t); font-size: 14px; max-width: 640px; }
+/* Galería de comunidades — muro de fotos: una tarjeta-collage por comunidad,
+   no una foto suelta por cada imagen. Pensada para que se sienta como un
+   mosaico de rostros reales, no como una cuadrícula de archivos. */
+.galeria-wrap{ max-width: 1240px; margin: 0 auto; }
+.galeria-header{ margin-bottom: 10px; }
+.galeria-header h1{ font-size: 30px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 8px; }
+.galeria-header p{ color: var(--t); font-size: 14.5px; max-width: 620px; line-height: 1.6; }
+
+.galeria-stats{
+  display: flex; gap: 28px; flex-wrap: wrap;
+  margin: 20px 0 32px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.galeria-stats div b{ display:block; font-size: 24px; font-weight: 800; color: var(--n); }
+.galeria-stats div span{ font-size: 11.5px; color: var(--t); text-transform: uppercase; letter-spacing: .05em; }
+
 .galeria-grid{
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
-.galeria-item{
+.galeria-card{
   position: relative;
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 4 / 3;
   background: #12121f;
   cursor: zoom-in;
-  border: 1px solid rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.07);
+  box-shadow: 0 6px 20px rgba(0,0,0,.3);
+  transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s;
 }
-.galeria-item img{ width: 100%; height: 100%; object-fit: cover; transition: transform .3s; }
-.galeria-item:hover img{ transform: scale(1.06); }
-.galeria-item .galeria-caption{
+.galeria-card:hover{ transform: translateY(-6px); box-shadow: 0 16px 34px rgba(0,0,0,.5); }
+.galeria-card-principal{
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: transform .5s cubic-bezier(.16,1,.3,1);
+}
+.galeria-card:hover .galeria-card-principal{ transform: scale(1.08); }
+
+/* Las otras fotos de la MISMA comunidad aparecen como miniaturas encimadas,
+   en vez de repetirse como tarjetas idénticas por separado. */
+.galeria-card-miniaturas{
+  position: absolute; top: 12px; right: 12px;
+  display: flex; gap: 6px;
+  z-index: 2;
+}
+.galeria-mini{
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid rgba(255,255,255,.85);
+  box-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.galeria-mas{
+  width: 38px; height: 38px;
+  border-radius: 9px;
+  background: rgba(0,0,0,.7);
+  border: 2px solid rgba(255,255,255,.85);
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 12.5px; font-weight: 800;
+}
+.galeria-card-status{
+  position: absolute; top: 12px; left: 12px; z-index: 2;
+  background: linear-gradient(135deg, #E8640A, #ff8c3a);
+  color: #fff; font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+  box-shadow: 0 3px 10px rgba(232,100,10,.4);
+}
+.galeria-card-caption{
   position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(to top, rgba(0,0,0,.85), transparent);
-  color: #fff; padding: 26px 12px 10px;
-  font-size: 12.5px; line-height: 1.4;
+  background: linear-gradient(to top, rgba(0,0,0,.9) 10%, transparent 100%);
+  color: #fff; padding: 46px 16px 14px;
+  z-index: 1;
 }
-.galeria-item .galeria-caption b{ display: block; font-size: 13.5px; }
-.galeria-item .galeria-caption span{ color: #ddd; font-size: 11px; }
-.galeria-vacio{ color: var(--t); font-size: 14px; padding: 40px 0; text-align: center; }
+.galeria-card-caption b{ display: block; font-size: 16px; font-weight: 700; }
+.galeria-card-caption span{ color: #ddd; font-size: 12px; }
+.galeria-vacio{ color: var(--t); font-size: 14px; padding: 60px 0; text-align: center; }
 
 @media(max-width:980px){
   .mapa-contenedor { flex-direction: column; height: auto; }
@@ -1431,12 +1483,14 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 <div id="vista-gal" class="vista">
   <div class="galeria-wrap">
     <div class="galeria-header">
-      <h1>Galería de comunidades</h1>
-      <p>Cada fotografía es una comunidad real que hoy recibe apoyo alimentario gracias a Cáritas y sus donantes.</p>
+      <h1>Rostros y comunidades reales</h1>
+      <p>Cada tarjeta es una comunidad de carne y hueso — familias mexiquenses que hoy tienen acceso a una alimentación digna gracias a Cáritas y sus donantes. Toca cualquier imagen para verla en grande.</p>
     </div>
+    <div class="galeria-stats" id="galeria-stats"></div>
     <div id="galeria-grid" class="galeria-grid"></div>
   </div>
 </div>
+
 <div id="vista-adm" class="vista">
   <div class="admin-wrap">
 
@@ -1767,35 +1821,64 @@ function mostrarVista(id){
   }
 }
 
-// --- Galería: junta las fotos de TODAS las comunidades en una sola cuadrícula ---
+// --- Galería: un "muro" con UNA tarjeta por comunidad (no una por foto),
+// para que las 3 fotos de una misma comunidad se vean como un solo relato
+// en vez de repetirse como tarjetas idénticas separadas. ---
 window.pintarGaleria = function(){
   var cont = document.getElementById('galeria-grid');
+  var statsEl = document.getElementById('galeria-stats');
   if(!cont) return;
+
+  function normalizarFotos(c){
+    return (c.fotos || []).map(function(f){
+      return typeof f === 'string'
+        ? {src:f, caption:c.nombre, categoria:''}
+        : {src:f.src, caption:f.categoria + ' · ' + c.nombre, categoria:f.categoria};
+    });
+  }
 
   function render(){
     var todas = window.ComunidadesStore.cargar();
-    var fotos = [];
-    todas.forEach(function(c){
-      (c.fotos || []).forEach(function(f){
-        if(typeof f === 'string'){
-          fotos.push({src:f, caption:c.nombre, nombre:c.nombre, municipio:c.municipio, categoria:''});
-        } else {
-          fotos.push({src:f.src, caption:f.categoria + ' · ' + c.nombre, nombre:c.nombre, municipio:c.municipio, categoria:f.categoria});
-        }
-      });
-    });
+    var conFotos = todas.filter(function(c){ return (c.fotos || []).length > 0; });
 
-    if(fotos.length === 0){
+    if(conFotos.length === 0){
+      if(statsEl) statsEl.innerHTML = '';
       cont.innerHTML = '<p class="galeria-vacio">Todavía no hay fotografías cargadas. En cuanto se registren comunidades con fotos, van a aparecer aquí.</p>';
       return;
     }
 
-    window.__lightboxFotos = fotos;
+    var totalFotos = conFotos.reduce(function(acc,c){ return acc + (c.fotos||[]).length; }, 0);
+    var totalFamilias = todas.reduce(function(acc,c){ return acc + (parseInt(c.familias,10)||0); }, 0);
+    var municipiosUnicos = todas.map(function(c){ return c.municipio; }).filter(function(v,i,a){ return a.indexOf(v)===i; }).length;
 
-    cont.innerHTML = fotos.map(function(f, i){
-      return '<div class="galeria-item" onclick="window.abrirLightbox(' + i + ')">' +
-        '<img src="' + f.src + '" alt="' + f.caption + '" loading="lazy">' +
-        '<div class="galeria-caption"><b>' + f.nombre + '</b><span>' + f.municipio + (f.categoria ? ' · ' + f.categoria : '') + '</span></div>' +
+    if(statsEl){
+      statsEl.innerHTML =
+        '<div><b>' + conFotos.length + '</b><span>Comunidades con fotos</span></div>' +
+        '<div><b>' + totalFotos + '</b><span>Fotografías</span></div>' +
+        '<div><b>' + totalFamilias.toLocaleString('es-MX') + '</b><span>Familias atendidas</span></div>' +
+        '<div><b>' + municipiosUnicos + '</b><span>Municipios</span></div>';
+    }
+
+    // Cada comunidad guarda su propio set de fotos, para que el lightbox
+    // navegue solo entre las fotos de ESA comunidad al abrir su tarjeta —
+    // no entre toda la galería mezclada.
+    window.__galeriaPorComunidad = conFotos.map(normalizarFotos);
+
+    cont.innerHTML = conFotos.map(function(c, idx){
+      var fotos = window.__galeriaPorComunidad[idx];
+      var principal = fotos[0];
+      var miniaturas = fotos.slice(1, 3);
+      var restantes = fotos.length - 1 - miniaturas.length;
+
+      var miniaturasHtml = miniaturas.map(function(f){
+        return '<div class="galeria-mini" style="background-image:url(\'' + f.src + '\')"></div>';
+      }).join('') + (restantes > 0 ? '<div class="galeria-mas">+' + restantes + '</div>' : '');
+
+      return '<div class="galeria-card" onclick="window.abrirGaleriaComunidad(' + idx + ')">' +
+        '<span class="galeria-card-status">Zona Atendida</span>' +
+        '<div class="galeria-card-principal" style="background-image:url(\'' + principal.src + '\')"></div>' +
+        (miniaturas.length ? '<div class="galeria-card-miniaturas">' + miniaturasHtml + '</div>' : '') +
+        '<div class="galeria-card-caption"><b>' + c.nombre + '</b><span>' + c.municipio + ' · ' + fotos.length + (fotos.length === 1 ? ' fotografía' : ' fotografías') + '</span></div>' +
       '</div>';
     }).join('');
   }
@@ -1803,6 +1886,13 @@ window.pintarGaleria = function(){
   if(window.ComunidadesStore){
     window.ComunidadesStore.refrescar().then(render);
   }
+};
+
+window.abrirGaleriaComunidad = function(idx){
+  var fotos = (window.__galeriaPorComunidad || [])[idx];
+  if(!fotos || !fotos.length) return;
+  window.__lightboxFotos = fotos;
+  window.abrirLightbox(0);
 };
 
 function ir(id){
