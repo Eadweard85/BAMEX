@@ -701,6 +701,47 @@ header{
 .search-box input:focus{outline:none;border-color:var(--n);background:rgba(0,0,0,0.6);box-shadow:0 0 8px rgba(232,100,10,.3)}
 .search-box input.search-sin-resultado{border-color:#ff5c5c;animation:searchShake .4s}
 @keyframes searchShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.search-results{
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 320px;
+  max-width: 90vw;
+  max-height: 340px;
+  overflow-y: auto;
+  background: #12121f;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.55);
+  z-index: 500;
+}
+.search-results.show{ display: block; }
+.search-result-item{
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.search-result-item:last-child{ border-bottom: none; }
+.search-result-item:hover{ background: rgba(232,100,10,.18); }
+.search-result-item span.search-result-sub{ color: var(--t); font-size: 11.5px; }
+.search-result-tag{
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--t);
+  background: rgba(255,255,255,.06);
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.search-result-empty{ padding: 16px; text-align: center; color: var(--t); font-size: 12.5px; }
 
 nav{display:flex;gap:1.5rem;align-items:center}
 nav button{background:none;border:none;padding:8px 4px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;transition:color .2s;position:relative}
@@ -746,10 +787,10 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 #gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
 #gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
 
-#vista-com{padding:105px 2rem 2rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#05050a;}
-.com-header{ max-width: 900px; margin: 0 auto 20px; animation: comFadeIn .4s ease; }
-.com-header h1{ font-size: 26px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
-.com-header p{ color: var(--t); font-size: 14px; line-height: 1.6; max-width: 640px; }
+#vista-com{padding:90px 2rem 1.5rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#05050a;}
+.com-header{ max-width: 900px; margin: 0 auto 12px; animation: comFadeIn .4s ease; }
+.com-header h1{ font-size: 21px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 3px; }
+.com-header p{ color: var(--t); font-size: 13px; line-height: 1.4; max-width: 640px; }
 @keyframes comFadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 .bnav{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap}
 .bc{font-size:13px;color:var(--t);display:flex;align-items:center;gap:6px;flex:1}
@@ -763,7 +804,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   border: 1px solid rgba(255,255,255,.05);
   border-radius: var(--r);
   padding: 1.5rem;
-  height: calc(100vh - 270px);
+  height: calc(100vh - 205px);
   min-height: 500px;
   animation: comFadeIn .5s ease;
 }
@@ -1456,8 +1497,8 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
     </div>
     
     <div class="search-box">
-      <input type="text" placeholder="Buscar municipio o comunidad..." id="global-search" list="global-search-datalist" autocomplete="off">
-      <datalist id="global-search-datalist"></datalist>
+      <input type="text" placeholder="Buscar municipio o comunidad..." id="global-search" autocomplete="off">
+      <div class="search-results" id="global-search-results"></div>
     </div>
   </div>
 
@@ -2598,67 +2639,101 @@ window.ComunidadesStore = (function(){
   };
 
   // --- Buscador global (header): busca por nombre de municipio o de
-  // comunidad y navega directo a esa ficha, en vez de ser un input decorativo
-  // sin ninguna función. ---
+  // comunidad y navega directo a esa ficha. Usa un dropdown propio (no el
+  // <datalist> nativo del navegador) para que la lista de resultados se vea
+  // acorde al diseño del sitio en vez del feo listado plano del sistema. ---
   (function initBuscadorGlobal(){
     var input = document.getElementById('global-search');
-    var datalist = document.getElementById('global-search-datalist');
-    if(!input || !datalist) return;
+    var resultsBox = document.getElementById('global-search-results');
+    if(!input || !resultsBox) return;
 
-    function poblarDatalist(){
-      var nombres = meta.map(function(m){ return m.nombre; });
+    var resultadosActuales = [];
+
+    function coleccion(){
+      var items = meta.map(function(m){ return {tipo:'municipio', nombre:m.nombre, ref:m.nombre}; });
       var todas = window.ComunidadesStore ? window.ComunidadesStore.cargar() : [];
-      todas.forEach(function(c){ nombres.push(c.nombre); });
-      datalist.innerHTML = nombres
-        .filter(function(v,i,a){ return a.indexOf(v)===i; })
-        .sort(function(a,b){ return a.localeCompare(b,'es'); })
-        .map(function(n){ return '<option value="'+n.replace(/"/g,'&quot;')+'">'; })
-        .join('');
+      todas.forEach(function(c){ items.push({tipo:'comunidad', nombre:c.nombre, municipio:c.municipio, ref:c.id}); });
+      return items;
     }
-    poblarDatalist();
-    if(window.ComunidadesStore) window.ComunidadesStore.listo().then(poblarDatalist);
+
+    function cerrarResultados(){
+      resultsBox.classList.remove('show');
+      resultsBox.innerHTML = '';
+      resultadosActuales = [];
+    }
+
+    function seleccionarResultado(item){
+      input.value = item.nombre;
+      cerrarResultados();
+      ir('com');
+      setTimeout(function(){
+        if(item.tipo === 'comunidad') window.edomexMostrarComunidad(item.ref);
+        else window.edomexSelectByName(item.ref);
+      }, 250);
+    }
+
+    function renderResultados(lista){
+      if(lista.length === 0){
+        resultsBox.innerHTML = '<div class="search-result-empty">Sin resultados. Intenta con otro nombre.</div>';
+        resultsBox.classList.add('show');
+        return;
+      }
+      resultsBox.innerHTML = lista.map(function(item, i){
+        var etiqueta = item.tipo === 'municipio' ? 'Municipio' : 'Comunidad';
+        var sub = item.tipo === 'comunidad' ? (' <span class="search-result-sub">· ' + item.municipio + '</span>') : '';
+        return '<div class="search-result-item" data-idx="' + i + '">' +
+          '<span>' + item.nombre + sub + '</span>' +
+          '<span class="search-result-tag">' + etiqueta + '</span>' +
+        '</div>';
+      }).join('');
+      resultsBox.classList.add('show');
+      Array.prototype.forEach.call(resultsBox.querySelectorAll('.search-result-item'), function(el){
+        el.addEventListener('click', function(){
+          var idx = parseInt(el.getAttribute('data-idx'), 10);
+          seleccionarResultado(lista[idx]);
+        });
+      });
+    }
 
     function marcarSinResultado(){
       input.classList.add('search-sin-resultado');
       setTimeout(function(){ input.classList.remove('search-sin-resultado'); }, 500);
     }
 
-    function buscarYNavegar(){
+    function buscar(){
       var termino = normalize(input.value);
-      if(!termino) return;
-
-      var todas = window.ComunidadesStore ? window.ComunidadesStore.cargar() : [];
-
-      // 1) coincidencia exacta o parcial con una comunidad (más específico)
-      var comunidad = todas.filter(function(c){ return normalize(c.nombre) === termino; })[0] ||
-                      todas.filter(function(c){ return normalize(c.nombre).indexOf(termino) !== -1; })[0];
-      if(comunidad){
-        ir('com');
-        setTimeout(function(){ window.edomexMostrarComunidad(comunidad.id); }, 250);
-        return;
-      }
-
-      // 2) coincidencia con un municipio
-      var municipio = meta.filter(function(m){ return normalize(m.nombre) === termino; })[0] ||
-                      meta.filter(function(m){ return normalize(m.nombre).indexOf(termino) !== -1; })[0];
-      if(municipio){
-        ir('com');
-        setTimeout(function(){ window.edomexSelectByName(municipio.nombre); }, 250);
-        return;
-      }
-
-      marcarSinResultado();
+      if(!termino){ cerrarResultados(); return; }
+      var coincidencias = coleccion().filter(function(it){
+        return normalize(it.nombre).indexOf(termino) !== -1;
+      });
+      coincidencias.sort(function(a,b){
+        var aEmpieza = normalize(a.nombre).indexOf(termino) === 0 ? 0 : 1;
+        var bEmpieza = normalize(b.nombre).indexOf(termino) === 0 ? 0 : 1;
+        if(aEmpieza !== bEmpieza) return aEmpieza - bEmpieza;
+        return a.nombre.localeCompare(b.nombre, 'es');
+      });
+      resultadosActuales = coincidencias.slice(0, 8);
+      renderResultados(resultadosActuales);
     }
+
+    input.addEventListener('input', buscar);
+    input.addEventListener('focus', function(){ if(input.value.trim()) buscar(); });
 
     input.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         e.preventDefault();
-        buscarYNavegar();
+        if(resultadosActuales.length > 0){
+          seleccionarResultado(resultadosActuales[0]);
+        } else if(input.value.trim()){
+          marcarSinResultado();
+        }
       }
+      if(e.key === 'Escape') cerrarResultados();
     });
 
-    // También responde si eligen una opción del datalist con el mouse.
-    input.addEventListener('change', buscarYNavegar);
+    document.addEventListener('click', function(e){
+      if(e.target !== input && !resultsBox.contains(e.target)) cerrarResultados();
+    });
   })();
 })();
 </script>
