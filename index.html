@@ -1622,7 +1622,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
         <p class="admin-mapa-hint">Si eliges una localidad del catálogo, el punto se coloca solo. Si no aparece en la lista, pega aquí un link de Google Maps, unas coordenadas (lat, lng) o escribe una dirección — también puedes hacer clic o arrastrar el pin directamente en el mapa.</p>
         <div class="admin-buscar-direccion">
           <input type="text" id="com-buscar-direccion" placeholder="Pega un link de Google Maps, coordenadas o una dirección...">
-          <button type="button" class="bq" onclick="buscarDireccionAdmin()">Buscar</button>
+          <button type="button" class="bq" id="com-buscar-btn" onclick="buscarDireccionAdmin()">Buscar</button>
         </div>
         <div id="com-mapa-picker"></div>
         <p class="admin-mapa-coords" id="com-mapa-coords">Sin ubicación marcada todavía.</p>
@@ -2961,9 +2961,25 @@ window.ComunidadesStore = (function(){
     return null;
   }
 
+  // Los links cortos (maps.app.goo.gl, goo.gl/maps) no traen coordenadas en la
+  // URL: solo redirigen. El navegador no puede "seguir" esa redirección para
+  // leer la URL final por restricciones de CORS, así que usamos un proxy
+  // público que sí la sigue en su servidor y nos devuelve la URL final.
+  function resolverLinkCorto(url){
+    var proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    return fetch(proxy).then(function(res){ return res.json(); }).then(function(data){
+      var finalUrl = (data && data.status && data.status.url) ? data.status.url : '';
+      var coords = finalUrl ? extraerCoordsDeTexto(finalUrl) : null;
+      if(coords) return coords;
+      if(data && data.contents) return extraerCoordsDeTexto(data.contents);
+      return null;
+    }).catch(function(){ return null; });
+  }
+
   window.buscarDireccionAdmin = function(){
     var q = document.getElementById('com-buscar-direccion').value.trim();
     if(!q) return;
+    var boton = document.getElementById('com-buscar-btn');
 
     // ¿Trae coordenadas o un link de Google Maps con coordenadas incluidas?
     var coords = extraerCoordsDeTexto(q);
@@ -2973,10 +2989,18 @@ window.ComunidadesStore = (function(){
     }
 
     // ¿Es un link (de Maps u otro) pero sin coordenadas visibles en la URL?
-    // Esto pasa con links cortos (maps.app.goo.gl, goo.gl/maps) que redirigen
-    // y no podemos "seguir" desde el navegador por restricciones de CORS.
+    // Puede ser un link corto (maps.app.goo.gl / goo.gl/maps): intentamos
+    // resolverlo automáticamente antes de rendirnos.
     if(/^https?:\/\//i.test(q)){
-      alert('Ese link no incluye coordenadas visibles (posiblemente es un link corto).\n\nEn Google Maps, abre el lugar y usa "Compartir" → copia el link largo (con "@lat,lon" o "!3d...!4d..."), o copia directamente las coordenadas que aparecen al buscar el lugar.');
+      if(boton){ boton.disabled = true; boton.textContent = 'Buscando...'; }
+      resolverLinkCorto(q).then(function(coordsResueltas){
+        if(boton){ boton.disabled = false; boton.textContent = 'Buscar'; }
+        if(coordsResueltas){
+          irACoordenadas(coordsResueltas.lat, coordsResueltas.lon, 16);
+        } else {
+          alert('No se pudieron obtener coordenadas de ese link.\n\nEn Google Maps, abre el lugar y usa "Compartir" → copia el link largo (con "@lat,lon" o "!3d...!4d..."), o copia directamente las coordenadas que aparecen al buscar el lugar.');
+        }
+      });
       return;
     }
 
