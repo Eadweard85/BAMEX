@@ -2341,6 +2341,13 @@ window.ComunidadesStore = (function(){
   window.mostrarAdmin = async function(){
     var sesion = await supabaseClient.auth.getSession();
     var logueado = !!(sesion.data && sesion.data.session);
+
+    // El botón "Administrar" del menú solo aparece mientras hay una sesión
+    // activa — así, ya adentro, puedes moverte libre entre pestañas y volver
+    // sin tener que volver a escribir #login cada vez.
+    var navAdm = document.getElementById('nav-adm');
+    if(navAdm) navAdm.style.display = logueado ? '' : 'none';
+
     document.getElementById('admin-login-wrap').classList.toggle('hide', logueado);
     document.getElementById('admin-panel-wrap').classList.toggle('show', logueado);
     if(logueado){
@@ -2397,19 +2404,19 @@ window.ComunidadesStore = (function(){
     window.mostrarAdmin();
   };
 
-  // Si la sesión cambia (por ejemplo se cierra en otra pestaña), refleja el
-  // estado aquí también mientras estemos viendo la pantalla de Administrar.
+  // Refleja cualquier cambio de sesión de inmediato (login, logout, o que se
+  // cierre desde otra pestaña) — sin importar qué pestaña esté visible en
+  // ese momento, para que el botón "Administrar" del menú siempre esté
+  // sincronizado con si hay sesión activa o no.
   supabaseClient.auth.onAuthStateChange(function(){
-    var vista = document.getElementById('vista-adm');
-    if(vista && vista.classList.contains('on')) window.mostrarAdmin();
+    window.mostrarAdmin();
   });
 
-  // Si la página se abrió directo en #login (link directo, o el usuario le
-  // dio "Adelante" hasta llegar aquí), la vista ya se puso visible antes de
-  // que esta función existiera — así que la revisamos una vez más ahora.
-  if(window.location.hash.replace('#','') === 'login'){
-    window.mostrarAdmin();
-  }
+  // Revisa la sesión una vez al cargar la página, sin importar en qué
+  // pestaña caigas — así, si ya tenías la sesión abierta de antes, el botón
+  // "Administrar" aparece de inmediato sin tener que volver a pasar por
+  // #login. Si no hay sesión, simplemente no pasa nada visible.
+  window.mostrarAdmin();
 
   // --- Mapa selector de ubicación exacta ---
   var pickerMap = null, pickerMarker = null, pickerLatLng = null;
