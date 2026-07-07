@@ -1275,6 +1275,35 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .admin-hidden{ display: none; }
 
 .admin-lista-wrap h3{ font-size: 15px; margin-bottom: 10px; }
+.admin-lista-toolbar{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.admin-lista-toolbar input[type="text"]{
+  flex: 1;
+  min-width: 180px;
+  padding: 9px 10px;
+  background: #12121f;
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+}
+.admin-select-all{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--t);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.admin-com-check{ display: flex; align-items: center; padding-right: 4px; cursor: pointer; }
+.admin-com-check input{ width: 16px; height: 16px; cursor: pointer; }
+.admin-com-info{ flex: 1; }
 .admin-import-wrap{
   background: #0c0c14;
   border: 1px solid rgba(255,255,255,0.06);
@@ -1659,16 +1688,25 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
       </div>
 
       <div class="admin-import-wrap">
-        <h3>Importar comunidades desde Excel</h3>
+        <h3>Importar / actualizar comunidades desde Excel</h3>
         <p class="admin-mapa-hint">
           Sube un archivo <b>.xlsx o .csv</b> con una fila por comunidad y estas columnas (el orden no importa,
           los nombres de columna se detectan solos): <b>Municipio</b>, <b>Comunidad</b> (o "Nombre") y <b>Familias</b>.
           La frecuencia se pondrá como "Quincenal" para todas. Si el municipio + nombre coinciden con el catálogo
-          INEGI, la ubicación en el mapa se coloca sola; si no, se importa igual pero sin ubicación exacta
-          (la puedes marcar después desde "Editar", con el buscador de arriba). Si una comunidad ya existe
-          (mismo nombre + municipio), se actualiza en vez de duplicarse.
+          INEGI, la ubicación en el mapa se coloca sola; si no, se importa igual pero sin ubicación exacta.
         </p>
-        <input type="file" id="import-archivo" accept=".xlsx,.xls,.csv">
+        <p class="admin-mapa-hint">
+          <b>Para actualizaciones mensuales (ej. familias atendidas):</b> descarga primero el Excel con el botón de
+          abajo — trae una columna <b>ID</b> que identifica a cada comunidad de forma exacta. Edita ese mismo
+          archivo (cambia solo "Familias") y vuelve a subirlo: como ya trae ID, actualiza el registro correcto
+          aunque hayas editado el nombre después, sin crear duplicados. Si tu archivo no trae ID (primera carga),
+          empareja por nombre + municipio como respaldo.
+        </p>
+        <div class="admin-form-actions">
+          <button type="button" class="bq" onclick="exportarComunidadesExcel()">⬇ Descargar Excel actual (con ID)</button>
+        </div>
+
+        <input type="file" id="import-archivo" accept=".xlsx,.xls,.csv" style="margin-top:16px;">
         <div class="admin-form-actions">
           <button type="button" class="bq" onclick="analizarArchivoImportacion()">Analizar archivo</button>
         </div>
@@ -1740,6 +1778,15 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 
       <div class="admin-lista-wrap">
         <h3>Comunidades registradas</h3>
+        <div class="admin-lista-toolbar">
+          <input type="text" id="lista-filtro" placeholder="Filtrar por nombre o municipio...">
+          <label class="admin-select-all">
+            <input type="checkbox" id="lista-seleccionar-todo" onchange="toggleSeleccionarTodoFiltrado(this)">
+            Seleccionar/deseleccionar todo lo filtrado
+          </label>
+          <button type="button" class="bq" id="lista-eliminar-btn" onclick="eliminarSeleccionadasAdmin()" disabled>Eliminar seleccionadas (0)</button>
+        </div>
+        <p id="lista-progreso" class="admin-import-progreso"></p>
         <div id="admin-lista-comunidades"></div>
       </div>
     </div>
@@ -4071,29 +4118,137 @@ var OpenLocationCode = function () {};
     if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
   };
 
-  function refrescarListaAdmin(){
+  var seleccionEliminar = {}; // { [id]: true } — usamos objeto para simplicidad en este scope ES5
+
+  function obtenerListaFiltrada(){
+    var filtroInput = document.getElementById('lista-filtro');
+    var filtro = filtroInput ? normalizarTextoCat(filtroInput.value) : '';
     var lista = window.ComunidadesStore.cargar();
+    if(!filtro) return lista;
+    return lista.filter(function(c){
+      return normalizarTextoCat(c.nombre).indexOf(filtro) !== -1 || normalizarTextoCat(c.municipio).indexOf(filtro) !== -1;
+    });
+  }
+
+  function actualizarBotonEliminarSeleccionadas(){
+    var btn = document.getElementById('lista-eliminar-btn');
+    if(!btn) return;
+    var n = Object.keys(seleccionEliminar).length;
+    btn.textContent = 'Eliminar seleccionadas (' + n + ')';
+    btn.disabled = n === 0;
+  }
+
+  function refrescarListaAdmin(){
+    var listaCompleta = window.ComunidadesStore.cargar();
+
+    // limpiar de la selección ids que ya no existen (ej. se eliminaron desde otra pestaña)
+    var idsValidos = {};
+    listaCompleta.forEach(function(c){ idsValidos[String(c.id)] = true; });
+    Object.keys(seleccionEliminar).forEach(function(id){ if(!idsValidos[id]) delete seleccionEliminar[id]; });
+
     var cont = document.getElementById('admin-lista-comunidades');
-    if(lista.length === 0){
+    if(listaCompleta.length === 0){
       cont.innerHTML = '<p class="admin-empty">Aún no hay comunidades registradas.</p>';
+      actualizarBotonEliminarSeleccionadas();
       return;
     }
+
+    var lista = obtenerListaFiltrada();
+    if(lista.length === 0){
+      cont.innerHTML = '<p class="admin-empty">Ninguna comunidad coincide con el filtro.</p>';
+      actualizarBotonEliminarSeleccionadas();
+      return;
+    }
+
     cont.innerHTML = lista.map(function(c){
       var ubicacionTxt = (typeof c.lat === 'number') ? '📍 ubicación exacta' : '📍 aprox. (sin marcar)';
+      var marcado = seleccionEliminar[String(c.id)] ? 'checked' : '';
       return '<div class="admin-com-item">' +
-        '<div><b>' + c.nombre + '</b><br><span>' + c.municipio + ' · ' + (c.familias || 0) + ' familias · ' + (c.frecuencia || '—') + ' · ' + ubicacionTxt + '</span></div>' +
+        '<label class="admin-com-check"><input type="checkbox" data-id="' + c.id + '" onchange="toggleSeleccionComunidad(this)" ' + marcado + '></label>' +
+        '<div class="admin-com-info"><b>' + c.nombre + '</b><br><span>' + c.municipio + ' · ' + (c.familias || 0) + ' familias · ' + (c.frecuencia || '—') + ' · ' + ubicacionTxt + '</span></div>' +
         '<div class="admin-com-actions">' +
           '<button onclick="editarComunidadAdmin(\'' + c.id + '\')">Editar</button>' +
           '<button onclick="eliminarComunidadAdmin(\'' + c.id + '\')">Eliminar</button>' +
         '</div>' +
       '</div>';
     }).join('');
+    actualizarBotonEliminarSeleccionadas();
   }
+
+  window.toggleSeleccionComunidad = function(checkbox){
+    var id = String(checkbox.getAttribute('data-id'));
+    if(checkbox.checked) seleccionEliminar[id] = true;
+    else delete seleccionEliminar[id];
+    actualizarBotonEliminarSeleccionadas();
+  };
+
+  window.toggleSeleccionarTodoFiltrado = function(checkbox){
+    var lista = obtenerListaFiltrada();
+    lista.forEach(function(c){
+      if(checkbox.checked) seleccionEliminar[String(c.id)] = true;
+      else delete seleccionEliminar[String(c.id)];
+    });
+    refrescarListaAdmin();
+  };
+
+  window.eliminarSeleccionadasAdmin = async function(){
+    var ids = Object.keys(seleccionEliminar);
+    if(!ids.length) return;
+    if(!confirm('¿Eliminar ' + ids.length + ' comunidades seleccionadas? Esta acción no se puede deshacer.')) return;
+
+    var btn = document.getElementById('lista-eliminar-btn');
+    var progreso = document.getElementById('lista-progreso');
+    btn.disabled = true;
+
+    var hechas = 0, fallidas = 0;
+    for(var i = 0; i < ids.length; i++){
+      if(progreso) progreso.textContent = 'Eliminando ' + (i + 1) + ' / ' + ids.length + '...';
+      try{
+        await window.ComunidadesStore.eliminar(ids[i]);
+        delete seleccionEliminar[ids[i]];
+        hechas++;
+      } catch(err){
+        fallidas++;
+      }
+    }
+
+    if(progreso) progreso.textContent = 'Listo: ' + hechas + ' eliminadas' + (fallidas ? ' · ' + fallidas + ' fallaron' : '') + '.';
+    refrescarListaAdmin();
+    if(window.refreshComunidadesMarkers) window.refreshComunidadesMarkers();
+    if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
+  };
+
+  document.getElementById('lista-filtro').addEventListener('input', refrescarListaAdmin);
 
   // ------------------------------------------------------------------
   // IMPORTACIÓN MASIVA DESDE EXCEL/CSV
   // ------------------------------------------------------------------
   var __importFilasProcesadas = [];
+
+  window.exportarComunidadesExcel = function(){
+    var lista = window.ComunidadesStore.cargar().slice().sort(function(a, b){
+      return (a.municipio || '').localeCompare(b.municipio || '') || (a.nombre || '').localeCompare(b.nombre || '');
+    });
+    if(!lista.length){ alert('Todavía no hay comunidades registradas para exportar.'); return; }
+
+    var filas = lista.map(function(c){
+      return {
+        ID: c.id,
+        Municipio: c.municipio,
+        Comunidad: c.nombre,
+        Familias: c.familias || 0,
+        Frecuencia: c.frecuencia || '',
+        Latitud: (typeof c.lat === 'number') ? c.lat : '',
+        Longitud: (typeof c.lng === 'number') ? c.lng : ''
+      };
+    });
+
+    var hoja = XLSX.utils.json_to_sheet(filas);
+    var libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, 'Comunidades');
+    var fecha = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(libro, 'comunidades_' + fecha + '.xlsx');
+  };
 
   function indiceColumna(headers, patrones){
     for(var i = 0; i < headers.length; i++){
@@ -4101,6 +4256,19 @@ var OpenLocationCode = function () {};
       for(var j = 0; j < patrones.length; j++){
         if(h.indexOf(patrones[j]) !== -1) return i;
       }
+    }
+    return -1;
+  }
+
+  // Detección de la columna ID por IGUALDAD exacta (no por "contiene"), porque
+  // "Comunidad" contiene la subcadena "id" y daría un falso positivo con
+  // indiceColumna(). El ID es opcional: solo viene si el archivo fue generado
+  // con "Descargar Excel actual", o si el usuario lo agregó a mano.
+  function indiceColumnaId(headers){
+    var validos = ['id', 'clave', 'uuid', 'identificador', 'idcomunidad', 'id_comunidad'];
+    for(var i = 0; i < headers.length; i++){
+      var limpio = normalizarTextoCat(String(headers[i] || '')).replace(/[^a-z0-9]/g, '');
+      if(validos.indexOf(limpio) !== -1) return i;
     }
     return -1;
   }
@@ -4139,6 +4307,7 @@ var OpenLocationCode = function () {};
     var idxMunicipio = indiceColumna(headers, ['municipio']);
     var idxNombre = indiceColumna(headers, ['comunidad', 'localidad', 'nombre']);
     var idxFamilias = indiceColumna(headers, ['familias']);
+    var idxId = indiceColumnaId(headers);
 
     if(idxMunicipio === -1 || idxNombre === -1){
       alert('No encontré las columnas de "Municipio" y/o "Comunidad/Nombre" en la primera fila del archivo. Revisa los encabezados.');
@@ -4147,9 +4316,11 @@ var OpenLocationCode = function () {};
 
     var existentes = window.ComunidadesStore.cargar();
     var existentesPorClave = {};
+    var existentesPorId = {};
     existentes.forEach(function(c){
       var clave = normalizarTextoCat(c.municipio) + '||' + normalizarTextoCat(c.nombre);
       existentesPorClave[clave] = c;
+      existentesPorId[String(c.id)] = c;
     });
 
     var procesadas = [];
@@ -4160,6 +4331,7 @@ var OpenLocationCode = function () {};
       var municipioTexto = String(fila[idxMunicipio] || '').trim();
       var nombreTexto = String(fila[idxNombre] || '').trim();
       var familiasTexto = idxFamilias > -1 ? String(fila[idxFamilias] || '').trim() : '';
+      var idTexto = idxId > -1 ? String(fila[idxId] || '').trim() : '';
 
       var item = { fila: i + 1, municipioTexto: municipioTexto, nombreTexto: nombreTexto };
 
@@ -4200,15 +4372,24 @@ var OpenLocationCode = function () {};
       }
 
       var claveExistente = normalizarTextoCat(item.municipio) + '||' + normalizarTextoCat(item.nombre);
-      var existente = existentesPorClave[claveExistente];
+      var existentePorId = idTexto ? existentesPorId[idTexto] : null;
+      var existente = existentePorId || existentesPorClave[claveExistente];
+
       if(existente){
         item.idExistente = existente.id;
         item.accion = 'actualizar';
+        item.emparejadoPorId = !!existentePorId;
+        if(existentePorId){
+          item.motivo += ' · 🔑 emparejado por ID (a prueba de cambios de nombre)';
+        }
         if((item.lat === undefined || item.lat === null) && typeof existente.lat === 'number'){
           item.lat = existente.lat;
           item.lng = existente.lng;
         }
       } else {
+        if(idTexto && !existentePorId){
+          item.motivo += ' · el ID "' + idTexto + '" no existe ya (se creará como nueva)';
+        }
         item.accion = 'crear';
       }
 
