@@ -1700,7 +1700,10 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
           Sube un archivo <b>.xlsx o .csv</b> con una fila por comunidad y estas columnas (el orden no importa,
           los nombres de columna se detectan solos): <b>Municipio</b>, <b>Comunidad</b> (o "Nombre") y <b>Familias</b>.
           La frecuencia se pondrá como "Quincenal" para todas. Si el municipio + nombre coinciden con el catálogo
-          INEGI, la ubicación en el mapa se coloca sola; si no, se importa igual pero sin ubicación exacta.
+          INEGI, la ubicación en el mapa se coloca sola; si no, se importa igual pero sin ubicación exacta. Si el
+          municipio no es de los 125 del Edomex (ej. comunidades vecinas como Maravatío de Ocampo), también se
+          importa — queda como "Otro municipio" y sin ubicación automática, la marcas después desde "Editar" con
+          el buscador de arriba.
         </p>
         <p class="admin-mapa-hint">
           <b>Para actualizaciones mensuales (ej. familias atendidas):</b> descarga primero el Excel con el botón de
@@ -4420,29 +4423,37 @@ var OpenLocationCode = function () {};
 
       var objetivoMun = normalizarTextoCat(municipioTexto);
       var municipioReal = Object.keys(metaPorNombre).filter(function(n){ return normalizarTextoCat(n) === objetivoMun; })[0];
-      if(!municipioReal){
-        item.estado = 'error'; item.motivo = 'Municipio no reconocido: "' + municipioTexto + '"';
-        procesadas.push(item); continue;
-      }
-      item.municipio = municipioReal;
 
       var familias = parseInt(familiasTexto, 10);
       item.familias = isNaN(familias) ? 0 : familias;
 
-      var m = metaPorNombre[municipioReal];
-      var listaLocalidades = localidadesPorMunicipio[m.clave] || [];
-      var objetivoNom = normalizarTextoCat(nombreTexto);
-      var matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
-      if(matchCat){
-        item.nombre = matchCat.n;
-        item.lat = matchCat.lat;
-        item.lng = matchCat.lng;
-        item.estado = 'ok';
-        item.motivo = 'Ubicación real encontrada en el catálogo INEGI';
-      } else {
+      if(!municipioReal){
+        // Municipio fuera del catálogo del Edomex (ej. Maravatío de Ocampo,
+        // Michoacán): se importa igual como "Otro municipio", con el texto
+        // tal cual venía en el Excel — no hay catálogo INEGI para calcular
+        // su ubicación automáticamente, así que queda sin marcar (igual que
+        // cuando se agrega a mano eligiendo "Otro municipio" en el formulario).
+        item.municipio = municipioTexto;
         item.nombre = nombreTexto;
         item.estado = 'warn';
-        item.motivo = 'Sin coincidencia en el catálogo — se importará sin ubicación exacta';
+        item.motivo = 'Municipio fuera del catálogo del Edomex ("' + municipioTexto + '") — se importa como "Otro municipio", sin ubicación automática';
+      } else {
+        item.municipio = municipioReal;
+        var m = metaPorNombre[municipioReal];
+        var listaLocalidades = localidadesPorMunicipio[m.clave] || [];
+        var objetivoNom = normalizarTextoCat(nombreTexto);
+        var matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
+        if(matchCat){
+          item.nombre = matchCat.n;
+          item.lat = matchCat.lat;
+          item.lng = matchCat.lng;
+          item.estado = 'ok';
+          item.motivo = 'Ubicación real encontrada en el catálogo INEGI';
+        } else {
+          item.nombre = nombreTexto;
+          item.estado = 'warn';
+          item.motivo = 'Sin coincidencia en el catálogo — se importará sin ubicación exacta';
+        }
       }
 
       var claveExistente = normalizarTextoCat(item.municipio) + '||' + normalizarTextoCat(item.nombre);
