@@ -1735,6 +1735,7 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
 
         <label>Municipio</label>
         <select id="com-municipio" required></select>
+        <input type="text" id="com-municipio-otro" class="admin-hidden" placeholder="Escribe el municipio y estado, ej. Maravatío de Ocampo, Michoacán" style="margin-top:8px;">
 
         <label>Nombre de la comunidad</label>
         <input type="text" id="com-nombre" required placeholder="Escribe para ver localidades reales del municipio..." list="com-nombre-datalist" autocomplete="off">
@@ -3624,6 +3625,30 @@ var OpenLocationCode = function () {};
       opt.textContent = m.nombre;
       selectMunicipio.appendChild(opt);
     });
+  var optOtro = document.createElement('option');
+  optOtro.value = '__otro__';
+  optOtro.textContent = 'Otro municipio (fuera del Edomex)';
+  selectMunicipio.appendChild(optOtro);
+
+  // Devuelve el municipio "real" a usar: el elegido del catálogo, o el texto
+  // libre escrito cuando se elige "Otro municipio (fuera del Edomex)".
+  function obtenerMunicipioActual(){
+    if(selectMunicipio.value === '__otro__'){
+      return document.getElementById('com-municipio-otro').value.trim();
+    }
+    return selectMunicipio.value;
+  }
+
+  function mostrarUOcultarMunicipioOtro(){
+    var otroInput = document.getElementById('com-municipio-otro');
+    var esOtro = selectMunicipio.value === '__otro__';
+    otroInput.classList.toggle('admin-hidden', !esOtro);
+    if(esOtro){
+      document.getElementById('com-nombre-datalist').innerHTML = '';
+      document.getElementById('com-catalogo-hint').textContent =
+        'No hay catálogo INEGI para municipios fuera del Estado de México — escribe el nombre de la comunidad libremente. El buscador de ubicación de abajo sí la puede encontrar en cualquier parte de México.';
+    }
+  }
   function poblarDatalistLocalidades(nombreMunicipio){
     var m = metaPorNombre[nombreMunicipio];
     var datalist = document.getElementById('com-nombre-datalist');
@@ -3783,6 +3808,8 @@ var OpenLocationCode = function () {};
   }
 
   selectMunicipio.addEventListener('change', function(){
+    mostrarUOcultarMunicipioOtro();
+    if(selectMunicipio.value === '__otro__') return;
     if(!pickerLatLng) recentrarPickerEnMunicipio(selectMunicipio.value);
     poblarDatalistLocalidades(selectMunicipio.value);
     intentarAutoubicarPorNombre();
@@ -3918,7 +3945,24 @@ var OpenLocationCode = function () {};
           return normalizarTextoCat(n) === objetivo;
         })[0] || null;
       }
-      if(!municipioEncontrado) return;
+
+      if(!municipioEncontrado){
+        // Fuera del catálogo del Edomex (ej. Maravatío de Ocampo, Michoacán):
+        // usamos "Otro municipio" y dejamos escrito lo que detectamos, junto
+        // con el estado, para que el admin solo tenga que confirmarlo.
+        if(candidatosMunicipio[0]){
+          selectMunicipio.value = '__otro__';
+          mostrarUOcultarMunicipioOtro();
+          document.getElementById('com-municipio-otro').value =
+            candidatosMunicipio[0] + (addr.state ? ', ' + addr.state : '');
+        }
+        var candidatosComunidadLibre = [addr.village, addr.hamlet, addr.suburb, addr.town, addr.neighbourhood, addr.city_district]
+          .filter(Boolean);
+        if(candidatosComunidadLibre[0]){
+          document.getElementById('com-nombre').value = candidatosComunidadLibre[0];
+        }
+        return;
+      }
 
       selectMunicipio.value = municipioEncontrado;
       poblarDatalistLocalidades(municipioEncontrado);
@@ -3994,14 +4038,29 @@ var OpenLocationCode = function () {};
     }
 
     // 4) De lo contrario, se trata como dirección/lugar de texto normal.
-    var municipio = selectMunicipio.value;
-    var consulta = q + (municipio ? ', ' + municipio : '') + ', Estado de México, México';
-    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' + encodeURIComponent(consulta);
+    //    Primero probamos asumiendo que es del Edomex (mejora la precisión en
+    //    el caso más común); si no hay resultado, reintentamos sin esa
+    //    suposición y en todo México — para comunidades como Maravatío de
+    //    Ocampo (Michoacán) u otras que atienden fuera del Estado de México.
+    var municipio = obtenerMunicipioActual();
+    var esOtroMunicipio = selectMunicipio.value === '__otro__';
+    var intentoEdomex = q + (municipio ? ', ' + municipio : '') + ', Estado de México, México';
+    var intentoNacional = q + (municipio ? ', ' + municipio : '') + ', México';
 
-    conBotonOcupado(fetch(url).then(function(res){ return res.json(); }).then(function(data){
-      if(data && data.length) return {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
-      return null;
-    }).catch(function(){ return null; })).then(function(coordsResueltas){
+    function buscarEnNominatim(consulta){
+      var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' + encodeURIComponent(consulta);
+      return fetch(url).then(function(res){ return res.json(); }).then(function(data){
+        if(data && data.length) return {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)};
+        return null;
+      }).catch(function(){ return null; });
+    }
+
+    conBotonOcupado(
+      (esOtroMunicipio ? Promise.resolve(null) : buscarEnNominatim(intentoEdomex)).then(function(coords){
+        if(coords) return coords;
+        return buscarEnNominatim(intentoNacional);
+      })
+    ).then(function(coordsResueltas){
       if(coordsResueltas) ubicarYCompletar(coordsResueltas.lat, coordsResueltas.lon, 15);
       else fallarConAyuda();
     });
@@ -4061,6 +4120,7 @@ var OpenLocationCode = function () {};
   window.resetFormComunidad = function(){
     document.getElementById('form-comunidad').reset();
     document.getElementById('com-edit-id').value = '';
+    document.getElementById('com-municipio-otro').classList.add('admin-hidden');
     window.__fotosPendientes = {};
     CATEGORIAS_FOTO.forEach(function(cat){ window.__fotosPendientes[cat] = null; });
     pintarPreviewFotos();
@@ -4080,10 +4140,17 @@ var OpenLocationCode = function () {};
     if(!c) return;
     document.getElementById('com-edit-id').value = c.id;
     document.getElementById('com-nombre').value = c.nombre;
-    document.getElementById('com-municipio').value = c.municipio;
+    if(metaPorNombre[c.municipio]){
+      document.getElementById('com-municipio').value = c.municipio;
+      mostrarUOcultarMunicipioOtro();
+      poblarDatalistLocalidades(c.municipio);
+    } else {
+      document.getElementById('com-municipio').value = '__otro__';
+      mostrarUOcultarMunicipioOtro();
+      document.getElementById('com-municipio-otro').value = c.municipio;
+    }
     document.getElementById('com-familias').value = c.familias;
     document.getElementById('com-frecuencia').value = c.frecuencia;
-    poblarDatalistLocalidades(c.municipio);
 
     window.__fotosPendientes = {};
     CATEGORIAS_FOTO.forEach(function(cat){ window.__fotosPendientes[cat] = null; });
@@ -4534,14 +4601,19 @@ var OpenLocationCode = function () {};
     ev.preventDefault();
     var id = document.getElementById('com-edit-id').value;
     var nombre = document.getElementById('com-nombre').value.trim();
-    var municipio = document.getElementById('com-municipio').value;
+    var municipio = obtenerMunicipioActual();
     var familias = parseInt(document.getElementById('com-familias').value, 10) || 0;
     var frecuencia = document.getElementById('com-frecuencia').value;
     var fotos = CATEGORIAS_FOTO
       .filter(function(cat){ return window.__fotosPendientes[cat]; })
       .map(function(cat){ return {categoria:cat, src:window.__fotosPendientes[cat]}; });
 
-    if(!nombre || !municipio){ return; }
+    if(!nombre || !municipio){
+      if(selectMunicipio.value === '__otro__' && !municipio){
+        alert('Escribe el nombre del municipio (y de preferencia el estado) en el campo de texto.');
+      }
+      return;
+    }
 
     var registro = { nombre:nombre, municipio:municipio, familias:familias, frecuencia:frecuencia, fotos:fotos };
     if(pickerLatLng){
