@@ -2259,8 +2259,8 @@ function alCambiarMunicipio() {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-  const SUPABASE_URL = "https://aqrvfccdkigfvqaoirpp.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_3WgmUyNraIpbRAUS-lIvBw_UfQ_UMhL";
+  const SUPABASE_URL = "https://pvjlcsxggbnhtuogtuio.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_UB0Zdik6-oW6s5NOLdeVfg_8sfjIGSM";
 
   var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 </script>
@@ -4559,6 +4559,7 @@ var OpenLocationCode = function () {};
     confirmarBtn.disabled = true;
 
     var hechas = 0, nuevas = 0, actualizadas = 0, fallidas = 0;
+    var primerError = null;
     for(var i = 0; i < importables.length; i++){
       var item = importables[i];
       progreso.textContent = 'Importando ' + (i + 1) + ' / ' + importables.length + '...';
@@ -4585,12 +4586,18 @@ var OpenLocationCode = function () {};
         }
       } catch(err){
         fallidas++;
+        var msj = (err && (err.message || err.error_description || err.hint)) || JSON.stringify(err);
+        console.error('Error al importar fila', item.fila, '(' + item.nombre + '):', err);
+        if(!primerError) primerError = msj;
       }
       hechas++;
     }
 
     progreso.textContent = 'Listo: ' + hechas + ' procesadas · ' + nuevas + ' nuevas · ' +
       actualizadas + ' actualizadas' + (fallidas ? ' · ' + fallidas + ' fallaron' : '') + '.';
+    if(primerError){
+      progreso.textContent += ' Motivo del primer error (revisa la consola del navegador para ver todos): "' + primerError + '"';
+    }
     confirmarBtn.disabled = false;
     confirmarBtn.textContent = 'Confirmar importación';
 
