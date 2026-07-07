@@ -1325,7 +1325,14 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   border-radius: 20px;
   border: 1px solid var(--br);
   background: rgba(255,255,255,.04);
+  font-family: inherit;
+  color: #fff;
+  cursor: default;
+  transition: transform .1s, box-shadow .15s;
 }
+button.admin-import-badge{ cursor: pointer; }
+button.admin-import-badge:hover{ background: rgba(255,255,255,.09); }
+button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; transform: translateY(-1px); }
 .admin-import-badge b{ font-family: 'IBM Plex Mono', monospace; }
 .admin-import-badge.ok{ border-color: rgba(90,200,120,.4); color: #7fe0a0; }
 .admin-import-badge.warn{ border-color: rgba(232,180,10,.4); color: #f0cf6a; }
@@ -4400,9 +4407,12 @@ var OpenLocationCode = function () {};
     pintarResultadoImportacion(procesadas);
   };
 
+  var __importFiltroEstado = 'todas';
+
   function pintarResultadoImportacion(procesadas){
     var wrap = document.getElementById('import-resultado');
     wrap.classList.remove('admin-hidden');
+    __importFiltroEstado = 'todas';
 
     var ok = procesadas.filter(function(x){ return x.estado === 'ok'; }).length;
     var warn = procesadas.filter(function(x){ return x.estado === 'warn'; }).length;
@@ -4411,12 +4421,29 @@ var OpenLocationCode = function () {};
     var actualiza = procesadas.filter(function(x){ return x.estado !== 'error' && x.accion === 'actualizar'; }).length;
 
     document.getElementById('import-resumen').innerHTML =
-      '<span class="admin-import-badge ok"><b>' + ok + '</b> con ubicación exacta</span>' +
-      '<span class="admin-import-badge warn"><b>' + warn + '</b> sin ubicación (se importan igual)</span>' +
-      '<span class="admin-import-badge err"><b>' + err + '</b> con error (no se importan)</span>' +
+      '<button type="button" class="admin-import-badge activo" data-estado="todas" onclick="filtrarImportacionPorEstado(this)"><b>' + procesadas.length + '</b> todas</button>' +
+      '<button type="button" class="admin-import-badge ok" data-estado="ok" onclick="filtrarImportacionPorEstado(this)"><b>' + ok + '</b> con ubicación exacta</button>' +
+      '<button type="button" class="admin-import-badge warn" data-estado="warn" onclick="filtrarImportacionPorEstado(this)"><b>' + warn + '</b> sin ubicación (se importan igual)</button>' +
+      '<button type="button" class="admin-import-badge err" data-estado="error" onclick="filtrarImportacionPorEstado(this)"><b>' + err + '</b> con error (no se importan)</button>' +
       '<span class="admin-import-badge"><b>' + nuevas + '</b> nuevas · <b>' + actualiza + '</b> actualizarían una existente</span>';
 
-    var filasHtml = procesadas.map(function(x){
+    renderTablaImportacion();
+  }
+
+  window.filtrarImportacionPorEstado = function(boton){
+    __importFiltroEstado = boton.getAttribute('data-estado');
+    var botones = document.querySelectorAll('#import-resumen .admin-import-badge[data-estado]');
+    botones.forEach(function(b){ b.classList.toggle('activo', b === boton); });
+    renderTablaImportacion();
+  };
+
+  function renderTablaImportacion(){
+    var procesadas = __importFilasProcesadas;
+    var visibles = __importFiltroEstado === 'todas'
+      ? procesadas
+      : procesadas.filter(function(x){ return x.estado === __importFiltroEstado; });
+
+    var filasHtml = visibles.map(function(x){
       var claseFila = x.estado === 'ok' ? 'fila-ok' : (x.estado === 'warn' ? 'fila-warn' : 'fila-err');
       var accionTxt = x.estado === 'error' ? '—' : (x.accion === 'actualizar' ? 'Actualizar' : 'Crear');
       return '<tr class="' + claseFila + '">' +
@@ -4429,7 +4456,11 @@ var OpenLocationCode = function () {};
       '</tr>';
     }).join('');
 
+    var etiquetaFiltro = __importFiltroEstado === 'todas' ? '' :
+      '<p class="admin-mapa-hint">Mostrando ' + visibles.length + ' de ' + procesadas.length + ' filas — <a href="#" onclick="event.preventDefault(); filtrarImportacionPorEstado(document.querySelector(\'#import-resumen [data-estado=todas]\'));" style="color:#e8640a;">ver todas de nuevo</a>.</p>';
+
     document.getElementById('import-tabla-wrap').innerHTML =
+      etiquetaFiltro +
       '<table class="admin-import-tabla"><thead><tr>' +
         '<th>Fila</th><th>Comunidad</th><th>Municipio</th><th>Familias</th><th>Acción</th><th>Detalle</th>' +
       '</tr></thead><tbody>' + filasHtml + '</tbody></table>';
