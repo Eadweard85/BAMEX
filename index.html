@@ -2007,12 +2007,38 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
 
   var t0=performance.now();
   var globoActivo = true;
+  var pestanaVisible = true;
+  var contextoPerdido = false;
 
   window.setGlobeActive = function(v){ globoActivo = !!v; };
 
+  // Si el navegador reclama la GPU (común al dejar la pestaña en segundo
+  // plano mucho tiempo), el canvas se queda negro y esta librería (r128) no
+  // sabe reconstruir la escena sola. En vez de dejarlo roto, detectamos la
+  // pérdida y recargamos la página solo cuando el usuario vuelve a esta
+  // pestaña — así se repara solo sin que la persona tenga que adivinar que
+  // debe refrescar manualmente.
+  canvas.addEventListener('webglcontextlost', function(e){
+    e.preventDefault();
+    contextoPerdido = true;
+  }, false);
+
+  document.addEventListener('visibilitychange', function(){
+    pestanaVisible = document.visibilityState === 'visible';
+    if(pestanaVisible && contextoPerdido){
+      window.location.reload();
+    }
+    // Al volver a la pestaña, Leaflet a veces mide mal el contenedor del
+    // mapa si estuvo oculto mientras el layout cambiaba — forzamos que
+    // recalcule su tamaño.
+    if(pestanaVisible && window.__invalidarMapaEdomex){
+      setTimeout(window.__invalidarMapaEdomex, 100);
+    }
+  });
+
   (function loop(){
     requestAnimationFrame(loop);
-    if(!globoActivo || !globe) return;
+    if(!globoActivo || !globe || !pestanaVisible || contextoPerdido) return;
 
     var e=(performance.now()-t0)/1000;
     if(intro&&e<2.0){camera.position.z=5.0-(1-Math.pow(1-Math.min(1,e/1.5),3))*2.2;}
@@ -2740,6 +2766,8 @@ window.ComunidadesStore = (function(){
   window.initEdomexMap = function(){
     if(initDone){ map.invalidateSize(); return; }
     initDone = true;
+
+    window.__invalidarMapaEdomex = function(){ if(map) map.invalidateSize(); };
 
     map = L.map('map-edomex', {
       zoomControl:true,
@@ -4044,6 +4072,43 @@ var OpenLocationCode = function () {};
     }
   }
 
+  // ------------------------------------------------------------------
+  // CIERRE DE SESIÓN POR INACTIVIDAD (30 minutos sin usar el panel)
+  // ------------------------------------------------------------------
+  var TIEMPO_INACTIVIDAD_MS = 30 * 60 * 1000;
+  var temporizadorInactividad = null;
+  var monitorInactividadActivo = false;
+  var EVENTOS_ACTIVIDAD = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+
+  function reiniciarTemporizadorInactividad(){
+    if(!monitorInactividadActivo) return;
+    clearTimeout(temporizadorInactividad);
+    temporizadorInactividad = setTimeout(function(){
+      detenerMonitorInactividad();
+      supabaseClient.auth.signOut().then(function(){
+        window.mostrarAdmin();
+        alert('Tu sesión se cerró automáticamente por 30 minutos de inactividad. Vuelve a iniciar sesión para seguir editando.');
+      });
+    }, TIEMPO_INACTIVIDAD_MS);
+  }
+
+  function iniciarMonitorInactividad(){
+    if(monitorInactividadActivo) return;
+    monitorInactividadActivo = true;
+    EVENTOS_ACTIVIDAD.forEach(function(ev){
+      document.addEventListener(ev, reiniciarTemporizadorInactividad, {passive:true});
+    });
+    reiniciarTemporizadorInactividad();
+  }
+
+  function detenerMonitorInactividad(){
+    monitorInactividadActivo = false;
+    clearTimeout(temporizadorInactividad);
+    EVENTOS_ACTIVIDAD.forEach(function(ev){
+      document.removeEventListener(ev, reiniciarTemporizadorInactividad);
+    });
+  }
+
   window.mostrarAdmin = async function(){
     var sesion = await supabaseClient.auth.getSession();
     var logueado = !!(sesion.data && sesion.data.session);
@@ -4054,6 +4119,7 @@ var OpenLocationCode = function () {};
     document.getElementById('admin-login-wrap').classList.toggle('hide', logueado);
     document.getElementById('admin-panel-wrap').classList.toggle('show', logueado);
     if(logueado){
+      iniciarMonitorInactividad();
       window.ComunidadesStore.refrescar().then(refrescarListaAdmin);
       setTimeout(function(){
         if(!pickerMap){
@@ -4063,6 +4129,8 @@ var OpenLocationCode = function () {};
           pickerMap.invalidateSize();
         }
       }, 60);
+    } else {
+      detenerMonitorInactividad();
     }
   };
 
