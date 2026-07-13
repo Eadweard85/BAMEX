@@ -2750,38 +2750,71 @@ window.ComunidadesStore = (function(){
     map.attributionControl.setPrefix('');
 
     // Países del mundo: solo contexto visual (no interactivos), con su
-    // nombre en español. Casi invisibles cuando el mapa está encuadrado en
-    // el Edomex; se hacen relevantes al alejar el zoom.
+    // nombre en español. Todo esto (polígonos + etiquetas) solo se activa
+    // cuando el zoom está bastante alejado — así, en el uso normal (zoom
+    // encuadrado en el Edomex) no existen ni se procesan, para que la
+    // interacción del mapa se sienta rápida.
+    var etiquetasPaisesGroup = L.layerGroup();
     if(paisesGeo){
       worldLayer = L.geoJSON(paisesGeo, {
         renderer: L.canvas(),
         interactive: false,
         style: function(){ return { color:'rgba(255,255,255,.28)', weight:1, fillColor:'#0b0b12', fillOpacity:0.5 }; }
-      }).addTo(map);
+      });
 
       Object.keys(etiquetasPaises).forEach(function(nombrePais){
-        L.tooltip(etiquetasPaises[nombrePais], {
-          className: 'pais-tip', permanent: true, direction: 'center'
-        }).setContent(nombrePais).addTo(map);
+        etiquetasPaisesGroup.addLayer(
+          L.tooltip(etiquetasPaises[nombrePais], {className:'pais-tip', permanent:true, direction:'center'}).setContent(nombrePais)
+        );
       });
     }
 
     // Estados de México (los 32, con nombre) — contexto nacional, no
-    // interactivos; el detalle real de cada municipio vive en la capa de
-    // municipios de abajo.
+    // interactivos. Mismo criterio: solo existen en el mapa cuando el zoom
+    // está lo bastante alejado para que tengan sentido.
+    var etiquetasEstadosGroup = L.layerGroup();
     if(estadosMxGeo){
       statesMxLayer = L.geoJSON(estadosMxGeo, {
         renderer: L.canvas(),
         interactive: false,
         style: function(){ return { color:'rgba(255,255,255,.4)', weight:1.4, fillOpacity:0, dashArray:'5,4' }; }
-      }).addTo(map);
+      });
 
       Object.keys(etiquetasEstadosMx).forEach(function(nombreEstado){
-        L.tooltip(etiquetasEstadosMx[nombreEstado], {
-          className: 'vecino-tip', permanent: true, direction: 'center'
-        }).setContent(nombreEstado).addTo(map);
+        etiquetasEstadosGroup.addLayer(
+          L.tooltip(etiquetasEstadosMx[nombreEstado], {className:'vecino-tip', permanent:true, direction:'center'}).setContent(nombreEstado)
+        );
       });
     }
+
+    // Prende/apaga esas 4 capas según qué tan alejado esté el zoom, en vez
+    // de tenerlas siempre activas (con 32 + 180 etiquetas permanentes
+    // recalculando su posición en cada interacción, el mapa se sentía
+    // lento — por eso el INP alto). Umbrales: los estados se ven desde un
+    // zoom medio; los países solo cuando ya estás bastante alejado.
+    function actualizarCapasPorZoom(){
+      var z = map.getZoom();
+      var mostrarEstados = z <= 9;
+      var mostrarPaises = z <= 6;
+
+      if(mostrarEstados){
+        if(statesMxLayer && !map.hasLayer(statesMxLayer)) statesMxLayer.addTo(map);
+        if(!map.hasLayer(etiquetasEstadosGroup)) etiquetasEstadosGroup.addTo(map);
+      } else {
+        if(statesMxLayer && map.hasLayer(statesMxLayer)) map.removeLayer(statesMxLayer);
+        if(map.hasLayer(etiquetasEstadosGroup)) map.removeLayer(etiquetasEstadosGroup);
+      }
+
+      if(mostrarPaises){
+        if(worldLayer && !map.hasLayer(worldLayer)) worldLayer.addTo(map);
+        if(!map.hasLayer(etiquetasPaisesGroup)) etiquetasPaisesGroup.addTo(map);
+      } else {
+        if(worldLayer && map.hasLayer(worldLayer)) map.removeLayer(worldLayer);
+        if(map.hasLayer(etiquetasPaisesGroup)) map.removeLayer(etiquetasPaisesGroup);
+      }
+    }
+    map.on('zoomend', actualizarCapasPorZoom);
+    actualizarCapasPorZoom();
 
     // Aquí SOLO se dibuja el territorio de los municipios fuera del Edomex
     // que de verdad tienen alguna comunidad registrada (ej. Maravatío,
