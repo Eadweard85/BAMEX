@@ -1618,19 +1618,18 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
     <div id="gui">
       <div class="gb">
         <div class="gst" id="panel-stats">
-          <div><div class="gsn" id="sn1">527</div><div class="gsl">comunidades</div></div>
+          <div><div class="gsn" id="sn-alimento">125 T</div><div class="gsl">alimento</div></div>
           <div class="gdv"></div>
-          <div><div class="gsn" id="sn2">38,400</div><div class="gsl">familias</div></div>
+          <div><div class="gsn" id="sn-municipios">125</div><div class="gsl">municipios</div></div>
           <div class="gdv"></div>
-          <div><div class="gsn" id="sn3">125 T</div><div class="gsl">alimento</div></div>
+          <div><div class="gsn" id="sn-comunidades">527</div><div class="gsl">comunidades</div></div>
           <div class="gdv"></div>
-          <div><div class="gsn" id="sn4">125</div><div class="gsl">municipios</div></div>
+          <div><div class="gsn" id="sn-familias">38,400</div><div class="gsl">familias</div></div>
         </div>
         <div class="gbt">
           <button class="bg" onclick="goMex()">📍 Zoom al Estado de México</button>
           <button class="bq" id="spb" onclick="toggleSpin()">⏸ Pausar</button>
           <button class="bq" onclick="resetZ()">↺ Alejar</button>
-          <button class="bq" onclick="ir('com')">Ver comunidades →</button>
         </div>
         <p class="gh">Arrastra para girar · rueda del mouse para zoom</p>
       </div>
@@ -2760,8 +2759,35 @@ window.ComunidadesStore = (function(){
       // Si info === null, ya se intentó y no se encontró nada para ese
       // municipio (muy raro); no se dibuja.
     });
+
+    if(window.actualizarStatsInicio) window.actualizarStatsInicio();
   }
   window.refreshComunidadesMarkers = pintarMarcadoresComunidades;
+
+  // Estadísticas de la pantalla de Inicio: se calculan de las comunidades
+  // reales cargadas, no de números fijos. "Alimento" no se toca aquí — no
+  // hay todavía una fórmula definida para ese dato.
+  window.actualizarStatsInicio = function(){
+    var todas = window.ComunidadesStore.cargar();
+    var totalComunidades = todas.length;
+    var totalFamilias = totalComunidades * 50;
+    var municipiosUnicos = {};
+    todas.forEach(function(c){
+      if(c.municipio) municipiosUnicos[normalize(c.municipio)] = true;
+    });
+    var totalMunicipios = Object.keys(municipiosUnicos).length;
+
+    var elComunidades = document.getElementById('sn-comunidades');
+    var elFamilias = document.getElementById('sn-familias');
+    var elMunicipios = document.getElementById('sn-municipios');
+    if(elComunidades) elComunidades.textContent = totalComunidades.toLocaleString('es-MX');
+    if(elFamilias) elFamilias.textContent = totalFamilias.toLocaleString('es-MX');
+    if(elMunicipios) elMunicipios.textContent = totalMunicipios.toLocaleString('es-MX');
+  };
+
+  // Se calculan también al cargar la página (aunque el usuario nunca visite
+  // la vista de Comunidades), para que el Inicio ya muestre números reales.
+  window.ComunidadesStore.refrescar().then(window.actualizarStatsInicio);
 
   window.initEdomexMap = function(){
     if(initDone){ map.invalidateSize(); return; }
