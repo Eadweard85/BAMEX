@@ -2392,6 +2392,38 @@ window.ComunidadesStore = (function(){
   var hoverStyle = { fillColor:'rgba(232,100,10,0.25)', color:'#E8640A', weight:2, fillOpacity:0.55 };
   var selectStyle = { fillColor:'#E8640A', color:'#ffb066', weight:2.5, fillOpacity:0.55 };
 
+  function colocarGrupoEnPunto(grupo, lat, lon){
+    grupo.forEach(function(c){
+      var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
+      var mk = L.marker([lat, lon], {icon:icon}).addTo(comunidadesLayer);
+      mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
+      mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
+    });
+  }
+
+  // Caché de centros geocodificados para municipios fuera del catálogo del
+  // Edomex (ej. Maravatío de Ocampo, Michoacán). null = se intentó y no se
+  // encontró (para no reintentar en cada repintado).
+  var centroMunicipioExtra = {};
+  var geocodificandoMunicipioExtra = {};
+
+  function geocodificarMunicipioExtra(nombreMunicipio, key){
+    if(geocodificandoMunicipioExtra[key]) return;
+    geocodificandoMunicipioExtra[key] = true;
+    var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=mx&q=' +
+      encodeURIComponent(nombreMunicipio + ', México');
+    fetch(url).then(function(res){ return res.json(); }).then(function(data){
+      centroMunicipioExtra[key] = (data && data.length)
+        ? {lat:parseFloat(data[0].lat), lon:parseFloat(data[0].lon)}
+        : null;
+    }).catch(function(){
+      centroMunicipioExtra[key] = null;
+    }).finally(function(){
+      delete geocodificandoMunicipioExtra[key];
+      pintarMarcadoresComunidades();
+    });
+  }
+
   function pintarMarcadoresComunidades(){
     if(!comunidadesLayer) return;
     comunidadesLayer.clearLayers();
@@ -2417,19 +2449,23 @@ window.ComunidadesStore = (function(){
     });
 
     Object.keys(porMunicipio).forEach(function(key){
-      var m = metaByName[key];
-      if(!m) return;
       var grupo = porMunicipio[key];
-      grupo.forEach(function(c, i){
-        var rad = grupo.length > 1 ? 0.02 : 0;
-        var ang = (i / grupo.length) * Math.PI * 2;
-        var lat = m.lat + Math.sin(ang) * rad;
-        var lon = m.lon + Math.cos(ang) * rad;
-        var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
-        var mk = L.marker([lat, lon], {icon:icon}).addTo(comunidadesLayer);
-        mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
-        mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
-      });
+      var m = metaByName[key];
+      if(m){
+        // Municipio del catálogo del Edomex: todas al punto céntrico exacto,
+        // sin repartirlas en círculo.
+        colocarGrupoEnPunto(grupo, m.lat, m.lon);
+        return;
+      }
+      // Municipio fuera del catálogo del Edomex (ej. Maravatío de Ocampo):
+      // usamos el centro geocodificado en caché, o lo pedimos una vez.
+      if(centroMunicipioExtra[key]){
+        colocarGrupoEnPunto(grupo, centroMunicipioExtra[key].lat, centroMunicipioExtra[key].lon);
+      } else if(centroMunicipioExtra[key] === undefined){
+        geocodificarMunicipioExtra(grupo[0].municipio, key);
+      }
+      // Si centroMunicipioExtra[key] === null, ya se intentó y no se
+      // encontró ubicación para ese municipio; no se dibuja (muy raro).
     });
   }
   window.refreshComunidadesMarkers = pintarMarcadoresComunidades;
