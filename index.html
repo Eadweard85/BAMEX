@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Banco de Alimentos Cáritas del Estado de México</title>
+<meta name="description" content="Mapa de comunidades atendidas por el Banco de Alimentos Cáritas en el Estado de México: cobertura, familias beneficiadas y cómo donar.">
+<meta property="og:title" content="Banco de Alimentos Cáritas del Estado de México">
+<meta property="og:description" content="Comunidades atendidas, familias beneficiadas y cobertura en tiempo real.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%8A%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* required styles */
 
@@ -658,9 +666,10 @@ svg.leaflet-image-layer.leaflet-interactive path {
 		}
 	}
 
-:root{--n:#E8640A;--nc:#FFF0E6;--no:#B84D00;--b:#000;--f:#000;--br:rgba(255,255,255,.12);--t:#aaa;--o:#fff;--v:#2E7D5E;--r:10px}
+:root{--n:#E8640A;--nc:#FFF0E6;--no:#B84D00;--b:#050507;--f:#050507;--br:rgba(255,255,255,.12);--t:#aaa;--o:#fff;--v:#2E7D5E;--r:10px;--font-display:'Space Grotesk',sans-serif;--font-body:'Inter','Segoe UI',Arial,sans-serif}
 *{box-sizing:border-box;margin:0;padding:0}
-body,html{height:100%;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;background:#000;color:var(--o);font-size:16px;line-height:1.6}
+h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.01em}
+body,html{height:100%;overflow:hidden;font-family:var(--font-body);background:#050507;color:var(--o);font-size:16px;line-height:1.6}
 
 /* HEADER INTEGRADO */
 header{
@@ -751,7 +760,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 
 .vista{width:100%;height:100vh;overflow:hidden;display:none}.vista.on{display:block}
 
-#gw{width:100%;height:100%;background:#000000;position:relative;overflow:hidden}
+#gw{width:100%;height:100%;background:#050507;position:relative;overflow:hidden}
 #gc{
   display:block;
   width:100%;
@@ -773,7 +782,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 
 .gb{display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all;margin-bottom:5px;margin-top:auto}
 .gst{display:flex;gap:20px;justify-content:center;align-items:center;background:rgba(15,15,25,0.75);padding:10px 22px;border-radius:14px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
-.gsn{font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
+.gsn{font-family:var(--font-display);font-size:20px;font-weight:700;color:#ff8c3a;text-shadow:0 0 8px rgba(232,100,10,.4);text-align:center;line-height:1.1}
 .gsl{font-size:11px;color:rgba(255,255,255,.6);text-align:center;margin-top:2px}
 .gdv{width:1px;height:24px;background:rgba(255,255,255,.15);align-self:center}
 .gbt{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
@@ -784,8 +793,10 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .gh{color:rgba(255,255,255,.4);font-size:11px;animation:bk 3s infinite;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
 @keyframes bk{0%,100%{opacity:.4}50%{opacity:.8}}
 
-#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.6);font-size:14px;text-align:center;pointer-events:none;z-index:5;background:rgba(0,0,0,0.6);padding:15px 25px;border-radius:10px;backdrop-filter:blur(5px)}
-#gload span{display:block;font-size:11px;margin-top:6px;color:#ff8c3a}
+#gload{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.7);font-size:13px;text-align:center;pointer-events:none;z-index:5;background:rgba(8,8,12,0.7);padding:20px 28px;border-radius:12px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);font-family:var(--font-body)}
+#gload span{display:block;font-size:11px;margin-top:6px;color:rgba(255,255,255,.4)}
+#gload .gload-spinner{width:22px;height:22px;margin:0 auto 12px;border-radius:50%;border:2px solid rgba(255,140,58,.2);border-top-color:#ff8c3a;animation:gloadSpin .8s linear infinite}
+@keyframes gloadSpin{to{transform:rotate(360deg)}}
 
 #vista-com{padding:90px 2rem 1.5rem 2rem; overflow-y:auto; color:var(--o); height:100vh; background:#05050a;}
 .com-header{ margin: 0 0 12px 0; animation: comFadeIn .4s ease; }
@@ -898,10 +909,19 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   color: #fff;
   border: 1px solid var(--br);
   border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
 }
 .leaflet-popup-tip{ background: #0c0c14; }
 .leaflet-popup-content{ font-size: 13px; margin: 12px 14px; line-height: 1.5; }
 .leaflet-popup-content b{ color: var(--n); }
+.leaflet-container a.leaflet-popup-close-button{
+  color: rgba(255,255,255,.5) !important;
+  font-size: 18px !important;
+  top: 6px !important;
+  right: 8px !important;
+}
+.leaflet-container a.leaflet-popup-close-button:hover{ color: var(--n) !important; }
+.leaflet-interactive{ cursor: pointer; }
 #map-edomex .leaflet-control-zoom a{
   background: #12121f !important;
   color: #fff !important;
@@ -1550,14 +1570,28 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
 }
 .galeria-card-caption b{ display: block; font-size: 16px; font-weight: 700; }
 .galeria-card-caption span{ color: #ddd; font-size: 12px; }
-.galeria-vacio{ color: var(--t); font-size: 14px; padding: 60px 0; text-align: center; }
+.galeria-vacio{
+  color: var(--t);
+  padding: 80px 20px;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.galeria-vacio-icono{
+  font-size: 40px;
+  opacity: .5;
+  margin-bottom: 16px;
+  filter: grayscale(1);
+}
+.galeria-vacio h3{ color: var(--o); font-size: 18px; margin-bottom: 8px; }
+.galeria-vacio p{ font-size: 14px; line-height: 1.5; }
 
 @media(max-width:980px){
   .mapa-contenedor { flex-direction: column; height: auto; }
   .mapa-grafico { height: 400px; }
 }
 @media(max-width:820px){
-  header{position:relative;background:#000;padding:1rem;height:auto;flex-direction:column;gap:10px;padding-bottom:10px}
+  header{position:relative;background:#050507;padding:1rem;height:auto;flex-direction:column;gap:10px;padding-bottom:10px}
   .logo-container{width:100%;justify-content:space-between;gap:1rem}
   .search-box input{width:100%;background:#0d0d0d}
   nav{width:100%;justify-content:center;gap:1rem}
@@ -1614,7 +1648,7 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
 <div id="vista-inicio" class="vista on">
   <div id="gw">
     <canvas id="gc"></canvas>
-    <div id="gload">Cargando mapa en UHD...<span>Optimizando texturas para zoom</span></div>
+    <div id="gload"><div class="gload-spinner"></div>Cargando mapa en UHD...<span>Optimizando texturas para zoom</span></div>
     <div id="gui">
       <div class="gb">
         <div class="gst" id="panel-stats">
@@ -1831,10 +1865,10 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.3;
-  renderer.setClearColor(0x000000, 1);
+  renderer.setClearColor(0x050507, 1);
 
   var scene=new THREE.Scene();
-  scene.background = new THREE.Color(0x000000);
+  scene.background = new THREE.Color(0x050507);
   
   var camera=new THREE.PerspectiveCamera(38,W/H,0.1,200);
   camera.position.z=2.8;
@@ -2105,7 +2139,12 @@ window.pintarGaleria = function(){
 
     if(conFotos.length === 0){
       if(statsEl) statsEl.innerHTML = '';
-      cont.innerHTML = '<p class="galeria-vacio">Todavía no hay fotografías cargadas. En cuanto se registren comunidades con fotos, van a aparecer aquí.</p>';
+      cont.innerHTML =
+        '<div class="galeria-vacio">' +
+          '<div class="galeria-vacio-icono">📷</div>' +
+          '<h3>Aún no hay fotografías</h3>' +
+          '<p>En cuanto se registren comunidades con fotos, van a aparecer aquí.</p>' +
+        '</div>';
       return;
     }
 
@@ -2764,6 +2803,24 @@ window.ComunidadesStore = (function(){
   }
   window.refreshComunidadesMarkers = pintarMarcadoresComunidades;
 
+  // Anima un número de texto de su valor actual hacia el nuevo (efecto
+  // "conteo ascendente"), en vez de simplemente reemplazar el texto.
+  function animarNumeroHacia(el, valorFinal){
+    if(!el) return;
+    var valorInicial = parseInt(String(el.textContent).replace(/[^\d]/g, ''), 10) || 0;
+    if(valorInicial === valorFinal){ el.textContent = valorFinal.toLocaleString('es-MX'); return; }
+    var duracionMs = 900;
+    var inicio = performance.now();
+    function frame(ahora){
+      var progreso = Math.min(1, (ahora - inicio) / duracionMs);
+      var facilitado = 1 - Math.pow(1 - progreso, 3); // ease-out cúbico
+      var valorActual = Math.round(valorInicial + (valorFinal - valorInicial) * facilitado);
+      el.textContent = valorActual.toLocaleString('es-MX');
+      if(progreso < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
   // Estadísticas de la pantalla de Inicio: se calculan de las comunidades
   // reales cargadas, no de números fijos. "Alimento" no se toca aquí — no
   // hay todavía una fórmula definida para ese dato.
@@ -2777,12 +2834,9 @@ window.ComunidadesStore = (function(){
     });
     var totalMunicipios = Object.keys(municipiosUnicos).length;
 
-    var elComunidades = document.getElementById('sn-comunidades');
-    var elFamilias = document.getElementById('sn-familias');
-    var elMunicipios = document.getElementById('sn-municipios');
-    if(elComunidades) elComunidades.textContent = totalComunidades.toLocaleString('es-MX');
-    if(elFamilias) elFamilias.textContent = totalFamilias.toLocaleString('es-MX');
-    if(elMunicipios) elMunicipios.textContent = totalMunicipios.toLocaleString('es-MX');
+    animarNumeroHacia(document.getElementById('sn-comunidades'), totalComunidades);
+    animarNumeroHacia(document.getElementById('sn-familias'), totalFamilias);
+    animarNumeroHacia(document.getElementById('sn-municipios'), totalMunicipios);
   };
 
   // Se calculan también al cargar la página (aunque el usuario nunca visite
