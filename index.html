@@ -3774,12 +3774,34 @@ window.ComunidadesStore = (function(){
     }
   }
 
+  // A diferencia de edomexMostrarComunidad() (que si la comunidad no tiene
+  // coordenadas exactas se va a las orillas de todo el municipio), este
+  // recorrido SIEMPRE se acerca a nivel comunidad: usa sus coordenadas si
+  // las tiene, y si no, el centro del municipio como punto de referencia
+  // — pero con el mismo zoom cerrado, nunca mostrando el municipio entero.
+  function mapaPlayVolarComunidad(c){
+    fichaActual = {tipo:'comunidad', id:c.id};
+    renderComunidadCard(c);
+    var m = metaByName[normalize(c.municipio)];
+    if(!m || !m._layer) return;
+    if(selectedLayer) geoLayer.resetStyle(selectedLayer);
+    selectedLayer = m._layer;
+    selectedMunicipioMeta = m;
+    m._layer.setStyle(selectStyle);
+    m._layer.bringToFront();
+    var lat = (typeof c.lat === 'number') ? c.lat : m.lat;
+    var lng = (typeof c.lng === 'number') ? c.lng : m.lon;
+    map.flyTo([lat, lng], 13, {duration:0.6});
+    var select = document.getElementById('select-mun');
+    if(select) select.value = m.nombre;
+  }
+
   function mapaPlayMostrarParada(i){
     if(!mapaplay.lista.length) return;
     mapaplay.indice = (i + mapaplay.lista.length) % mapaplay.lista.length;
     var parada = mapaplay.lista[mapaplay.indice];
     if(parada.tipo === 'comunidad'){
-      window.edomexMostrarComunidad(parada.data.id);
+      mapaPlayVolarComunidad(parada.data);
     } else {
       window.edomexSelectByName(parada.data.nombre);
     }
