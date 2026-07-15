@@ -3684,41 +3684,50 @@ window.ComunidadesStore = (function(){
   };
 
   // ------------------------------------------------------------------
-  // BOTÓN DE PLAY EN EL MAPA: un recorrido chico y directo, mezclando una
-  // comunidad con foto y luego el municipio al que pertenece (y así,
-  // alternando) — el mapa real vuela a cada parada mientras una tarjeta
-  // flotante en la esquina va mostrando la foto y los datos de cada una.
+  // BOTÓN DE PLAY EN EL MAPA: recorrido curado a mano — solo estas
+  // comunidades, en este orden exacto. El mapa real vuela a cada una
+  // mientras la tarjeta flotante muestra su foto y sus datos.
   var MAPAPLAY_DURACION_MS = 6000;
   var mapaplay = { activo:false, indice:0, lista:[], timer:null };
 
+  var MAPAPLAY_LISTA_CURADA = [
+    { nombre:'Barrio de San Juan', municipio:'Xalatlaco' },
+    { nombre:'Otumba', municipio:'Otumba' },
+    { nombre:'San Juan', municipio:'Malinalco' },
+    { nombre:'El Estanco', municipio:'Luvianos' },
+    { nombre:'Concepción de la Venta', municipio:'San José del Rincón' },
+    { nombre:'Higuerillas Bañé', municipio:'Polotitlán' },
+    { nombre:'San Jerónimo Zacapexco', municipio:'Villa del Carbón' },
+    { nombre:'Rosa Morado', municipio:'Almoloya de Juárez' },
+    { nombre:'San Mateo Huitzizilngo', municipio:'Chalco' },
+    { nombre:'Cerro del Divisadero', municipio:'Tejupilco' },
+    { nombre:'Pueblo Nuevo de los Ángeles', municipio:'El Oro' },
+    { nombre:'San Nicolás Tlazala', municipio:'Capulhuac' },
+    { nombre:'Axapusco Centro', municipio:'Axapusco' },
+    { nombre:'Ejido de Emiliano Zapata', municipio:'Tenancingo' },
+    { nombre:'San Martín las Rojas Huitzizilapan', municipio:'Lerma' },
+    { nombre:'Cienegillas de Labra', municipio:'Temascaltepec' }
+  ];
+
+  function mapaPlayCoincide(texto, objetivo){
+    var a = normalize(texto || ''), b = normalize(objetivo || '');
+    if(!a || !b) return false;
+    return a === b || a.indexOf(b) !== -1 || b.indexOf(a) !== -1;
+  }
+
   function mapaPlaySeleccionar(){
     var todas = window.ComunidadesStore.cargar();
-    var comunidadesTop = todas.slice()
-      .sort(function(a,b){ return (b.familias||0) - (a.familias||0); })
-      .slice(0, 10);
-
-    var porMunicipio = {};
-    todas.forEach(function(c){
-      var key = normalize(c.municipio || '');
-      var m = metaByName[key];
-      if(!m) return;
-      if(!porMunicipio[key]) porMunicipio[key] = { nombre:m.nombre, familias:0, comunidades:0 };
-      porMunicipio[key].familias += (parseInt(c.familias,10) || 0);
-      porMunicipio[key].comunidades += 1;
-    });
-    var municipiosTop = Object.keys(porMunicipio).map(function(k){ return porMunicipio[k]; });
-    municipiosTop.sort(function(a,b){ return b.familias - a.familias; });
-    municipiosTop = municipiosTop.slice(0, 8);
-
-    // Se alternan: comunidad, su municipio, siguiente comunidad, su
-    // municipio... así el recorrido va de lo específico a lo general y de
-    // regreso, en vez de agrupar todas las comunidades y luego todos los
-    // municipios seguidos.
     var lista = [];
-    var i = 0, j = 0;
-    while(i < comunidadesTop.length || j < municipiosTop.length){
-      if(i < comunidadesTop.length){ lista.push({tipo:'comunidad', data:comunidadesTop[i]}); i++; }
-      if(j < municipiosTop.length){ lista.push({tipo:'municipio', data:municipiosTop[j]}); j++; }
+    var noEncontradas = [];
+    MAPAPLAY_LISTA_CURADA.forEach(function(item){
+      var encontrada = todas.find(function(c){
+        return mapaPlayCoincide(c.nombre, item.nombre) && mapaPlayCoincide(c.municipio, item.municipio);
+      });
+      if(encontrada) lista.push({ tipo:'comunidad', data:encontrada });
+      else noEncontradas.push(item.nombre + ' (' + item.municipio + ')');
+    });
+    if(noEncontradas.length){
+      console.warn('Recorrido: no se encontraron estas comunidades en la base de datos —', noEncontradas.join(', '));
     }
     return lista;
   }
