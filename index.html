@@ -961,7 +961,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   position: absolute;
   top: 12px;
   right: 12px;
-  z-index: 500;
+  z-index: 1050;
   width: 34px;
   height: 34px;
   border-radius: 8px;
@@ -981,7 +981,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   position: absolute;
   top: 12px;
   right: 54px;
-  z-index: 500;
+  z-index: 1050;
   width: 40px;
   height: 40px;
 }
@@ -1270,7 +1270,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   top: 50%;
   right: 12px;
   transform: translateY(-50%);
-  z-index: 500;
+  z-index: 1050;
   width: 30px;
   height: 44px;
   border-radius: 8px;
@@ -3767,7 +3767,7 @@ window.ComunidadesStore = (function(){
   // comunidades, en este orden exacto. El mapa real vuela a cada una
   // mientras la tarjeta flotante muestra su foto y sus datos, en modo
   // cine (pantalla completa, por encima del header).
-  var MAPAPLAY_DURACION_MS = 3000;
+  var MAPAPLAY_DURACION_MS = 6000;
   var mapaplay = {
     activo:false,      // true mientras el modo cine está abierto (reproduciendo o en pausa)
     pausado:false,
@@ -3948,6 +3948,29 @@ window.ComunidadesStore = (function(){
     if(btn){ btn.textContent = '⏸'; btn.title = 'Pausar'; }
   }
 
+  // Pantalla completa real (la del monitor, no solo el área del navegador).
+  // Los navegadores requieren que esto se dispare directo desde el clic del
+  // usuario — por eso vive aquí y no en un setTimeout.
+  function mapaPlayPedirFullscreen(el){
+    var pedir = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if(pedir) pedir.call(el).catch(function(){ /* algunos navegadores/iframes lo bloquean; el modo cine sigue funcionando igual, solo sin ocupar el monitor completo */ });
+  }
+  function mapaPlaySalirFullscreen(){
+    var enFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    if(!enFullscreen) return;
+    var salir = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if(salir) salir.call(document).catch(function(){});
+  }
+  // Si el usuario sale de pantalla completa con Escape (sin usar nuestro
+  // botón "Salir"), el modo cine se cierra solo para no quedar en un
+  // estado a medias.
+  ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(function(ev){
+    document.addEventListener(ev, function(){
+      var enFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+      if(!enFullscreen && mapaplay.activo) window.mapaPlaySalir();
+    });
+  });
+
   window.mapaPlayToggle = function(){
     var btn = document.getElementById('mapa-play-btn');
     var card = document.getElementById('mapaplay-card');
@@ -3955,7 +3978,8 @@ window.ComunidadesStore = (function(){
     var salirBtn = document.getElementById('cine-salir-btn');
 
     if(!mapaplay.activo){
-      // Primer clic: arranca el recorrido en modo cine (pantalla completa).
+      // Primer clic: arranca el recorrido en modo cine (pantalla completa
+      // real del monitor, no solo del navegador).
       mapaplay.lista = mapaPlaySeleccionar();
       if(!mapaplay.lista.length){
         alert('Todavía no hay comunidades registradas para armar un recorrido.');
@@ -3963,7 +3987,10 @@ window.ComunidadesStore = (function(){
       }
       mapaplay.activo = true;
       mapaplay.pausado = false;
-      if(cont) cont.classList.add('modo-cine');
+      if(cont){
+        cont.classList.add('modo-cine');
+        mapaPlayPedirFullscreen(cont);
+      }
       if(salirBtn) salirBtn.style.display = '';
       if(btn){ btn.textContent = '⏸'; btn.title = 'Pausar'; btn.classList.add('activo'); }
       if(card) card.style.display = 'flex';
@@ -3996,6 +4023,7 @@ window.ComunidadesStore = (function(){
     if(card) card.style.display = 'none';
     if(btn){ btn.textContent = '▶'; btn.title = 'Reproducir recorrido en el mapa'; btn.classList.remove('activo'); }
     if(ring) ring.style.strokeDashoffset = MAPAPLAY_RING_CIRCUNFERENCIA;
+    mapaPlaySalirFullscreen();
     window.edomexResetView();
     if(window.edomexInvalidateSize) setTimeout(window.edomexInvalidateSize, 250);
   };
