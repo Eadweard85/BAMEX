@@ -2650,13 +2650,37 @@ function toggleMapaExpandido(){
     btn.textContent = expandido ? '⤡' : '⤢';
     btn.title = expandido ? 'Salir de pantalla completa' : 'Ver en grande';
   }
+  if(expandido){
+    if(window.mapaPlayPedirFullscreen) window.mapaPlayPedirFullscreen(cont);
+  } else {
+    if(window.mapaPlaySalirFullscreen) window.mapaPlaySalirFullscreen();
+  }
   if(window.edomexInvalidateSize) window.edomexInvalidateSize();
 }
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape'){
     var cont = document.querySelector('.mapa-contenedor');
-    if(cont && cont.classList.contains('expandido')) toggleMapaExpandido();
+    var enFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    // Si de verdad estamos en pantalla completa del sistema, el propio
+    // Escape del navegador ya la cierra y eso dispara "fullscreenchange"
+    // (que se encarga de quitar la clase "expandido"). Aquí solo cubrimos
+    // el caso en que el modo expandido está activo pero el fullscreen real
+    // no se pudo activar (por ejemplo, bloqueado dentro de un iframe).
+    if(!enFullscreen && cont && cont.classList.contains('expandido')) toggleMapaExpandido();
   }
+});
+['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'].forEach(function(ev){
+  document.addEventListener(ev, function(){
+    var enFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    var cont = document.querySelector('.mapa-contenedor');
+    // Si salieron de pantalla completa con Escape (sin pasar por nuestro
+    // botón ⤡) y seguíamos en modo "expandido" normal (no el modo cine,
+    // que ya tiene su propio manejo), quitamos esa clase para no quedar
+    // en un estado a medias.
+    if(!enFullscreen && cont && cont.classList.contains('expandido') && !cont.classList.contains('modo-cine')){
+      toggleMapaExpandido();
+    }
+  });
 });
 
 window.toggleMapaSidebar = function(){
@@ -3961,6 +3985,8 @@ window.ComunidadesStore = (function(){
     var salir = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
     if(salir) salir.call(document).catch(function(){});
   }
+  window.mapaPlayPedirFullscreen = mapaPlayPedirFullscreen;
+  window.mapaPlaySalirFullscreen = mapaPlaySalirFullscreen;
   // Si el usuario sale de pantalla completa con Escape (sin usar nuestro
   // botón "Salir"), el modo cine se cierra solo para no quedar en un
   // estado a medias.
