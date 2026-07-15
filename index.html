@@ -1514,6 +1514,45 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 
 #vista-det,#vista-don,#vista-adm,#vista-gal{padding:105px 1.5rem 1.5rem 1.5rem;overflow-y:auto;color:var(--o);height:100vh}
 
+#vista-don{ position: relative; }
+
+.don-fondo-espacial{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.don-sol{
+  position: absolute;
+  bottom: -140px;
+  right: -140px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #ffe3b0 0%, #ff8c3a 38%, #E8640A 65%, rgba(232,100,10,0) 100%);
+  box-shadow: 0 0 180px 90px rgba(232,100,10,.25);
+  animation: donSolPulso 6s ease-in-out infinite;
+}
+@keyframes donSolPulso{
+  0%,100%{ opacity: .9; }
+  50%{ opacity: 1; }
+}
+.don-estrella{
+  position: absolute;
+  background: #fff;
+  border-radius: 50%;
+  opacity: .15;
+  animation-name: donEstrellaParpadeo;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes donEstrellaParpadeo{
+  0%, 100%{ opacity: .15; }
+  50%{ opacity: .9; }
+}
+.don-header, .panal-wrap{ position: relative; z-index: 1; }
+
 .don-header{ max-width:1100px; margin:0 auto 30px; animation: comFadeIn .4s ease; }
 .don-header h1{ font-size:26px; font-weight:800; letter-spacing:-.01em; margin-bottom:6px; }
 .don-header p{ color:var(--t); font-size:14px; max-width:560px; line-height:1.5; }
@@ -2242,6 +2281,11 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
 
 <div id="vista-det" class="vista"></div>
 <div id="vista-don" class="vista">
+  <div class="don-fondo-espacial">
+    <div class="don-sol"></div>
+    <div id="don-estrellas"></div>
+  </div>
+
   <div class="don-header">
     <h1>Nuestros donadores</h1>
     <p>Empresas y personas que hacen posible que la comida llegue a quienes más lo necesitan. Toca un logo para conocer su historia con nosotros.</p>
@@ -2252,6 +2296,23 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
     <p class="panal-vacio admin-hidden" id="panal-vacio">Todavía no hay donadores registrados. En cuanto se den de alta, van a aparecer aquí.</p>
   </div>
 </div>
+
+<script>
+(function(){
+  var cont = document.getElementById('don-estrellas');
+  if(!cont) return;
+  var html = '';
+  for(var i = 0; i < 130; i++){
+    var top = (Math.random() * 100).toFixed(2);
+    var left = (Math.random() * 100).toFixed(2);
+    var tam = (Math.random() * 2 + 1).toFixed(1);
+    var duracion = (Math.random() * 3 + 2.5).toFixed(1);
+    var retraso = (Math.random() * 4).toFixed(1);
+    html += '<div class="don-estrella" style="top:'+top+'%;left:'+left+'%;width:'+tam+'px;height:'+tam+'px;animation-duration:'+duracion+'s;animation-delay:-'+retraso+'s;"></div>';
+  }
+  cont.innerHTML = html;
+})();
+</script>
 
 <div id="donador-modal" class="donador-modal" style="display:none;" onclick="if(event.target.id==='donador-modal') cerrarModalDonador()">
   <div class="donador-modal-contenido">
