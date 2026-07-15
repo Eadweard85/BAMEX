@@ -1530,10 +1530,40 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   width: 380px;
   height: 380px;
   border-radius: 50%;
+  overflow: hidden;
   background: radial-gradient(circle at 32% 30%, #ffe3b0 0%, #ff8c3a 38%, #E8640A 65%, rgba(232,100,10,0) 100%);
   box-shadow: 0 0 180px 90px rgba(232,100,10,.25);
   animation: donSolPulso 6s ease-in-out infinite;
 }
+.don-sol::before,
+.don-sol::after{
+  content: '';
+  position: absolute;
+  inset: -35%;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+  filter: blur(5px);
+}
+.don-sol::before{
+  background: conic-gradient(from 0deg,
+    rgba(255,225,150,.6) 0deg,  rgba(232,100,10,0) 35deg,
+    rgba(255,170,80,.55) 90deg, rgba(232,100,10,0) 130deg,
+    rgba(255,130,45,.6) 190deg, rgba(232,100,10,0) 235deg,
+    rgba(255,205,110,.55) 290deg, rgba(232,100,10,0) 330deg,
+    rgba(255,225,150,.6) 360deg
+  );
+  animation: donSolGirar 16s linear infinite;
+}
+.don-sol::after{
+  background: conic-gradient(from 60deg,
+    rgba(255,110,30,.55) 0deg, rgba(232,100,10,0) 55deg,
+    rgba(255,190,95,.5) 120deg, rgba(232,100,10,0) 175deg,
+    rgba(255,140,55,.55) 250deg, rgba(232,100,10,0) 305deg,
+    rgba(255,110,30,.55) 360deg
+  );
+  animation: donSolGirar 10s linear infinite reverse;
+}
+@keyframes donSolGirar{ from{ transform: rotate(0deg); } to{ transform: rotate(360deg); } }
 @keyframes donSolPulso{
   0%,100%{ opacity: .9; }
   50%{ opacity: 1; }
