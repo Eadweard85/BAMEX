@@ -6525,6 +6525,7 @@ var OpenLocationCode = function () {};
 (function(){
 
   function comprimirImagenGenerica(file, maxAncho, cb){
+    var esPng = file.type === 'image/png';
     var reader = new FileReader();
     reader.onload = function(e){
       var img = new Image();
@@ -6535,7 +6536,10 @@ var OpenLocationCode = function () {};
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cb(canvas.toDataURL('image/jpeg', 0.72));
+        // Los PNG (típicamente logos con fondo transparente) se conservan
+        // en PNG para no perder la transparencia — convertirlos a JPEG les
+        // pondría un fondo negro sólido, porque JPEG no soporta alfa.
+        cb(esPng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.72));
       };
       img.src = e.target.result;
     };
