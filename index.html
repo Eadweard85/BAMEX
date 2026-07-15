@@ -3481,8 +3481,11 @@ window.CampanasStore = (function(){
 (function(){
 
   function celdaHtml(d){
-    if(!d.logo) return '<span class="donador-logo-sinlogo" data-donador-id="'+d.id+'" title="'+d.nombre.replace(/"/g,'')+'" onclick="seleccionarDonador(\''+d.id+'\')">🏢</span>';
-    return '<img class="donador-logo-img" data-donador-id="'+d.id+'" src="'+d.logo+'" alt="'+d.nombre.replace(/"/g,'')+'" title="'+d.nombre.replace(/"/g,'')+'" onclick="seleccionarDonador(\''+d.id+'\')">';
+    var comunes = 'data-donador-id="'+d.id+'" title="'+d.nombre.replace(/"/g,'')+'" '+
+      'onmouseenter="resaltarDonador(\''+d.id+'\')" onmouseleave="quitarResaltadoDonador()" '+
+      'onclick="abrirModalDonador(\''+d.id+'\')"';
+    if(!d.logo) return '<span class="donador-logo-sinlogo" '+comunes+'>🏢</span>';
+    return '<img class="donador-logo-img" src="'+d.logo+'" alt="'+d.nombre.replace(/"/g,'')+'" '+comunes+'>';
   }
 
   window.refrescarPanalDonadores = function(){
@@ -3500,26 +3503,22 @@ window.CampanasStore = (function(){
     cont.innerHTML = renderPanalCarrusel(lista);
   };
 
-  // Siempre en movimiento: cada fila muestra la lista COMPLETA de
-  // donadores (no repartida entre filas), duplicada para el loop
-  // continuo — así aunque haya pocos donadores, cada fila igual se ve
-  // variada antes de repetir, en vez de un solo logo solo repitiéndose.
+  // Una sola fila en movimiento — cada donador aparece una vez, y se
+  // repite el mínimo de veces necesario para llenar el ancho y que el
+  // loop continuo no se note (con pocos donadores, se repite un poco más
+  // para que no se vea vacío; con muchos, casi no hace falta repetir).
   function renderPanalCarrusel(lista){
-    var html = lista.map(celdaHtml).join('');
-    var filas = [
-      { clase:'panal-fila', estilo:'' },
-      { clase:'panal-fila panal-fila-offset', estilo:'' },
-      { clase:'panal-fila', estilo:' style="animation-duration:48s"' }
-    ];
-    return filas.map(function(f){
-      return '<div class="'+f.clase+'"'+f.estilo+'>' + html + html + '</div>';
-    }).join('');
+    var VECES_MINIMAS = Math.max(2, Math.ceil(8 / lista.length));
+    var html = '';
+    for(var i=0; i<VECES_MINIMAS; i++){ html += lista.map(celdaHtml).join(''); }
+    return '<div class="panal-fila">' + html + '</div>';
   }
 
-  // Al seleccionar un donador: ese se resalta (a color, con brillo) y
-  // TODOS los demás logos —en cualquiera de las filas, incluidas sus
-  // copias duplicadas del loop— se apagan a blanco y negro.
-  window.seleccionarDonador = function(id){
+  // Al pasar el cursor sobre un donador: ese se resalta (a color, con
+  // brillo) y TODOS los demás logos —incluidas sus copias repetidas del
+  // loop— se apagan a blanco y negro. Al quitar el cursor, todos regresan
+  // a color normal.
+  window.resaltarDonador = function(id){
     document.querySelectorAll('.donador-logo-img, .donador-logo-sinlogo').forEach(function(el){
       if(el.dataset.donadorId === id){
         el.classList.add('panal-activo');
@@ -3529,7 +3528,12 @@ window.CampanasStore = (function(){
         el.classList.remove('panal-activo');
       }
     });
-    window.abrirModalDonador(id);
+  };
+
+  window.quitarResaltadoDonador = function(){
+    document.querySelectorAll('.donador-logo-img, .donador-logo-sinlogo').forEach(function(el){
+      el.classList.remove('panal-activo', 'panal-atenuado');
+    });
   };
 
   window.abrirModalDonador = function(id){
