@@ -3157,13 +3157,6 @@ window.ComunidadesStore = (function(){
     animarNumeroHacia(document.getElementById('sn-comunidades'), totalComunidades);
     animarNumeroHacia(document.getElementById('sn-familias'), totalFamilias);
     animarNumeroHacia(document.getElementById('sn-municipios'), totalMunicipios);
-
-    frasesImpacto = [
-      '4 de cada 10 familias<br>en el Estado de México<br>enfrentan carencia alimentaria.',
-      totalFamilias.toLocaleString('es-MX') + ' familias<br>ya reciben apoyo alimentario<br>gracias a Cáritas.',
-      totalComunidades.toLocaleString('es-MX') + ' comunidades<br>atendidas en todo<br>el Estado de México.',
-      'Cada quincena,<br>despensas llegan a quienes<br>más lo necesitan.'
-    ];
   };
 
   // Se calculan también al cargar la página (aunque el usuario nunca visite
@@ -3171,10 +3164,11 @@ window.ComunidadesStore = (function(){
   window.ComunidadesStore.refrescar().then(window.actualizarStatsInicio);
 
   // Frase rotativa de impacto sobre el globo: cada 10s se difumina y cambia
-  // a la siguiente. Empieza con el dato de CONEVAL fijo en el HTML y, en
-  // cuanto cargan las comunidades reales, se suman frases con datos vivos.
+  // a la siguiente.
   var frasesImpacto = [
-    '4 de cada 10 familias<br>en el Estado de México<br>enfrentan carencia alimentaria.'
+    '4 de cada 10 familias<br>en el Estado de México<br>enfrentan carencia alimentaria.',
+    'Lo que para ti es<br>un excedente del día,<br>para otra familia es la cena de hoy.',
+    '"Si podemos conquistar<br>el espacio, podemos<br>conquistar el hambre infantil."<br><span style="font-size:13px;font-weight:500;opacity:.55;">— Buzz Aldrin</span>'
   ];
   var indiceFraseImpacto = 0;
   setInterval(function(){
