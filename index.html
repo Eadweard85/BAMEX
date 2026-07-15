@@ -1521,7 +1521,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .panal-wrap{
   position: relative;
   margin: 0 -1.5rem;
-  padding: 20px 0;
+  padding: 20px 1.5rem;
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 50%, rgba(232,100,10,.05) 0%, transparent 70%);
 }
@@ -1535,32 +1535,43 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   animation-name: panalScrollIzq;
   animation-duration: 55s;
 }
-#panal-fila-3{ margin-top: -22px; animation-duration: 48s; }
 .panal-fila:hover{ animation-play-state: paused; }
 @keyframes panalScrollIzq{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
 @keyframes panalScrollDer{ from{ transform: translateX(-50%); } to{ transform: translateX(0); } }
 
+/* Panal fijo: cuando hay pocos donadores, se muestran una sola vez cada
+   uno, centrados, sin scroll ni animación — nada de duplicados. */
+.panal-fila-fija{
+  display:flex;
+  justify-content:center;
+  flex-wrap: wrap;
+}
+.panal-fila-fija.panal-fila-offset{ margin-top:-22px; }
+
 .panal-hex{
-  width: 118px;
-  height: 102px;
+  width: 130px;
+  height: 112px;
   clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
   background: linear-gradient(145deg, #14141f, #0c0c14);
   border: 1px solid rgba(255,255,255,.06);
   display:flex; align-items:center; justify-content:center;
   flex-shrink:0;
   margin: 0 -13px;
+  padding: 14px;
   cursor:pointer;
   transition: transform .25s cubic-bezier(.16,1,.3,1), background .25s ease;
   position: relative;
+  box-sizing: border-box;
 }
 .panal-hex:hover{ transform: scale(1.16); background: linear-gradient(145deg, #1c1c2e, #12121f); z-index:5; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
-.panal-hex img{ max-width:62%; max-height:60%; object-fit:contain; pointer-events:none; }
+.panal-hex img{ max-width:48%; max-height:46%; object-fit:contain; pointer-events:none; }
 .panal-hex-sinlogo{ font-size:22px; opacity:.35; pointer-events:none; }
 
 .panal-vacio{ text-align:center; color:var(--t); font-size:14px; padding:60px 0; }
 
 @media (max-width: 820px){
-  .panal-hex{ width:88px; height:76px; margin:0 -9px; }
+  .panal-hex{ width:96px; height:82px; margin:0 -9px; padding:10px; }
+  .panal-hex img{ max-width:52%; max-height:50%; }
   .panal-fila{ animation-duration: 30s !important; }
 }
 
@@ -2236,9 +2247,7 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
   </div>
 
   <div class="panal-wrap" id="panal-wrap">
-    <div class="panal-fila" id="panal-fila-1"></div>
-    <div class="panal-fila panal-fila-offset" id="panal-fila-2"></div>
-    <div class="panal-fila" id="panal-fila-3"></div>
+    <div id="panal-contenido"></div>
     <p class="panal-vacio admin-hidden" id="panal-vacio">Todavía no hay donadores registrados. En cuanto se den de alta, van a aparecer aquí.</p>
   </div>
 </div>
@@ -3480,33 +3489,58 @@ window.CampanasStore = (function(){
     return '<div class="panal-hex" title="'+d.nombre.replace(/"/g,'')+'" onclick="abrirModalDonador(\''+d.id+'\')">'+contenido+'</div>';
   }
 
+  // Con pocos donadores, duplicar para el scroll infinito se nota
+  // pegado/repetido (el problema que reportaron) — así que por debajo de
+  // este número se muestra un panal fijo, cada logo una sola vez.
+  var UMBRAL_CARRUSEL = 10;
+
   window.refrescarPanalDonadores = function(){
     var lista = window.DonadoresStore.cargar();
+    var cont = document.getElementById('panal-contenido');
     var vacioMsg = document.getElementById('panal-vacio');
-    var filas = [document.getElementById('panal-fila-1'), document.getElementById('panal-fila-2'), document.getElementById('panal-fila-3')];
-    if(!filas[0]) return; // la vista todavía no está en el DOM
+    if(!cont) return; // la vista todavía no está en el DOM
 
     if(!lista.length){
-      filas.forEach(function(f){ f.innerHTML=''; f.style.display='none'; });
+      cont.innerHTML = '';
       if(vacioMsg) vacioMsg.classList.remove('admin-hidden');
       return;
     }
     if(vacioMsg) vacioMsg.classList.add('admin-hidden');
-    filas.forEach(function(f){ f.style.display='flex'; });
 
-    // Reparte los donadores entre las 3 filas (uno por uno, en orden), y
-    // duplica el contenido de cada fila para que el scroll infinito no
-    // se note la costura donde vuelve a empezar.
+    if(lista.length < UMBRAL_CARRUSEL){
+      cont.innerHTML = renderPanalFijo(lista);
+    } else {
+      cont.innerHTML = renderPanalCarrusel(lista);
+    }
+  };
+
+  // Panal fijo: sin animación, sin duplicar — cada donador aparece
+  // exactamente una vez. Se reparte en filas de 5, con las filas pares
+  // desplazadas para que las celdas se entrelacen como un panal real.
+  function renderPanalFijo(lista){
+    var POR_FILA = 5;
+    var filas = [];
+    for(var i=0; i<lista.length; i+=POR_FILA){ filas.push(lista.slice(i, i+POR_FILA)); }
+    return filas.map(function(grupo, i){
+      var clase = 'panal-fila-fija' + (i % 2 === 1 ? ' panal-fila-offset' : '');
+      return '<div class="'+clase+'">' + grupo.map(celdaHtml).join('') + '</div>';
+    }).join('');
+  }
+
+  // Panal en carrusel: solo cuando ya hay suficientes donadores para que
+  // la duplicación (necesaria para el loop continuo) no se vea como un
+  // logo repetido pegado al lado.
+  function renderPanalCarrusel(lista){
     var porFila = [[], [], []];
     lista.forEach(function(d, i){ porFila[i % 3].push(d); });
-
-    filas.forEach(function(fila, i){
-      var grupo = porFila[i];
-      if(!grupo.length){ fila.innerHTML=''; return; }
+    return porFila.map(function(grupo, i){
+      if(!grupo.length) return '';
       var html = grupo.map(celdaHtml).join('');
-      fila.innerHTML = html + html; // duplicado para el loop continuo
-    });
-  };
+      var clase = 'panal-fila' + (i === 1 ? ' panal-fila-offset' : (i === 2 ? ' panal-fila-3' : ''));
+      var estiloExtra = i === 2 ? ' style="margin-top:-22px;animation-duration:48s"' : '';
+      return '<div class="'+clase+'"'+estiloExtra+'>' + html + html + '</div>'; // duplicado, aquí sí no se nota
+    }).join('');
+  }
 
   window.abrirModalDonador = function(id){
     var d = window.DonadoresStore.cargar().find(function(x){ return x.id === id; });
