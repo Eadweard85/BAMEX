@@ -977,10 +977,38 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 }
 .mapa-expandir-btn:hover{ background: rgba(232,100,10,.3); border-color: var(--n); }
 
-.mapa-play-btn{
+.mapa-play-wrap{
   position: absolute;
   top: 12px;
   right: 54px;
+  z-index: 500;
+  width: 40px;
+  height: 40px;
+}
+.mapa-play-ring{
+  position: absolute;
+  top: 0; left: 0;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+.mapa-play-ring-fondo{
+  fill: none;
+  stroke: rgba(255,255,255,.12);
+  stroke-width: 2;
+}
+.mapa-play-ring-progreso{
+  fill: none;
+  stroke: #ff8c3a;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 106.8;
+  stroke-dashoffset: 106.8;
+  transition: stroke-dashoffset .1s linear;
+}
+.mapa-play-btn{
+  position: absolute;
+  top: 3px;
+  left: 3px;
   z-index: 500;
   width: 34px;
   height: 34px;
@@ -1004,6 +1032,44 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   70%{ box-shadow: 0 0 0 10px rgba(232,100,10,0); }
   100%{ box-shadow: 0 0 0 0 rgba(232,100,10,0); }
 }
+.cine-salir-btn{
+  position: absolute;
+  top: 12px;
+  right: 96px;
+  z-index: 2100;
+  background: rgba(10,10,15,.85);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff;
+  font-size: 12.5px;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: 17px;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.cine-salir-btn:hover{ background: rgba(232,100,10,.3); border-color: var(--n); }
+
+/* Modo cine: el recorrido de comunidades toma toda la pantalla, por
+   encima incluso del header/nav (que sigue existiendo detrás, solo que
+   ya no se ve ni se puede interactuar con él mientras dura el recorrido). */
+.mapa-contenedor.modo-cine{
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  margin: 0;
+  border-radius: 0;
+  padding: 0;
+  height: 100vh;
+  background: #050507;
+  animation: modoCineIn .35s ease;
+  will-change: opacity;
+}
+@keyframes modoCineIn{ from{ opacity: 0; } to{ opacity: 1; } }
+.mapa-contenedor.modo-cine .mapa-sidebar{ display: none; }
+.mapa-contenedor.modo-cine .mapa-grafico{ border-radius: 0; }
+.mapa-contenedor.modo-cine .mapa-expandir-btn,
+.mapa-contenedor.modo-cine .sidebar-mostrar-btn{ display: none !important; }
+.mapa-contenedor.modo-cine .mapaplay-card{ width: 320px; }
 
 .mapaplay-card{
   position: absolute;
@@ -1021,6 +1087,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,.5);
   animation: mapaplayIn .4s cubic-bezier(.16,1,.3,1);
+  will-change: transform, opacity;
 }
 @keyframes mapaplayIn{ from{ opacity:0; transform: translateY(12px); } to{ opacity:1; transform: translateY(0); } }
 .mapaplay-visual{ position: relative; height: 110px; background: radial-gradient(circle at 50% 30%, #1a1a28 0%, #0c0c14 75%); }
@@ -1117,6 +1184,9 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 }
 .leaflet-container a.leaflet-popup-close-button:hover{ color: var(--n) !important; }
 .leaflet-interactive{ cursor: pointer; }
+.leaflet-interactive:focus,
+.leaflet-container path:focus,
+.leaflet-container svg:focus{ outline: none !important; }
 #map-edomex .leaflet-control-zoom{
   border: none !important;
   box-shadow: 0 8px 24px rgba(0,0,0,.5) !important;
@@ -1939,11 +2009,18 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
       </div>
     </div>
   </div>
-  <div class="mapa-contenedor">
+  <div class="mapa-contenedor" id="mapa-contenedor">
     <div class="mapa-grafico">
-      <button class="mapa-play-btn" id="mapa-play-btn" onclick="window.mapaPlayToggle()" title="Reproducir recorrido en el mapa">▶</button>
+      <div class="mapa-play-wrap" id="mapa-play-wrap">
+        <svg class="mapa-play-ring" viewBox="0 0 40 40" width="40" height="40">
+          <circle class="mapa-play-ring-fondo" cx="20" cy="20" r="17"></circle>
+          <circle class="mapa-play-ring-progreso" id="mapa-play-ring-progreso" cx="20" cy="20" r="17"></circle>
+        </svg>
+        <button class="mapa-play-btn" id="mapa-play-btn" onclick="window.mapaPlayToggle()" title="Reproducir recorrido en el mapa">▶</button>
+      </div>
       <button class="mapa-expandir-btn" id="mapa-expandir-btn" onclick="toggleMapaExpandido()" title="Ver en grande">⤢</button>
       <button class="sidebar-mostrar-btn" id="sidebar-mostrar-btn" onclick="window.toggleMapaSidebar()" style="display:none;" title="Mostrar panel">‹</button>
+      <button class="cine-salir-btn" id="cine-salir-btn" onclick="window.mapaPlaySalir()" style="display:none;" title="Salir del modo cine">✕ Salir</button>
       <div id="map-edomex"></div>
 
       <div class="mapaplay-card" id="mapaplay-card" style="display:none;">
@@ -2400,6 +2477,7 @@ var RUTA_POR_ID = { inicio:'inicio', com:'comunidades', don:'donador', gal:'gale
 var ID_POR_RUTA = { inicio:'inicio', comunidades:'com', donador:'don', galeria:'gal', login:'adm' };
 
 function mostrarVista(id){
+  if(window.mapaPlaySalir) window.mapaPlaySalir();
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
   var vista = document.getElementById('vista-'+id);
@@ -3280,6 +3358,7 @@ window.ComunidadesStore = (function(){
           mouseover: function(){ if(layer !== selectedLayer) layer.setStyle(hoverStyle); },
           mouseout: function(){ if(layer !== selectedLayer) geoLayer.resetStyle(layer); },
           click: function(){
+            if(mapaplay.activo) window.mapaPlaySalir();
             selectLayer(layer, m);
             var info = getInfoMunicipio(m.nombre);
             var estatusTxt = info.atendida ? 'Zona Atendida' : 'Aún sin cobertura';
@@ -3686,9 +3765,19 @@ window.ComunidadesStore = (function(){
   // ------------------------------------------------------------------
   // BOTÓN DE PLAY EN EL MAPA: recorrido curado a mano — solo estas
   // comunidades, en este orden exacto. El mapa real vuela a cada una
-  // mientras la tarjeta flotante muestra su foto y sus datos.
-  var MAPAPLAY_DURACION_MS = 6000;
-  var mapaplay = { activo:false, indice:0, lista:[], timer:null };
+  // mientras la tarjeta flotante muestra su foto y sus datos, en modo
+  // cine (pantalla completa, por encima del header).
+  var MAPAPLAY_DURACION_MS = 3000;
+  var mapaplay = {
+    activo:false,      // true mientras el modo cine está abierto (reproduciendo o en pausa)
+    pausado:false,
+    indice:0,
+    lista:[],
+    timer:null,
+    progresoInicio:0,
+    progresoRestanteMs:MAPAPLAY_DURACION_MS,
+    progresoFrame:null
+  };
 
   var MAPAPLAY_LISTA_CURADA = [
     { nombre:'Barrio de San Juan', municipio:'Xalatlaco' },
@@ -3796,6 +3885,23 @@ window.ComunidadesStore = (function(){
     if(select) select.value = m.nombre;
   }
 
+  var MAPAPLAY_RING_CIRCUNFERENCIA = 106.8;
+  function mapaPlayAnimarAnillo(){
+    if(mapaplay.progresoFrame) cancelAnimationFrame(mapaplay.progresoFrame);
+    var ring = document.getElementById('mapa-play-ring-progreso');
+    if(!ring) return;
+    mapaplay.progresoInicio = performance.now();
+    var duracionRestante = mapaplay.progresoRestanteMs;
+    function frame(ahora){
+      if(!mapaplay.activo || mapaplay.pausado) return;
+      var transcurrido = ahora - mapaplay.progresoInicio;
+      var fraccion = Math.min(1, transcurrido / duracionRestante);
+      ring.style.strokeDashoffset = MAPAPLAY_RING_CIRCUNFERENCIA * (1 - fraccion);
+      if(fraccion < 1) mapaplay.progresoFrame = requestAnimationFrame(frame);
+    }
+    mapaplay.progresoFrame = requestAnimationFrame(frame);
+  }
+
   function mapaPlayMostrarParada(i){
     if(!mapaplay.lista.length) return;
     mapaplay.indice = (i + mapaplay.lista.length) % mapaplay.lista.length;
@@ -3810,36 +3916,88 @@ window.ComunidadesStore = (function(){
     void card.offsetWidth; // reinicia la animación de entrada en cada parada
     card.style.animation = '';
     mapaPlayRenderTarjeta(parada);
-    mapaPlayProgramarSiguiente();
+    mapaplay.progresoRestanteMs = MAPAPLAY_DURACION_MS;
+    mapaPlayAnimarAnillo();
+    mapaPlayProgramarSiguiente(MAPAPLAY_DURACION_MS);
   }
 
-  function mapaPlayProgramarSiguiente(){
+  function mapaPlayProgramarSiguiente(ms){
     clearTimeout(mapaplay.timer);
     mapaplay.timer = setTimeout(function(){
       mapaPlayMostrarParada(mapaplay.indice + 1);
-    }, MAPAPLAY_DURACION_MS);
+    }, ms);
+  }
+
+  // Pausa de verdad: congela justo donde va (el anillo se detiene, el
+  // cronómetro para) — no reinicia ni avanza. Reanudar continúa desde ahí.
+  function mapaPlayPausar(){
+    mapaplay.pausado = true;
+    clearTimeout(mapaplay.timer);
+    if(mapaplay.progresoFrame) cancelAnimationFrame(mapaplay.progresoFrame);
+    var transcurrido = performance.now() - mapaplay.progresoInicio;
+    mapaplay.progresoRestanteMs = Math.max(300, mapaplay.progresoRestanteMs - transcurrido);
+    var btn = document.getElementById('mapa-play-btn');
+    if(btn){ btn.textContent = '▶'; btn.title = 'Reanudar'; }
+  }
+
+  function mapaPlayReanudar(){
+    mapaplay.pausado = false;
+    mapaPlayAnimarAnillo();
+    mapaPlayProgramarSiguiente(mapaplay.progresoRestanteMs);
+    var btn = document.getElementById('mapa-play-btn');
+    if(btn){ btn.textContent = '⏸'; btn.title = 'Pausar'; }
   }
 
   window.mapaPlayToggle = function(){
     var btn = document.getElementById('mapa-play-btn');
     var card = document.getElementById('mapaplay-card');
-    if(mapaplay.activo){
-      mapaplay.activo = false;
-      clearTimeout(mapaplay.timer);
-      if(card) card.style.display = 'none';
-      if(btn){ btn.textContent = '▶'; btn.classList.remove('activo'); }
-      window.edomexResetView();
+    var cont = document.getElementById('mapa-contenedor');
+    var salirBtn = document.getElementById('cine-salir-btn');
+
+    if(!mapaplay.activo){
+      // Primer clic: arranca el recorrido en modo cine (pantalla completa).
+      mapaplay.lista = mapaPlaySeleccionar();
+      if(!mapaplay.lista.length){
+        alert('Todavía no hay comunidades registradas para armar un recorrido.');
+        return;
+      }
+      mapaplay.activo = true;
+      mapaplay.pausado = false;
+      if(cont) cont.classList.add('modo-cine');
+      if(salirBtn) salirBtn.style.display = '';
+      if(btn){ btn.textContent = '⏸'; btn.title = 'Pausar'; btn.classList.add('activo'); }
+      if(card) card.style.display = 'flex';
+      if(window.edomexInvalidateSize) setTimeout(window.edomexInvalidateSize, 250);
+      mapaPlayMostrarParada(0);
       return;
     }
-    mapaplay.lista = mapaPlaySeleccionar();
-    if(!mapaplay.lista.length){
-      alert('Todavía no hay comunidades registradas para armar un recorrido.');
-      return;
-    }
-    mapaplay.activo = true;
-    if(btn){ btn.textContent = '⏸'; btn.classList.add('activo'); }
-    if(card) card.style.display = 'flex';
-    mapaPlayMostrarParada(0);
+
+    // Ya estaba activo: el botón ahora es pausa/reanuda, NO sale del modo cine.
+    if(mapaplay.pausado) mapaPlayReanudar();
+    else mapaPlayPausar();
+  };
+
+  // Sale por completo del modo cine: limpia todo y regresa a la vista
+  // normal. Se usa desde el botón "✕ Salir", al navegar a otra sección, o
+  // al seleccionar manualmente un municipio mientras el recorrido corre.
+  window.mapaPlaySalir = function(){
+    if(!mapaplay.activo) return;
+    mapaplay.activo = false;
+    mapaplay.pausado = false;
+    clearTimeout(mapaplay.timer);
+    if(mapaplay.progresoFrame) cancelAnimationFrame(mapaplay.progresoFrame);
+    var btn = document.getElementById('mapa-play-btn');
+    var card = document.getElementById('mapaplay-card');
+    var cont = document.getElementById('mapa-contenedor');
+    var salirBtn = document.getElementById('cine-salir-btn');
+    var ring = document.getElementById('mapa-play-ring-progreso');
+    if(cont) cont.classList.remove('modo-cine');
+    if(salirBtn) salirBtn.style.display = 'none';
+    if(card) card.style.display = 'none';
+    if(btn){ btn.textContent = '▶'; btn.title = 'Reproducir recorrido en el mapa'; btn.classList.remove('activo'); }
+    if(ring) ring.style.strokeDashoffset = MAPAPLAY_RING_CIRCUNFERENCIA;
+    window.edomexResetView();
+    if(window.edomexInvalidateSize) setTimeout(window.edomexInvalidateSize, 250);
   };
 
   window.edomexResetView = function(){
