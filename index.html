@@ -1110,7 +1110,7 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .mapa-contenedor.expandido{
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 50;
+  z-index: 1100;
   margin: 0;
   border-radius: 0;
   height: 100vh;
@@ -3880,7 +3880,7 @@ window.ComunidadesStore = (function(){
     m._layer.bringToFront();
     var lat = (typeof c.lat === 'number') ? c.lat : m.lat;
     var lng = (typeof c.lng === 'number') ? c.lng : m.lon;
-    map.flyTo([lat, lng], 13, {duration:0.6});
+    map.flyTo([lat, lng], 11.5, {duration:0.6});
     var select = document.getElementById('select-mun');
     if(select) select.value = m.nombre;
   }
