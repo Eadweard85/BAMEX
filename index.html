@@ -2417,18 +2417,34 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
     if(spb) spb.textContent='⏸ Pausar';
   };
 
-  window.addEventListener('resize', function(){
-    W=wrap.clientWidth; H=wrap.clientHeight;
-    camera.aspect=W/H; camera.updateProjectionMatrix();
-    renderer.setSize(W,H);
-  });
-
   var t0=performance.now();
   var globoActivo = true;
   var pestanaVisible = true;
   var contextoPerdido = false;
 
-  window.setGlobeActive = function(v){ globoActivo = !!v; };
+  function redimensionarGlobo(){
+    var w = wrap.clientWidth, h = wrap.clientHeight;
+    // Si el contenedor está oculto (display:none porque estamos en otra
+    // sección), mide 0×0 — usar eso rompería la cámara para siempre. Mejor
+    // no tocar nada y esperar al próximo resize real o a que vuelva a
+    // mostrarse (ver setGlobeActive más abajo).
+    if(!w || !h) return;
+    W = w; H = h;
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  }
+
+  window.addEventListener('resize', redimensionarGlobo);
+
+  window.setGlobeActive = function(v){
+    globoActivo = !!v;
+    // Al volver a Inicio, el contenedor ya vuelve a medir lo que
+    // corresponde — pero recién se hizo visible, así que forzamos el
+    // recálculo aquí (por si mientras estuvo oculto se coló algún resize,
+    // por ejemplo al entrar/salir de pantalla completa en Comunidades).
+    if(globoActivo) setTimeout(redimensionarGlobo, 50);
+  };
 
   // Si el navegador reclama la GPU (común al dejar la pestaña en segundo
   // plano mucho tiempo), el canvas se queda negro y esta librería (r128) no
@@ -2478,6 +2494,10 @@ var ID_POR_RUTA = { inicio:'inicio', comunidades:'com', donador:'don', galeria:'
 
 function mostrarVista(id){
   if(window.mapaPlaySalir) window.mapaPlaySalir();
+  if(id !== 'com'){
+    var contMapa = document.querySelector('.mapa-contenedor');
+    if(contMapa && contMapa.classList.contains('expandido')) toggleMapaExpandido();
+  }
   document.querySelectorAll('.vista').forEach(function(v){v.classList.remove('on');});
   document.querySelectorAll('nav button').forEach(function(b){b.classList.remove('on');});
   var vista = document.getElementById('vista-'+id);
