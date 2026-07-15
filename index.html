@@ -1631,6 +1631,51 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .admin-form-actions{ display: flex; gap: 10px; margin-top: 18px; }
 .admin-hidden{ display: none; }
 
+.admin-tabs{ display:flex; gap:8px; margin: 4px 0 20px 0; border-bottom: 1px solid var(--br); }
+.admin-tab-btn{
+  background:none; border:none; color: rgba(255,255,255,.5);
+  font-size: 13.5px; font-weight:600; padding: 10px 4px; cursor:pointer;
+  position: relative; margin-right: 18px;
+}
+.admin-tab-btn:hover{ color: rgba(255,255,255,.8); }
+.admin-tab-btn.on{ color: #fff; }
+.admin-tab-btn.on::after{ content:''; position:absolute; bottom:-1px; left:0; width:100%; height:2px; background: var(--n); }
+
+.admin-donador-card{
+  display:flex; align-items:center; gap:14px;
+  background:#12121f; border:1px solid var(--br); border-radius:8px;
+  padding:10px 14px; margin-bottom:8px;
+}
+.admin-donador-logo{
+  width:44px; height:44px; border-radius:6px; background:#0c0c14;
+  display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;
+}
+.admin-donador-logo img{ max-width:100%; max-height:100%; object-fit:contain; }
+.admin-donador-info{ flex:1; min-width:0; }
+.admin-donador-info b{ display:block; font-size:14px; }
+.admin-donador-info span{ font-size:12px; color:var(--t); }
+.admin-donador-acciones{ display:flex; gap:6px; flex-shrink:0; }
+.admin-donador-acciones button{
+  background: rgba(255,255,255,.06); border:1px solid var(--br); color:#fff;
+  font-size:11.5px; padding:6px 10px; border-radius:6px; cursor:pointer;
+}
+.admin-donador-acciones button:hover{ background: rgba(232,100,10,.25); border-color: var(--n); }
+
+.admin-campana-card{
+  background:#0c0c14; border:1px solid var(--br); border-radius:8px;
+  padding:12px 14px; margin-bottom:8px;
+}
+.admin-campana-card b{ display:block; font-size:13.5px; margin-bottom:2px; }
+.admin-campana-card p{ font-size:12px; color:var(--t); margin-bottom:8px; }
+.admin-campana-fotos{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+.admin-campana-fotos img{ width:44px; height:44px; object-fit:cover; border-radius:5px; }
+.admin-campana-acciones{ display:flex; gap:6px; }
+.admin-campana-acciones button{
+  background: rgba(255,255,255,.06); border:1px solid var(--br); color:#fff;
+  font-size:11px; padding:5px 9px; border-radius:6px; cursor:pointer;
+}
+.admin-campana-acciones button:hover{ background: rgba(232,100,10,.25); border-color: var(--n); }
+
 .admin-lista-wrap h3{ font-size: 15px; margin-bottom: 10px; }
 .admin-lista-toolbar{
   display: flex;
@@ -2124,6 +2169,12 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
         <button class="bq" onclick="cerrarSesionAdmin()">Cerrar sesión</button>
       </div>
 
+      <div class="admin-tabs">
+        <button class="admin-tab-btn on" id="admin-tab-btn-com" onclick="cambiarTabAdmin('com')">Comunidades</button>
+        <button class="admin-tab-btn" id="admin-tab-btn-don" onclick="cambiarTabAdmin('don')">Donadores</button>
+      </div>
+
+      <div id="admin-tab-com" class="admin-tab-panel">
       <div class="admin-import-wrap">
         <h3>Importar / actualizar comunidades desde Excel</h3>
         <p class="admin-mapa-hint">
@@ -2230,6 +2281,74 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
         <p id="lista-progreso" class="admin-import-progreso"></p>
         <div id="admin-lista-comunidades"></div>
       </div>
+      </div>
+
+      <div id="admin-tab-don" class="admin-tab-panel admin-hidden">
+
+        <form id="form-donador" class="admin-form">
+          <h3 id="form-donador-titulo">Agregar donador</h3>
+          <input type="hidden" id="don-edit-id">
+
+          <label>Nombre del donador</label>
+          <input type="text" id="don-nombre" required placeholder="Ej. Grupo Bimbo">
+
+          <label>Logo</label>
+          <p class="admin-mapa-hint">Idealmente un logo con fondo transparente (PNG) para que se vea bien en el panal.</p>
+          <input type="file" id="don-logo-input" accept="image/*" onchange="manejarLogoDonador(this.files[0])">
+          <div id="don-logo-preview" class="admin-fotos-preview"></div>
+
+          <label>Descripción corta (opcional)</label>
+          <input type="text" id="don-descripcion" placeholder="Ej. Aliado desde 2022">
+
+          <label>Sitio web (opcional)</label>
+          <input type="text" id="don-sitio-web" placeholder="https://...">
+
+          <label>Orden en el panal</label>
+          <input type="number" id="don-orden" value="0" placeholder="0 = primero">
+
+          <div class="admin-form-actions">
+            <button type="submit" class="bg">Guardar donador</button>
+            <button type="button" id="don-cancelar-edicion" class="bq admin-hidden" onclick="resetFormDonador()">Cancelar edición</button>
+          </div>
+        </form>
+
+        <div class="admin-lista-wrap">
+          <h3>Donadores registrados</h3>
+          <div id="admin-lista-donadores"></div>
+        </div>
+
+        <div id="admin-campanas-wrap" class="admin-form admin-hidden">
+          <h3 id="admin-campanas-titulo">Campañas de —</h3>
+          <button type="button" class="bq" onclick="cerrarCampanasDonador()">✕ Cerrar</button>
+
+          <form id="form-campana" class="admin-form" style="border:none; padding:16px 0 0 0;">
+            <input type="hidden" id="cam-edit-id">
+            <input type="hidden" id="cam-donador-id">
+
+            <label>Título de la campaña</label>
+            <input type="text" id="cam-titulo" required placeholder="Ej. Recolección Navideña 2024">
+
+            <label>Descripción</label>
+            <input type="text" id="cam-descripcion" placeholder="Qué se hizo, resultados, etc.">
+
+            <label>Fecha (opcional)</label>
+            <input type="date" id="cam-fecha">
+
+            <label>Fotos (puedes subir varias)</label>
+            <input type="file" id="cam-fotos-input" accept="image/*" multiple onchange="manejarFotosCampana(this.files)">
+            <div id="cam-fotos-preview" class="admin-fotos-preview"></div>
+
+            <div class="admin-form-actions">
+              <button type="submit" class="bg">Guardar campaña</button>
+              <button type="button" id="cam-cancelar-edicion" class="bq admin-hidden" onclick="resetFormCampana()">Cancelar edición</button>
+            </div>
+          </form>
+
+          <div id="admin-lista-campanas"></div>
+        </div>
+
+      </div>
+
     </div>
 
   </div>
@@ -3072,6 +3191,140 @@ window.ComunidadesStore = (function(){
 
     actualizar: async function(id, registro){
       var fila = comunidadAFila(registro);
+      var resp = await supabaseClient.from(TABLA).update(fila).eq('id', id);
+      if(resp.error) throw resp.error;
+      await recargar();
+    },
+
+    eliminar: async function(id){
+      var resp = await supabaseClient.from(TABLA).delete().eq('id', id);
+      if(resp.error) throw resp.error;
+      await recargar();
+    }
+  };
+})();
+</script>
+
+<script>
+// --- DONADORES Y SUS CAMPAÑAS (mismo patrón que ComunidadesStore) ---
+window.DonadoresStore = (function(){
+  var TABLA = 'Donadores';
+  var cache = [];
+
+  function filaADonador(fila){
+    return {
+      id: fila.id,
+      nombre: fila.nombre,
+      logo: fila.logo || null,
+      descripcion: fila.descripcion || '',
+      sitio_web: fila.sitio_web || '',
+      orden: (fila.orden === null || fila.orden === undefined) ? 0 : Number(fila.orden)
+    };
+  }
+
+  function donadorAFila(registro){
+    return {
+      nombre: registro.nombre,
+      logo: registro.logo || null,
+      descripcion: registro.descripcion || '',
+      sitio_web: registro.sitio_web || '',
+      orden: (typeof registro.orden === 'number') ? registro.orden : 0
+    };
+  }
+
+  async function recargar(){
+    var resp = await supabaseClient.from(TABLA).select('*').order('orden', {ascending:true});
+    if(resp.error){
+      console.error('No se pudieron cargar los donadores desde Supabase:', resp.error);
+      return cache;
+    }
+    cache = (resp.data || []).map(filaADonador);
+    return cache;
+  }
+
+  var cargaInicial = recargar();
+
+  return {
+    listo: function(){ return cargaInicial; },
+    refrescar: function(){ return recargar(); },
+    cargar: function(){ return cache.slice(); },
+
+    agregar: async function(registro){
+      var fila = donadorAFila(registro);
+      var resp = await supabaseClient.from(TABLA).insert(fila).select().single();
+      if(resp.error) throw resp.error;
+      await recargar();
+      return filaADonador(resp.data);
+    },
+
+    actualizar: async function(id, registro){
+      var fila = donadorAFila(registro);
+      var resp = await supabaseClient.from(TABLA).update(fila).eq('id', id);
+      if(resp.error) throw resp.error;
+      await recargar();
+    },
+
+    eliminar: async function(id){
+      var resp = await supabaseClient.from(TABLA).delete().eq('id', id);
+      if(resp.error) throw resp.error;
+      await recargar();
+    }
+  };
+})();
+
+window.CampanasStore = (function(){
+  var TABLA = 'Campanas';
+  var cache = [];
+
+  function filaACampana(fila){
+    return {
+      id: fila.id,
+      donador_id: fila.donador_id,
+      titulo: fila.titulo,
+      descripcion: fila.descripcion || '',
+      fecha: fila.fecha || null,
+      fotos: Array.isArray(fila.fotos) ? fila.fotos : []
+    };
+  }
+
+  function campanaAFila(registro){
+    return {
+      donador_id: registro.donador_id,
+      titulo: registro.titulo,
+      descripcion: registro.descripcion || '',
+      fecha: registro.fecha || null,
+      fotos: registro.fotos || []
+    };
+  }
+
+  async function recargar(){
+    var resp = await supabaseClient.from(TABLA).select('*').order('fecha', {ascending:false});
+    if(resp.error){
+      console.error('No se pudieron cargar las campañas desde Supabase:', resp.error);
+      return cache;
+    }
+    cache = (resp.data || []).map(filaACampana);
+    return cache;
+  }
+
+  var cargaInicial = recargar();
+
+  return {
+    listo: function(){ return cargaInicial; },
+    refrescar: function(){ return recargar(); },
+    cargar: function(){ return cache.slice(); },
+    deDonador: function(donadorId){ return cache.filter(function(c){ return c.donador_id === donadorId; }); },
+
+    agregar: async function(registro){
+      var fila = campanaAFila(registro);
+      var resp = await supabaseClient.from(TABLA).insert(fila).select().single();
+      if(resp.error) throw resp.error;
+      await recargar();
+      return filaACampana(resp.data);
+    },
+
+    actualizar: async function(id, registro){
+      var fila = campanaAFila(registro);
       var resp = await supabaseClient.from(TABLA).update(fila).eq('id', id);
       if(resp.error) throw resp.error;
       await recargar();
@@ -6017,6 +6270,258 @@ var OpenLocationCode = function () {};
     if(window.refreshComunidadesMarkers) window.refreshComunidadesMarkers();
     if(window.refrescarFichaAbierta) window.refrescarFichaAbierta();
   });
+})();
+</script>
+
+<script>
+// --- PANEL DE ADMINISTRACIÓN: DONADORES Y SUS CAMPAÑAS ---
+(function(){
+
+  function comprimirImagenGenerica(file, maxAncho, cb){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var img = new Image();
+      img.onload = function(){
+        var escala = Math.min(1, maxAncho / img.width);
+        var w = Math.round(img.width * escala);
+        var h = Math.round(img.height * escala);
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        cb(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ------------------------------------------------------------------
+  // PESTAÑAS DEL ADMIN
+  // ------------------------------------------------------------------
+  window.cambiarTabAdmin = function(tab){
+    document.getElementById('admin-tab-com').classList.toggle('admin-hidden', tab !== 'com');
+    document.getElementById('admin-tab-don').classList.toggle('admin-hidden', tab !== 'don');
+    document.getElementById('admin-tab-btn-com').classList.toggle('on', tab === 'com');
+    document.getElementById('admin-tab-btn-don').classList.toggle('on', tab === 'don');
+    if(tab === 'don'){
+      window.DonadoresStore.refrescar().then(refrescarListaDonadores);
+    }
+  };
+
+  // ------------------------------------------------------------------
+  // FORMULARIO DE DONADOR
+  // ------------------------------------------------------------------
+  var logoDonadorPendiente = null;
+
+  window.manejarLogoDonador = function(file){
+    if(!file) return;
+    comprimirImagenGenerica(file, 500, function(src){
+      logoDonadorPendiente = src;
+      var preview = document.getElementById('don-logo-preview');
+      preview.innerHTML = '<div class="admin-foto-thumb"><img src="' + src + '"></div>';
+    });
+  };
+
+  window.resetFormDonador = function(){
+    document.getElementById('form-donador').reset();
+    document.getElementById('don-edit-id').value = '';
+    document.getElementById('don-logo-preview').innerHTML = '';
+    document.getElementById('don-orden').value = '0';
+    logoDonadorPendiente = null;
+    document.getElementById('form-donador-titulo').textContent = 'Agregar donador';
+    document.getElementById('don-cancelar-edicion').classList.add('admin-hidden');
+  };
+
+  window.editarDonador = function(id){
+    var d = window.DonadoresStore.cargar().find(function(x){ return x.id === id; });
+    if(!d) return;
+    document.getElementById('don-edit-id').value = d.id;
+    document.getElementById('don-nombre').value = d.nombre;
+    document.getElementById('don-descripcion').value = d.descripcion || '';
+    document.getElementById('don-sitio-web').value = d.sitio_web || '';
+    document.getElementById('don-orden').value = d.orden || 0;
+    logoDonadorPendiente = d.logo || null;
+    var preview = document.getElementById('don-logo-preview');
+    preview.innerHTML = d.logo ? '<div class="admin-foto-thumb"><img src="' + d.logo + '"></div>' : '';
+    document.getElementById('form-donador-titulo').textContent = 'Editar donador';
+    document.getElementById('don-cancelar-edicion').classList.remove('admin-hidden');
+    document.getElementById('form-donador').scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  window.eliminarDonador = async function(id, nombre){
+    if(!confirm('¿Eliminar a "' + nombre + '" y todas sus campañas registradas? Esta acción no se puede deshacer.')) return;
+    try{
+      await window.DonadoresStore.eliminar(id);
+      refrescarListaDonadores();
+    } catch(err){
+      alert('No se pudo eliminar: ' + (err && err.message ? err.message : err));
+    }
+  };
+
+  function refrescarListaDonadores(){
+    var cont = document.getElementById('admin-lista-donadores');
+    var lista = window.DonadoresStore.cargar();
+    if(!lista.length){
+      cont.innerHTML = '<p class="admin-mapa-hint">Todavía no hay donadores registrados.</p>';
+      return;
+    }
+    cont.innerHTML = lista.map(function(d){
+      return '<div class="admin-donador-card">' +
+        '<div class="admin-donador-logo">' + (d.logo ? '<img src="'+d.logo+'">' : '🏢') + '</div>' +
+        '<div class="admin-donador-info"><b>'+d.nombre+'</b><span>'+(d.descripcion||'Sin descripción')+'</span></div>' +
+        '<div class="admin-donador-acciones">' +
+          '<button onclick="abrirCampanasDonador(\''+d.id+'\', \''+d.nombre.replace(/'/g,"\\'")+'\')">Campañas</button>' +
+          '<button onclick="editarDonador(\''+d.id+'\')">Editar</button>' +
+          '<button onclick="eliminarDonador(\''+d.id+'\', \''+d.nombre.replace(/'/g,"\\'")+'\')">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('form-donador').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var id = document.getElementById('don-edit-id').value;
+    var registro = {
+      nombre: document.getElementById('don-nombre').value.trim(),
+      logo: logoDonadorPendiente,
+      descripcion: document.getElementById('don-descripcion').value.trim(),
+      sitio_web: document.getElementById('don-sitio-web').value.trim(),
+      orden: parseInt(document.getElementById('don-orden').value, 10) || 0
+    };
+    var boton = e.target.querySelector('button[type="submit"]');
+    if(boton){ boton.disabled = true; boton.textContent = 'Guardando...'; }
+    try{
+      if(id) await window.DonadoresStore.actualizar(id, registro);
+      else await window.DonadoresStore.agregar(registro);
+    } catch(err){
+      alert('No se pudo guardar en Supabase: ' + (err && err.message ? err.message : err));
+      if(boton){ boton.disabled = false; boton.textContent = 'Guardar donador'; }
+      return;
+    }
+    if(boton){ boton.disabled = false; boton.textContent = 'Guardar donador'; }
+    window.resetFormDonador();
+    refrescarListaDonadores();
+    if(window.refrescarPanalDonadores) window.refrescarPanalDonadores();
+  });
+
+  // ------------------------------------------------------------------
+  // CAMPAÑAS DE UN DONADOR
+  // ------------------------------------------------------------------
+  var fotosCampanaPendientes = [];
+
+  window.abrirCampanasDonador = async function(donadorId, nombreDonador){
+    document.getElementById('admin-campanas-wrap').classList.remove('admin-hidden');
+    document.getElementById('admin-campanas-titulo').textContent = 'Campañas de ' + nombreDonador;
+    document.getElementById('cam-donador-id').value = donadorId;
+    window.resetFormCampana();
+    await window.CampanasStore.refrescar();
+    refrescarListaCampanas(donadorId);
+    document.getElementById('admin-campanas-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  window.cerrarCampanasDonador = function(){
+    document.getElementById('admin-campanas-wrap').classList.add('admin-hidden');
+  };
+
+  window.manejarFotosCampana = function(files){
+    Array.prototype.forEach.call(files, function(file){
+      comprimirImagenGenerica(file, 900, function(src){
+        fotosCampanaPendientes.push({src:src});
+        pintarPreviewFotosCampana();
+      });
+    });
+  };
+
+  function pintarPreviewFotosCampana(){
+    var preview = document.getElementById('cam-fotos-preview');
+    preview.innerHTML = fotosCampanaPendientes.map(function(f, i){
+      return '<div class="admin-foto-thumb" style="position:relative"><img src="'+f.src+'">' +
+        '<button type="button" onclick="quitarFotoCampana('+i+')" style="position:absolute;top:2px;right:2px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;">✕</button></div>';
+    }).join('');
+  }
+
+  window.quitarFotoCampana = function(i){
+    fotosCampanaPendientes.splice(i, 1);
+    pintarPreviewFotosCampana();
+  };
+
+  window.resetFormCampana = function(){
+    document.getElementById('form-campana').reset();
+    document.getElementById('cam-edit-id').value = '';
+    document.getElementById('cam-fotos-preview').innerHTML = '';
+    fotosCampanaPendientes = [];
+    document.getElementById('cam-cancelar-edicion').classList.add('admin-hidden');
+  };
+
+  window.editarCampana = function(id){
+    var c = window.CampanasStore.cargar().find(function(x){ return x.id === id; });
+    if(!c) return;
+    document.getElementById('cam-edit-id').value = c.id;
+    document.getElementById('cam-titulo').value = c.titulo;
+    document.getElementById('cam-descripcion').value = c.descripcion || '';
+    document.getElementById('cam-fecha').value = c.fecha || '';
+    fotosCampanaPendientes = (c.fotos || []).slice();
+    pintarPreviewFotosCampana();
+    document.getElementById('cam-cancelar-edicion').classList.remove('admin-hidden');
+  };
+
+  window.eliminarCampana = async function(id, donadorId){
+    if(!confirm('¿Eliminar esta campaña?')) return;
+    try{
+      await window.CampanasStore.eliminar(id);
+      refrescarListaCampanas(donadorId);
+    } catch(err){
+      alert('No se pudo eliminar: ' + (err && err.message ? err.message : err));
+    }
+  };
+
+  function refrescarListaCampanas(donadorId){
+    var cont = document.getElementById('admin-lista-campanas');
+    var lista = window.CampanasStore.deDonador(donadorId);
+    if(!lista.length){
+      cont.innerHTML = '<p class="admin-mapa-hint">Todavía no hay campañas registradas para este donador.</p>';
+      return;
+    }
+    cont.innerHTML = lista.map(function(c){
+      return '<div class="admin-campana-card">' +
+        '<b>'+c.titulo+'</b>' +
+        '<p>'+(c.fecha ? c.fecha+' — ' : '')+(c.descripcion||'')+'</p>' +
+        (c.fotos && c.fotos.length ? '<div class="admin-campana-fotos">'+c.fotos.map(function(f){ return '<img src="'+f.src+'">'; }).join('')+'</div>' : '') +
+        '<div class="admin-campana-acciones">' +
+          '<button onclick="editarCampana(\''+c.id+'\')">Editar</button>' +
+          '<button onclick="eliminarCampana(\''+c.id+'\', \''+donadorId+'\')">Eliminar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  document.getElementById('form-campana').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var id = document.getElementById('cam-edit-id').value;
+    var donadorId = document.getElementById('cam-donador-id').value;
+    var registro = {
+      donador_id: donadorId,
+      titulo: document.getElementById('cam-titulo').value.trim(),
+      descripcion: document.getElementById('cam-descripcion').value.trim(),
+      fecha: document.getElementById('cam-fecha').value || null,
+      fotos: fotosCampanaPendientes
+    };
+    var boton = e.target.querySelector('button[type="submit"]');
+    if(boton){ boton.disabled = true; boton.textContent = 'Guardando...'; }
+    try{
+      if(id) await window.CampanasStore.actualizar(id, registro);
+      else await window.CampanasStore.agregar(registro);
+    } catch(err){
+      alert('No se pudo guardar en Supabase: ' + (err && err.message ? err.message : err));
+      if(boton){ boton.disabled = false; boton.textContent = 'Guardar campaña'; }
+      return;
+    }
+    if(boton){ boton.disabled = false; boton.textContent = 'Guardar campaña'; }
+    window.resetFormCampana();
+    refrescarListaCampanas(donadorId);
+    if(window.refrescarPanalDonadores) window.refrescarPanalDonadores();
+  });
+
 })();
 </script>
 
