@@ -1542,15 +1542,14 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 @keyframes panalScrollDer{ from{ transform: translateX(-50%); } to{ transform: translateX(0); } }
 
 /* ============================================================
-   TARJETA DE LOGO — fondo blanco sólido y consistente para todos
-   los donadores (el estándar de cualquier "muro de patrocinadores"
-   profesional), con sombra real para que se lea como tarjeta y no
-   como un recuadro vacío. La mayoría de los logos que suben las
-   empresas NO tienen fondo transparente real — traen su propio
-   blanco o negro "pegado" al PNG — así que además detectamos ese
-   caso (ver JS: detectarFondoLogo) y si el logo ya trae fondo
-   oscuro, la tarjeta cambia a oscura para que combinen, en vez de
-   dejar un cuadro negro flotando sobre blanco.
+   TARJETA DE LOGO — una sola tarjeta blanca, consistente, para
+   TODOS los donadores. La mayoría de los logos que suben las
+   empresas no tienen transparencia real (traen su propio blanco o
+   negro "pegado" al PNG); en vez de simular que la tarjeta
+   "combina" con ese fondo pegado, el fondo se elimina de verdad
+   antes de mostrarse — ver JS: procesarLogoDonador() /
+   limpiarFondoLogo(). Así todas las tarjetas quedan iguales,
+   sin recuadros oscuros sueltos entre logos en blanco.
    ============================================================ */
 .donador-celda{
   position: relative;
@@ -1571,16 +1570,12 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 0 0 1px rgba(0,0,0,.04);
   transition: box-shadow .3s ease, transform .3s ease, opacity .3s ease;
 }
-.donador-pedestal.fondo-oscuro{
-  background: #14141c;
-  box-shadow: 0 2px 6px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.08);
-}
 .donador-logo-img{
   height: 44px;
   width: auto;
   max-width: 100px;
   object-fit: contain;
-  transition: transform .3s ease;
+  transition: transform .3s ease, opacity .25s ease;
 }
 .donador-logo-sinlogo{
   font-size: 24px;
@@ -1595,8 +1590,8 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 }
 
 /* Donador activo (cursor encima o modal abierto): se eleva un poco
-   más — sin cambiar colores, la tarjeta ya es blanca/oscura desde
-   el inicio, así que no hay "parpadeo" de fondo al seleccionar. */
+   más — sin cambiar colores, la tarjeta ya es blanca desde el
+   inicio, así que no hay "parpadeo" de fondo al seleccionar. */
 .donador-celda.panal-activo .donador-pedestal{
   box-shadow: 0 10px 22px rgba(0,0,0,.45), 0 0 0 1px rgba(0,0,0,.04);
   transform: translateY(-3px);
@@ -3534,44 +3529,125 @@ window.CampanasStore = (function(){
       'onmouseenter="resaltarDonador(\''+d.id+'\')" onmouseleave="quitarResaltadoDonador()" '+
       'onclick="abrirModalDonador(\''+d.id+'\')"';
     var contenido = d.logo
-      ? '<img class="donador-logo-img" src="'+d.logo+'" alt="'+d.nombre.replace(/"/g,'')+'" onload="detectarFondoLogo(this)">'
+      ? '<img class="donador-logo-img" src="'+d.logo+'" alt="'+d.nombre.replace(/"/g,'')+'" onload="procesarLogoDonador(this)">'
       : '<span class="donador-logo-sinlogo">🏢</span>';
     return '<span class="donador-celda" '+comunes+'>' +
         '<span class="donador-pedestal">' + contenido + '</span>' +
       '</span>';
   }
 
-  // Muchos logos que suben los donadores NO tienen fondo transparente
-  // real: el PNG ya trae su propio blanco o negro "pintado". Sobre una
-  // tarjeta blanca, un logo con fondo negro pegado se ve como un
-  // recuadro negro flotando — así que muestreamos las 4 esquinas del
-  // logo y, si son opacas y oscuras, oscurecemos la tarjeta para que
-  // el fondo del logo se funda con la tarjeta en vez de contrastar mal.
-  window.detectarFondoLogo = function(img){
-    var tarjeta = img.closest('.donador-pedestal');
-    if(!tarjeta) return;
-    try{
-      var tam = 12;
-      var lienzo = document.createElement('canvas');
-      lienzo.width = tam; lienzo.height = tam;
-      var ctx = lienzo.getContext('2d');
-      ctx.drawImage(img, 0, 0, tam, tam);
-      var esquinas = [[0,0],[tam-1,0],[0,tam-1],[tam-1,tam-1]];
-      var opacas = 0, oscuras = 0;
-      esquinas.forEach(function(p){
-        var px = ctx.getImageData(p[0], p[1], 1, 1).data;
-        if(px[3] < 60) return; // esquina transparente: no cuenta como fondo pegado
-        opacas++;
-        var luminancia = px[0]*0.299 + px[1]*0.587 + px[2]*0.114;
-        if(luminancia < 60) oscuras++;
-      });
-      if(opacas >= 3 && oscuras === opacas){
-        tarjeta.classList.add('fondo-oscuro');
-      }
-    }catch(e){
-      // Si el canvas falla, se deja la tarjeta blanca por default.
+  // --- LIMPIEZA REAL DE FONDO ---
+  // La mayoría de los logos que suben los donadores NO tienen
+  // transparencia real: el PNG ya trae su propio blanco o negro
+  // "pintado" encima. En vez de simular que la tarjeta "combina" con
+  // ese fondo pegado (un parche visual), aquí se elimina el fondo de
+  // verdad: se lee el color de las esquinas y, si el borde completo
+  // de la imagen es de un color uniforme, se hace un flood-fill desde
+  // el borde marcando esos píxeles como transparentes. Así el logo
+  // queda con transparencia real y toda tarjeta puede ser blanca y
+  // consistente, sin excepciones. Es una heurística por color sólido
+  // (no segmentación con IA): si el borde no es un color parejo —por
+  // ejemplo, una foto o un degradado— la imagen se deja intacta.
+  var cacheLimpieza = {};
+  var pendientesLimpieza = {};
+
+  window.procesarLogoDonador = function(img){
+    if(img.dataset.procesado) return; // evita re-procesar cuando el propio cambio de src dispara onload de nuevo
+    var original = img.getAttribute('src');
+    if(Object.prototype.hasOwnProperty.call(cacheLimpieza, original)){
+      aplicarResultadoLimpieza(img, cacheLimpieza[original]);
+      return;
     }
+    if(pendientesLimpieza[original]){
+      pendientesLimpieza[original].push(img);
+      return;
+    }
+    pendientesLimpieza[original] = [img];
+    limpiarFondoLogo(original, function(resultado){
+      cacheLimpieza[original] = resultado;
+      pendientesLimpieza[original].forEach(function(el){ aplicarResultadoLimpieza(el, resultado); });
+      delete pendientesLimpieza[original];
+    });
   };
+
+  function aplicarResultadoLimpieza(img, resultado){
+    img.dataset.procesado = '1';
+    if(resultado && resultado !== img.getAttribute('src')){
+      img.src = resultado;
+    }
+  }
+
+  function limpiarFondoLogo(src, cb){
+    var img = new Image();
+    img.onload = function(){
+      try{
+        var maxLado = 420; // basta para un logo; evita procesar archivos enormes de más
+        var escala = Math.min(1, maxLado / Math.max(img.naturalWidth, img.naturalHeight, 1));
+        var w = Math.max(1, Math.round(img.naturalWidth * escala));
+        var h = Math.max(1, Math.round(img.naturalHeight * escala));
+        var lienzo = document.createElement('canvas');
+        lienzo.width = w; lienzo.height = h;
+        var ctx = lienzo.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        var imgData = ctx.getImageData(0, 0, w, h);
+        var datos = imgData.data;
+        var total = w * h;
+
+        function alphaEn(i){ return datos[i*4+3]; }
+        function colorCercaDe(i, ref, tol){
+          var b = i*4;
+          return Math.abs(datos[b]-ref[0])<=tol && Math.abs(datos[b+1]-ref[1])<=tol && Math.abs(datos[b+2]-ref[2])<=tol;
+        }
+
+        // Si el borde ya tiene transparencia real, no se toca nada.
+        var bordeYaTransparente = false;
+        for(var x=0; x<w && !bordeYaTransparente; x++){
+          if(alphaEn(x) < 200 || alphaEn((h-1)*w+x) < 200) bordeYaTransparente = true;
+        }
+        for(var y=0; y<h && !bordeYaTransparente; y++){
+          if(alphaEn(y*w) < 200 || alphaEn(y*w+(w-1)) < 200) bordeYaTransparente = true;
+        }
+        if(bordeYaTransparente){ cb(src); return; }
+
+        var ref = [datos[0], datos[1], datos[2]];
+        var TOL = 26;
+        var visitado = new Uint8Array(total);
+        var pila = [];
+
+        for(var xx=0; xx<w; xx++){
+          var iArriba = xx, iAbajo = (h-1)*w + xx;
+          if(colorCercaDe(iArriba, ref, TOL)) pila.push(iArriba);
+          if(colorCercaDe(iAbajo, ref, TOL)) pila.push(iAbajo);
+        }
+        for(var yy=0; yy<h; yy++){
+          var iIzq = yy*w, iDer = yy*w + (w-1);
+          if(colorCercaDe(iIzq, ref, TOL)) pila.push(iIzq);
+          if(colorCercaDe(iDer, ref, TOL)) pila.push(iDer);
+        }
+        if(!pila.length){ cb(src); return; } // el borde no es de color uniforme: mejor no tocar la imagen
+
+        while(pila.length){
+          var idx = pila.pop();
+          if(idx < 0 || idx >= total || visitado[idx]) continue;
+          visitado[idx] = 1;
+          if(!colorCercaDe(idx, ref, TOL)) continue;
+          datos[idx*4+3] = 0; // píxel transparente de verdad
+          var px = idx % w, py = (idx / w) | 0;
+          if(px+1 < w) pila.push(idx+1);
+          if(px-1 >= 0) pila.push(idx-1);
+          if(py+1 < h) pila.push(idx+w);
+          if(py-1 >= 0) pila.push(idx-w);
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        cb(lienzo.toDataURL('image/png'));
+      }catch(e){
+        cb(src); // si algo falla (ej. imagen de otro origen sin permiso), se usa el logo tal cual
+      }
+    };
+    img.onerror = function(){ cb(src); };
+    img.src = src;
+  }
 
   window.refrescarPanalDonadores = function(){
     var lista = window.DonadoresStore.cargar();
