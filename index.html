@@ -3839,23 +3839,33 @@ window.CampanasStore = (function(){
       sitio.style.display = 'none';
     }
 
-    var campanas = window.CampanasStore.deDonador(id);
+    // El modal se abre YA, con lo esencial (logo, nombre, descripción) —
+    // así el clic responde al instante. Armar las tarjetas de campañas
+    // (que pueden traer varias fotos en base64, lo más pesado de construir)
+    // se deja para el cuadro siguiente al pintado, para no bloquear la
+    // respuesta al clic mismo.
     var cont = document.getElementById('dm-campanas');
-    if(!campanas.length){
-      cont.innerHTML = '<p class="dm-campanas-vacio">Todavía no hay campañas registradas con este donador.</p>';
-    } else {
-      cont.innerHTML = campanas.map(function(c){
-        var fecha = c.fecha ? new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-MX', {year:'numeric', month:'long'}) : '';
-        return '<div class="dm-campana-card">' +
-          (fecha ? '<div class="dm-fecha">'+fecha+'</div>' : '') +
-          '<h4>'+c.titulo+'</h4>' +
-          (c.descripcion ? '<p>'+c.descripcion+'</p>' : '') +
-          (c.fotos && c.fotos.length ? '<div class="dm-campana-fotos">'+c.fotos.map(function(f){ return '<img src="'+f.src+'">'; }).join('')+'</div>' : '') +
-        '</div>';
-      }).join('');
-    }
-
+    cont.innerHTML = '<p class="dm-campanas-vacio">Cargando campañas…</p>';
     document.getElementById('donador-modal').style.display = 'flex';
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        var campanas = window.CampanasStore.deDonador(id);
+        if(!campanas.length){
+          cont.innerHTML = '<p class="dm-campanas-vacio">Todavía no hay campañas registradas con este donador.</p>';
+        } else {
+          cont.innerHTML = campanas.map(function(c){
+            var fecha = c.fecha ? new Date(c.fecha + 'T00:00:00').toLocaleDateString('es-MX', {year:'numeric', month:'long'}) : '';
+            return '<div class="dm-campana-card">' +
+              (fecha ? '<div class="dm-fecha">'+fecha+'</div>' : '') +
+              '<h4>'+c.titulo+'</h4>' +
+              (c.descripcion ? '<p>'+c.descripcion+'</p>' : '') +
+              (c.fotos && c.fotos.length ? '<div class="dm-campana-fotos">'+c.fotos.map(function(f){ return '<img src="'+f.src+'">'; }).join('')+'</div>' : '') +
+            '</div>';
+          }).join('');
+        }
+      });
+    });
   };
 
   // Al cerrar, todos los logos regresan a color normal — la próxima vez
@@ -4487,9 +4497,14 @@ window.CampanasStore = (function(){
     layer.setStyle(selectStyle);
     layer.bringToFront();
     map.flyToBounds(layer.getBounds(), {padding:[40,40], duration:0.6, maxZoom:10.5});
-    renderMunicipioCard(m);
     var select = document.getElementById('select-mun');
     if(select) select.value = m.nombre;
+    // El cambio de estilo y el vuelo del mapa ya dieron la respuesta visual
+    // inmediata al clic; la tarjeta lateral (con sus métricas) se arma un
+    // cuadro después, para no sumarle trabajo al instante del clic mismo.
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ renderMunicipioCard(m); });
+    });
   }
 
   var fichaActual = {tipo:null};
@@ -4543,7 +4558,6 @@ window.CampanasStore = (function(){
     if(!c) return;
 
     fichaActual = {tipo:'comunidad', id:comunidadId};
-    renderComunidadCard(c);
 
     var m = metaByName[normalize(c.municipio)];
     if(m && m._layer){
@@ -4560,6 +4574,13 @@ window.CampanasStore = (function(){
       var select = document.getElementById('select-mun');
       if(select) select.value = m.nombre;
     }
+
+    // El vuelo del mapa y el resaltado del municipio ya respondieron al
+    // clic de inmediato; la tarjeta con el carrusel de fotos (lo más
+    // pesado de construir) se arma un cuadro después del pintado.
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ renderComunidadCard(c); });
+    });
   };
 
   window.refrescarFichaAbierta = function(){
