@@ -3905,10 +3905,28 @@ window.CampanasStore = (function(){
   var hoverStyle = { fillColor:'rgba(232,100,10,0.25)', color:'#E8640A', weight:2, fillOpacity:0.55 };
   var selectStyle = { fillColor:'#E8640A', color:'#ffb066', weight:2.5, fillOpacity:0.55 };
 
+  // Antes, todas las comunidades sin coincidencia exacta en el catálogo se
+  // colocaban en las MISMAS coordenadas (el centro del municipio) — se
+  // apilaban una encima de otra y visualmente se veían como un solo punto,
+  // o ninguno. Ahora se reparten en pequeños anillos alrededor del centro
+  // (hasta 12 por anillo, creciendo el radio si hay más), para que cada
+  // comunidad tenga su propio punto visible y clicable.
   function colocarGrupoEnPunto(grupo, lat, lon){
-    grupo.forEach(function(c){
+    var n = grupo.length;
+    var POR_ANILLO = 12;
+    var RADIO_BASE = 0.012; // ~1.3 km en grados, ajustado por la latitud abajo
+    grupo.forEach(function(c, i){
+      var lat2 = lat, lon2 = lon;
+      if(n > 1){
+        var anillo = Math.floor(i / POR_ANILLO);
+        var enEsteAnillo = Math.min(POR_ANILLO, n - anillo * POR_ANILLO);
+        var radio = RADIO_BASE * (anillo + 1);
+        var angulo = (i % POR_ANILLO) * (2 * Math.PI / enEsteAnillo);
+        lat2 = lat + radio * Math.sin(angulo);
+        lon2 = lon + (radio * Math.cos(angulo)) / Math.cos(lat * Math.PI / 180);
+      }
       var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
-      var mk = L.marker([lat, lon], {icon:icon}).addTo(comunidadesLayer);
+      var mk = L.marker([lat2, lon2], {icon:icon}).addTo(comunidadesLayer);
       mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
       mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
     });
@@ -6588,7 +6606,15 @@ var OpenLocationCode = function () {};
         var m = metaPorNombre[municipioReal];
         var listaLocalidades = localidadesPorMunicipio[m.clave] || [];
         var objetivoNom = normalizarTextoCat(nombreTexto);
+        // Quita el texto entre paréntesis (alias/nombre alterno) para una
+        // segunda pasada — mucha discrepancia con el catálogo INEGI es solo
+        // eso: "El Capulín" vs "El Capulín (Barrio el Capulín la Loma)".
+        var sinParentesis = function(t){ return t.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim(); };
+        var objetivoNomSinParen = normalizarTextoCat(sinParentesis(nombreTexto));
         var matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
+        if(!matchCat && objetivoNomSinParen){
+          matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(sinParentesis(l.n)) === objetivoNomSinParen; })[0];
+        }
         if(matchCat){
           item.nombre = matchCat.n;
           item.lat = matchCat.lat;
