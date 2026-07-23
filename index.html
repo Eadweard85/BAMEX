@@ -1618,12 +1618,16 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   overflow: visible;
 }
 .constelacion-linea{
-  stroke: rgba(255,255,255,.16);
+  stroke: rgba(255,255,255,.22);
   stroke-width: 0.15;
-  transition: stroke .35s ease, stroke-width .35s ease, opacity .35s ease;
+  opacity: .4;
+  animation: constelacionLineaBrillo 5s ease-in-out infinite;
+  animation-delay: var(--retraso, 0s);
 }
-.constelacion-linea.panal-activo{ stroke: var(--n); stroke-width: 0.3; opacity: 1; }
-.constelacion-linea.panal-atenuado{ opacity: .1; }
+@keyframes constelacionLineaBrillo{
+  0%, 100%{ opacity: .3; stroke-width: 0.13; }
+  50%{ opacity: .85; stroke-width: 0.22; }
+}
 
 .donador-celda{
   position: absolute;
@@ -3707,9 +3711,14 @@ window.CampanasStore = (function(){
       return { donador: lista[i], x: p.x, y: p.y, retraso: (i % 6) * 0.5 };
     });
     var aristas = calcularArbolMinimo(posiciones);
-    var lineas = aristas.map(function(par){
+    var lineas = aristas.map(function(par, i){
       var a = posiciones[par[0]], b = posiciones[par[1]];
-      return '<line class="constelacion-linea" data-a="'+a.donador.id+'" data-b="'+b.donador.id+'" '+
+      // Retraso y duración distintos por línea (con algo de variación
+      // pseudoaleatoria) para que el destello se sienta como estrellas
+      // reales titilando por su cuenta, no un parpadeo sincronizado.
+      var retrasoLinea = ((i * 0.63) % 4).toFixed(2);
+      var duracionLinea = (4 + (i % 5) * 0.6).toFixed(2);
+      return '<line class="constelacion-linea" style="--retraso:'+retrasoLinea+'s;animation-duration:'+duracionLinea+'s" '+
         'x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"></line>';
     }).join('');
     var nodos = posiciones.map(function(p){ return celdaHtml(p.donador, p.x, p.y, p.retraso); }).join('');
@@ -3861,19 +3870,10 @@ window.CampanasStore = (function(){
         el.classList.remove('panal-activo');
       }
     });
-    document.querySelectorAll('.constelacion-linea').forEach(function(el){
-      if(el.dataset.a === id || el.dataset.b === id){
-        el.classList.add('panal-activo');
-        el.classList.remove('panal-atenuado');
-      } else {
-        el.classList.add('panal-atenuado');
-        el.classList.remove('panal-activo');
-      }
-    });
   };
 
   window.quitarResaltadoDonador = function(){
-    document.querySelectorAll('.donador-celda, .constelacion-linea').forEach(function(el){
+    document.querySelectorAll('.donador-celda').forEach(function(el){
       el.classList.remove('panal-activo', 'panal-atenuado');
     });
   };
@@ -3925,7 +3925,7 @@ window.CampanasStore = (function(){
   // que se abra el panal empieza limpio, sin nada apagado de antes.
   window.cerrarModalDonador = function(){
     document.getElementById('donador-modal').style.display = 'none';
-    document.querySelectorAll('.donador-celda, .constelacion-linea').forEach(function(el){
+    document.querySelectorAll('.donador-celda').forEach(function(el){
       el.classList.remove('panal-activo', 'panal-atenuado');
     });
   };
