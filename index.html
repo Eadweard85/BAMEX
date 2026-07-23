@@ -6505,6 +6505,104 @@ var OpenLocationCode = function () {};
   // "Comunidad" contiene la subcadena "id" y daría un falso positivo con
   // indiceColumna(). El ID es opcional: solo viene si el archivo fue generado
   // con "Descargar Excel actual", o si el usuario lo agregó a mano.
+  // --- UBICAR LA COMUNIDAD, NO SOLO EL MUNICIPIO ---
+  // Cuando el nombre del Excel no coincide letra por letra con el catálogo
+  // INEGI, en vez de rendirse (y dejar que la comunidad termine repartida
+  // en un anillo alrededor del centro del municipio), se intenta encontrar
+  // la localidad más parecida DENTRO de ese municipio y se usa su ubicación
+  // real — así el punto queda donde está esa comunidad, no en un lugar
+  // genérico. Se prueba, en orden, de la coincidencia más estricta a la
+  // más flexible; se detiene en la primera que encuentra.
+  function quitarParentesis(t){
+    return t.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  var PALABRAS_VACIAS_LOC = ['barrio','colonia','ejido','rancheria','ranchito','rancho',
+    'fraccionamiento','unidad','habitacional','conjunto','urbano','granja','paraje',
+    'seccion','manzana','numero','cuartel','primera','segunda','tercera','cuarta',
+    'quinta','sexta','septima','octava','novena','decima','uno','dos','tres','cuatro',
+    'cinco','seis','siete','ocho','nueve','diez','de','del','la','las','el','los',
+    'san','santa','santo'];
+
+  function palabrasClaveLoc(texto){
+    return normalizarTextoCat(texto).replace(/[()]/g, ' ').replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/).filter(function(p){ return p && PALABRAS_VACIAS_LOC.indexOf(p) === -1; });
+  }
+
+  function distanciaLevenshtein(a, b){
+    var la = a.length, lb = b.length;
+    if(!la) return lb;
+    if(!lb) return la;
+    var fila = [];
+    for(var j = 0; j <= lb; j++) fila[j] = j;
+    for(var i = 1; i <= la; i++){
+      var anterior = fila[0];
+      fila[0] = i;
+      for(var j2 = 1; j2 <= lb; j2++){
+        var temp = fila[j2];
+        fila[j2] = Math.min(fila[j2] + 1, fila[j2-1] + 1, anterior + (a[i-1] === b[j2-1] ? 0 : 1));
+        anterior = temp;
+      }
+    }
+    return fila[lb];
+  }
+
+  function mejorCoincidenciaLocalidad(nombreTexto, listaLocalidades){
+    if(!listaLocalidades.length) return null;
+    var objetivoNom = normalizarTextoCat(nombreTexto);
+
+    // 1) Coincidencia exacta.
+    var match = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
+    if(match) return { loc: match, tipo: 'exacta' };
+
+    // 2) Igual quitando el texto entre paréntesis (alias/nombre alterno):
+    //    "El Capulín" vs "El Capulín (Barrio el Capulín la Loma)".
+    var objetivoSinParen = normalizarTextoCat(quitarParentesis(nombreTexto));
+    if(objetivoSinParen){
+      match = listaLocalidades.filter(function(l){ return normalizarTextoCat(quitarParentesis(l.n)) === objetivoSinParen; })[0];
+      if(match) return { loc: match, tipo: 'sin paréntesis' };
+    }
+
+    // 3) Uno contiene al otro como texto — se queda con la más parecida en
+    //    longitud si hay varias candidatas.
+    var candidatasTexto = listaLocalidades.filter(function(l){
+      var ln = normalizarTextoCat(l.n);
+      return ln.indexOf(objetivoNom) !== -1 || objetivoNom.indexOf(ln) !== -1;
+    }).sort(function(a, b){
+      return Math.abs(normalizarTextoCat(a.n).length - objetivoNom.length) - Math.abs(normalizarTextoCat(b.n).length - objetivoNom.length);
+    });
+    if(candidatasTexto.length) return { loc: candidatasTexto[0], tipo: 'por contención de texto' };
+
+    // 4) Coincidencia de palabras clave, ignorando rellenos como "barrio",
+    //    "colonia", numerales ("primera", "segunda"), etc.
+    var clavesObjetivo = palabrasClaveLoc(nombreTexto);
+    if(clavesObjetivo.length){
+      var mejor = null, mejorScore = 0;
+      listaLocalidades.forEach(function(l){
+        var clavesLoc = palabrasClaveLoc(l.n);
+        if(!clavesLoc.length) return;
+        var comunes = clavesObjetivo.filter(function(p){ return clavesLoc.indexOf(p) !== -1; });
+        var score = comunes.length / Math.max(clavesObjetivo.length, clavesLoc.length);
+        if(score > mejorScore){ mejorScore = score; mejor = l; }
+      });
+      if(mejor && mejorScore >= 0.5) return { loc: mejor, tipo: 'por palabras clave (~' + Math.round(mejorScore * 100) + '%)' };
+    }
+
+    // 5) Último recurso: similitud de texto completo (distancia de
+    //    Levenshtein relativa a la longitud), solo si es razonablemente
+    //    cercana — para no adivinar cualquier cosa al azar.
+    var mejorLev = null, mejorDist = Infinity;
+    listaLocalidades.forEach(function(l){
+      var ln = normalizarTextoCat(l.n);
+      var d = distanciaLevenshtein(objetivoNom, ln);
+      var distRelativa = d / Math.max(objetivoNom.length, ln.length, 1);
+      if(distRelativa < mejorDist){ mejorDist = distRelativa; mejorLev = l; }
+    });
+    if(mejorLev && mejorDist <= 0.3) return { loc: mejorLev, tipo: 'por similitud de texto' };
+
+    return null;
+  }
+
   function indiceColumnaId(headers){
     var validos = ['id', 'clave', 'uuid', 'identificador', 'idcomunidad', 'id_comunidad'];
     for(var i = 0; i < headers.length; i++){
@@ -6605,26 +6703,22 @@ var OpenLocationCode = function () {};
         item.municipio = municipioReal;
         var m = metaPorNombre[municipioReal];
         var listaLocalidades = localidadesPorMunicipio[m.clave] || [];
-        var objetivoNom = normalizarTextoCat(nombreTexto);
-        // Quita el texto entre paréntesis (alias/nombre alterno) para una
-        // segunda pasada — mucha discrepancia con el catálogo INEGI es solo
-        // eso: "El Capulín" vs "El Capulín (Barrio el Capulín la Loma)".
-        var sinParentesis = function(t){ return t.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim(); };
-        var objetivoNomSinParen = normalizarTextoCat(sinParentesis(nombreTexto));
-        var matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(l.n) === objetivoNom; })[0];
-        if(!matchCat && objetivoNomSinParen){
-          matchCat = listaLocalidades.filter(function(l){ return normalizarTextoCat(sinParentesis(l.n)) === objetivoNomSinParen; })[0];
-        }
-        if(matchCat){
-          item.nombre = matchCat.n;
-          item.lat = matchCat.lat;
-          item.lng = matchCat.lng;
-          item.estado = 'ok';
-          item.motivo = 'Ubicación real encontrada en el catálogo INEGI';
+        var coincidencia = mejorCoincidenciaLocalidad(nombreTexto, listaLocalidades);
+        item.nombre = nombreTexto;
+        if(coincidencia){
+          item.lat = coincidencia.loc.lat;
+          item.lng = coincidencia.loc.lng;
+          if(coincidencia.tipo === 'exacta'){
+            item.estado = 'ok';
+            item.motivo = 'Ubicación real encontrada en el catálogo INEGI';
+          } else {
+            item.estado = 'warn';
+            item.motivo = 'Ubicación aproximada de esta comunidad — coincidencia ' + coincidencia.tipo +
+              ' con "' + coincidencia.loc.n + '" en el catálogo INEGI';
+          }
         } else {
-          item.nombre = nombreTexto;
           item.estado = 'warn';
-          item.motivo = 'Sin coincidencia en el catálogo — se importará sin ubicación exacta';
+          item.motivo = 'No se encontró ninguna localidad parecida en el catálogo de este municipio — se ubicará en el centro del municipio';
         }
       }
 
