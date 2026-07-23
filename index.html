@@ -6524,9 +6524,21 @@ var OpenLocationCode = function () {};
     'cinco','seis','siete','ocho','nueve','diez','de','del','la','las','el','los',
     'san','santa','santo'];
 
+  // Números romanos usados como sufijo de sector/barrio (I, II, III...) —
+  // el catálogo INEGI los usa así, pero el Excel de la gente casi siempre
+  // trae "1", "2", "3". Se filtran junto con los dígitos arábigos para que
+  // "Sector 1" y "Sector I" se reconozcan como la misma comunidad.
+  var NUMEROS_ROMANOS_LOC = ['i','ii','iii','iv','v','vi','vii','viii','ix','x'];
+
   function palabrasClaveLoc(texto){
     return normalizarTextoCat(texto).replace(/[()]/g, ' ').replace(/[^a-z0-9\s]/g, ' ')
-      .split(/\s+/).filter(function(p){ return p && PALABRAS_VACIAS_LOC.indexOf(p) === -1; });
+      .split(/\s+/).filter(function(p){
+        if(!p) return false;
+        if(/^\d+$/.test(p)) return false; // numeral arábigo suelto: "1", "2"...
+        if(PALABRAS_VACIAS_LOC.indexOf(p) !== -1) return false;
+        if(NUMEROS_ROMANOS_LOC.indexOf(p) !== -1) return false;
+        return true;
+      });
   }
 
   function distanciaLevenshtein(a, b){
@@ -6574,12 +6586,15 @@ var OpenLocationCode = function () {};
     if(candidatasTexto.length) return { loc: candidatasTexto[0], tipo: 'por contención de texto' };
 
     // 4) Coincidencia de palabras clave, ignorando rellenos como "barrio",
-    //    "colonia", numerales ("primera", "segunda"), etc.
-    var clavesObjetivo = palabrasClaveLoc(nombreTexto);
+    //    "colonia", numerales ("primera", "segunda"), etc. Se compara sin el
+    //    texto entre paréntesis del catálogo, para que un alias largo tipo
+    //    "Mayorazgo de León (Estación Río México)" no diluya la coincidencia
+    //    con "Mayorazgo de León".
+    var clavesObjetivo = palabrasClaveLoc(quitarParentesis(nombreTexto));
     if(clavesObjetivo.length){
       var mejor = null, mejorScore = 0;
       listaLocalidades.forEach(function(l){
-        var clavesLoc = palabrasClaveLoc(l.n);
+        var clavesLoc = palabrasClaveLoc(quitarParentesis(l.n));
         if(!clavesLoc.length) return;
         var comunes = clavesObjetivo.filter(function(p){ return clavesLoc.indexOf(p) !== -1; });
         var score = comunes.length / Math.max(clavesObjetivo.length, clavesLoc.length);
@@ -6589,13 +6604,13 @@ var OpenLocationCode = function () {};
     }
 
     // 5) Último recurso: similitud de texto completo (distancia de
-    //    Levenshtein relativa a la longitud), solo si es razonablemente
-    //    cercana — para no adivinar cualquier cosa al azar.
+    //    Levenshtein relativa a la longitud, también sin paréntesis), solo
+    //    si es razonablemente cercana — para no adivinar cualquier cosa al azar.
     var mejorLev = null, mejorDist = Infinity;
     listaLocalidades.forEach(function(l){
-      var ln = normalizarTextoCat(l.n);
-      var d = distanciaLevenshtein(objetivoNom, ln);
-      var distRelativa = d / Math.max(objetivoNom.length, ln.length, 1);
+      var ln = normalizarTextoCat(quitarParentesis(l.n));
+      var d = distanciaLevenshtein(objetivoSinParen || objetivoNom, ln);
+      var distRelativa = d / Math.max((objetivoSinParen || objetivoNom).length, ln.length, 1);
       if(distRelativa < mejorDist){ mejorDist = distRelativa; mejorLev = l; }
     });
     if(mejorLev && mejorDist <= 0.3) return { loc: mejorLev, tipo: 'por similitud de texto' };
@@ -6646,6 +6661,8 @@ var OpenLocationCode = function () {};
     var idxMunicipio = indiceColumna(headers, ['municipio']);
     var idxNombre = indiceColumna(headers, ['comunidad', 'localidad', 'nombre']);
     var idxFamilias = indiceColumna(headers, ['familias']);
+    var idxLat = indiceColumna(headers, ['latitud', 'lat']);
+    var idxLng = indiceColumna(headers, ['longitud', 'lng', 'lon']);
     var idxId = indiceColumnaId(headers);
 
     if(idxMunicipio === -1 || idxNombre === -1){
@@ -6671,6 +6688,9 @@ var OpenLocationCode = function () {};
       var nombreTexto = String(fila[idxNombre] || '').trim();
       var familiasTexto = idxFamilias > -1 ? String(fila[idxFamilias] || '').trim() : '';
       var idTexto = idxId > -1 ? String(fila[idxId] || '').trim() : '';
+      var latDelArchivo = idxLat > -1 ? parseFloat(fila[idxLat]) : NaN;
+      var lngDelArchivo = idxLng > -1 ? parseFloat(fila[idxLng]) : NaN;
+      var tieneCoordsDelArchivo = !isNaN(latDelArchivo) && !isNaN(lngDelArchivo);
 
       var item = { fila: i + 1, municipioTexto: municipioTexto, nombreTexto: nombreTexto };
 
@@ -6692,13 +6712,31 @@ var OpenLocationCode = function () {};
       if(!municipioReal){
         // Municipio fuera del catálogo del Edomex (ej. Maravatío de Ocampo,
         // Michoacán): se importa igual como "Otro municipio", con el texto
-        // tal cual venía en el Excel — no hay catálogo INEGI para calcular
-        // su ubicación automáticamente, así que queda sin marcar (igual que
-        // cuando se agrega a mano eligiendo "Otro municipio" en el formulario).
+        // tal cual venía en el Excel. Si el propio archivo ya trae
+        // coordenadas (de una exportación previa o edición manual), se
+        // respetan; si no, queda sin ubicación automática.
         item.municipio = municipioTexto;
         item.nombre = nombreTexto;
-        item.estado = 'warn';
-        item.motivo = 'Municipio fuera del catálogo del Edomex ("' + municipioTexto + '") — se importa como "Otro municipio", sin ubicación automática';
+        if(tieneCoordsDelArchivo){
+          item.lat = latDelArchivo;
+          item.lng = lngDelArchivo;
+          item.estado = 'ok';
+          item.motivo = 'Municipio fuera del catálogo del Edomex — se conserva la ubicación que ya traía el archivo';
+        } else {
+          item.estado = 'warn';
+          item.motivo = 'Municipio fuera del catálogo del Edomex ("' + municipioTexto + '") — se importa como "Otro municipio", sin ubicación automática';
+        }
+      } else if(tieneCoordsDelArchivo){
+        // El archivo ya trae coordenadas para esta fila (de una exportación
+        // anterior, o porque alguien la corrigió a mano en el Excel): se usan
+        // tal cual, sin volver a adivinar por nombre — es la ubicación más
+        // confiable posible, la de la propia comunidad.
+        item.municipio = municipioReal;
+        item.nombre = nombreTexto;
+        item.lat = latDelArchivo;
+        item.lng = lngDelArchivo;
+        item.estado = 'ok';
+        item.motivo = 'Se conserva la ubicación que ya traía el archivo para esta comunidad';
       } else {
         item.municipio = municipioReal;
         var m = metaPorNombre[municipioReal];
