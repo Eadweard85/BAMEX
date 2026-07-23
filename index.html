@@ -1082,14 +1082,14 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   position: absolute;
   top: 0; right: 0; bottom: 0;
   left: auto;
-  width: min(64vw, 820px);
+  width: min(48vw, 640px);
   height: 100%;
   z-index: 500;
   overflow: hidden;
   animation: mapaplayIn .55s cubic-bezier(.16,1,.3,1);
   will-change: transform, opacity;
 }
-.mapa-contenedor.modo-cine .mapaplay-card{ width: min(64vw, 820px); }
+.mapa-contenedor.modo-cine .mapaplay-card{ width: min(48vw, 640px); }
 @keyframes mapaplayIn{ from{ opacity:0; transform: translateX(28px); } to{ opacity:1; transform: translateX(0); } }
 
 .mapaplay-visual{
@@ -4520,6 +4520,23 @@ window.CampanasStore = (function(){
       '</div>';
   }
 
+  // Durante el modo cine, el panel inmersivo ocupa la mitad derecha de la
+  // pantalla — si el mapa centra el municipio/comunidad como si esa mitad
+  // estuviera libre, termina tapado o amontonado detrás del panel. Estas
+  // dos funciones desplazan el centro real del mapa hacia la derecha (o
+  // agregan relleno a la derecha en flyToBounds) para que lo que importa
+  // quede visible en la mitad izquierda, libre de la pantalla.
+  function anchoPanelInmersivoPx(){
+    return Math.min(window.innerWidth * 0.48, 640);
+  }
+
+  function centroConEspacioPanel(lat, lng, zoom){
+    if(!(mapaplay && mapaplay.activo)) return L.latLng(lat, lng);
+    var offsetX = anchoPanelInmersivoPx() / 2;
+    var p = map.project([lat, lng], zoom).add([offsetX, 0]);
+    return map.unproject(p, zoom);
+  }
+
   function selectLayer(layer, m){
     if(selectedLayer && selectedLayer !== layer){
       if(geoLayer && geoLayer.hasLayer(selectedLayer)) geoLayer.resetStyle(selectedLayer);
@@ -4530,7 +4547,13 @@ window.CampanasStore = (function(){
     fichaActual = {tipo:'municipio'};
     layer.setStyle(selectStyle);
     layer.bringToFront();
-    map.flyToBounds(layer.getBounds(), {padding:[40,40], duration:0.6, maxZoom:10.5});
+    var paddingDerecho = 40 + (mapaplay && mapaplay.activo ? anchoPanelInmersivoPx() : 0);
+    map.flyToBounds(layer.getBounds(), {
+      paddingTopLeft: [40, 40],
+      paddingBottomRight: [paddingDerecho, 40],
+      duration: 0.6,
+      maxZoom: 10.5
+    });
     var select = document.getElementById('select-mun');
     if(select) select.value = m.nombre;
     // El cambio de estilo y el vuelo del mapa ya dieron la respuesta visual
@@ -4601,9 +4624,15 @@ window.CampanasStore = (function(){
       m._layer.setStyle(selectStyle);
       m._layer.bringToFront();
       if(typeof c.lat === 'number' && typeof c.lng === 'number'){
-        map.flyTo([c.lat, c.lng], 13, {duration:0.6});
+        map.flyTo(centroConEspacioPanel(c.lat, c.lng, 13), 13, {duration:0.6});
       } else {
-        map.flyToBounds(m._layer.getBounds(), {padding:[40,40], duration:0.6, maxZoom:10.5});
+        var paddingDerechoC = 40 + (mapaplay && mapaplay.activo ? anchoPanelInmersivoPx() : 0);
+        map.flyToBounds(m._layer.getBounds(), {
+          paddingTopLeft: [40, 40],
+          paddingBottomRight: [paddingDerechoC, 40],
+          duration: 0.6,
+          maxZoom: 10.5
+        });
       }
       var select = document.getElementById('select-mun');
       if(select) select.value = m.nombre;
@@ -4872,7 +4901,8 @@ window.CampanasStore = (function(){
     m._layer.bringToFront();
     var lat = (typeof c.lat === 'number') ? c.lat : m.lat;
     var lng = (typeof c.lng === 'number') ? c.lng : m.lon;
-    map.flyTo([lat, lng], 11.5, {duration:0.6});
+    var zoomComunidad = 11.5;
+    map.flyTo(centroConEspacioPanel(lat, lng, zoomComunidad), zoomComunidad, {duration:0.6});
     var select = document.getElementById('select-mun');
     if(select) select.value = m.nombre;
   }
@@ -7365,4 +7395,4 @@ var OpenLocationCode = function () {};
 </script>
 
 </body>
-</html>.
+</html>
