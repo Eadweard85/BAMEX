@@ -3905,32 +3905,117 @@ window.CampanasStore = (function(){
   var hoverStyle = { fillColor:'rgba(232,100,10,0.25)', color:'#E8640A', weight:2, fillOpacity:0.55 };
   var selectStyle = { fillColor:'#E8640A', color:'#ffb066', weight:2.5, fillOpacity:0.55 };
 
-  // Antes, todas las comunidades sin coincidencia exacta en el catálogo se
-  // colocaban en las MISMAS coordenadas (el centro del municipio) — se
-  // apilaban una encima de otra y visualmente se veían como un solo punto,
-  // o ninguno. Ahora se reparten en pequeños anillos alrededor del centro
-  // (hasta 12 por anillo, creciendo el radio si hay más), para que cada
-  // comunidad tenga su propio punto visible y clicable.
-  function colocarGrupoEnPunto(grupo, lat, lon){
-    var n = grupo.length;
-    var POR_ANILLO = 12;
-    var RADIO_BASE = 0.012; // ~1.3 km en grados, ajustado por la latitud abajo
-    grupo.forEach(function(c, i){
-      var lat2 = lat, lon2 = lon;
-      if(n > 1){
-        var anillo = Math.floor(i / POR_ANILLO);
-        var enEsteAnillo = Math.min(POR_ANILLO, n - anillo * POR_ANILLO);
-        var radio = RADIO_BASE * (anillo + 1);
-        var angulo = (i % POR_ANILLO) * (2 * Math.PI / enEsteAnillo);
-        lat2 = lat + radio * Math.sin(angulo);
-        lon2 = lon + (radio * Math.cos(angulo)) / Math.cos(lat * Math.PI / 180);
+  // --- DISPERSIÓN ORGÁNICA DENTRO DEL POLÍGONO REAL DEL MUNICIPIO ---
+  // Antes, las comunidades sin coincidencia exacta se repartían en anillos
+  // concéntricos perfectos alrededor del centro del municipio — geométrico
+  // y nada orgánico. Ahora se genera un punto aleatorio (pero estable: la
+  // misma comunidad siempre cae en el mismo lugar entre repintados) DENTRO
+  // del polígono real del municipio, usando el mismo GeoJSON que ya dibuja
+  // sus fronteras — así la dispersión respeta la forma real del territorio
+  // en vez de un patrón matemático.
+  var geoPorMunicipioCache = null;
+
+  function bboxDeGeometria(geometry){
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    var poligonos = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+    poligonos.forEach(function(anillos){
+      anillos[0].forEach(function(pt){
+        if(pt[0] < minX) minX = pt[0];
+        if(pt[0] > maxX) maxX = pt[0];
+        if(pt[1] < minY) minY = pt[1];
+        if(pt[1] > maxY) maxY = pt[1];
+      });
+    });
+    return [minX, minY, maxX, maxY];
+  }
+
+  function obtenerGeoMunicipio(key){
+    if(!geoPorMunicipioCache){
+      geoPorMunicipioCache = {};
+      (geo.features || []).forEach(function(f){
+        var k = normalize(f.properties.NOM_MUN);
+        geoPorMunicipioCache[k] = { geometry: f.geometry, bbox: bboxDeGeometria(f.geometry) };
+      });
+    }
+    return geoPorMunicipioCache[key];
+  }
+
+  function puntoDentroDeAnillo(lng, lat, anillo){
+    var dentro = false;
+    for(var i = 0, j = anillo.length - 1; i < anillo.length; j = i++){
+      var xi = anillo[i][0], yi = anillo[i][1], xj = anillo[j][0], yj = anillo[j][1];
+      var interseca = ((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+      if(interseca) dentro = !dentro;
+    }
+    return dentro;
+  }
+
+  function puntoDentroDePoligono(lng, lat, geometry){
+    var poligonos = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+    for(var p = 0; p < poligonos.length; p++){
+      var anillos = poligonos[p];
+      if(puntoDentroDeAnillo(lng, lat, anillos[0])){
+        var enHueco = false;
+        for(var h = 1; h < anillos.length; h++){
+          if(puntoDentroDeAnillo(lng, lat, anillos[h])){ enHueco = true; break; }
+        }
+        if(!enHueco) return true;
       }
+    }
+    return false;
+  }
+
+  // Hash simple + generador pseudoaleatorio con semilla — para que cada
+  // comunidad siempre caiga en el mismo punto (no "baile" cada vez que se
+  // repinta el mapa), sin necesidad de guardarlo en la base de datos.
+  function hashTexto(s){
+    var h = 2166136261;
+    for(var i = 0; i < s.length; i++){
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function rngConSemilla(semilla){
+    var estado = semilla >>> 0;
+    return function(){
+      estado |= 0; estado = (estado + 0x6D2B79F5) | 0;
+      var t = Math.imul(estado ^ (estado >>> 15), 1 | estado);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function generarPuntoOrganico(c, centroLat, centroLon){
+    var semilla = hashTexto(String(c.id || c.nombre) + '|' + c.municipio);
+    var rng = rngConSemilla(semilla);
+    var info = obtenerGeoMunicipio(normalize(c.municipio));
+    if(info){
+      for(var intento = 0; intento < 40; intento++){
+        var lng = info.bbox[0] + rng() * (info.bbox[2] - info.bbox[0]);
+        var lat = info.bbox[1] + rng() * (info.bbox[3] - info.bbox[1]);
+        if(puntoDentroDePoligono(lng, lat, info.geometry)) return [lat, lng];
+      }
+    }
+    // Respaldo si no hay polígono disponible o no se halló un punto interior
+    // en los intentos: un jitter pequeño alrededor del centro — estable por
+    // comunidad, pero ya no en anillos perfectos.
+    var angulo = rng() * Math.PI * 2;
+    var radio = 0.01 + rng() * 0.02;
+    return [centroLat + radio * Math.sin(angulo), centroLon + (radio * Math.cos(angulo)) / Math.cos(centroLat * Math.PI / 180)];
+  }
+
+  function colocarGrupoEnPunto(grupo, lat, lon){
+    grupo.forEach(function(c){
+      var punto = generarPuntoOrganico(c, lat, lon);
       var icon = L.divIcon({className:'', html:'<div class="comunidad-pin-icon"></div>', iconSize:[14,14]});
-      var mk = L.marker([lat2, lon2], {icon:icon}).addTo(comunidadesLayer);
+      var mk = L.marker(punto, {icon:icon}).addTo(comunidadesLayer);
       mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
       mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
     });
   }
+
 
   // Caché de municipios fuera del catálogo del Edomex (ej. Maravatío,
   // Michoacán) que SÍ tienen alguna comunidad registrada. Se resuelven una
