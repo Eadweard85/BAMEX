@@ -1103,11 +1103,11 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
 .mapaplay-sinfoto{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:64px; opacity:.22; filter:grayscale(1); }
 
 .mapaplay-tag{
-  position: absolute; top: 26px; left: 34px;
-  z-index: 2;
+  display: inline-block;
   background: rgba(232,100,10,.92); color:#fff; font-size:12px; font-weight:700;
   text-transform: uppercase; letter-spacing:.06em; padding:5px 13px; border-radius:20px;
   box-shadow: 0 4px 14px rgba(0,0,0,.35);
+  margin-bottom: 10px;
 }
 
 .mapaplay-info{
@@ -1135,7 +1135,6 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
     mask-image: linear-gradient(to bottom, transparent 0%, transparent 4%, #000 65%);
     -webkit-mask-size: auto; mask-size: auto;
   }
-  .mapaplay-tag{ top: 16px; left: 18px; }
   .mapaplay-info{ padding: 60px 18px 18px; }
   .mapaplay-info h4{ font-size: 19px; }
   .mapaplay-stats{ gap: 22px; }
@@ -1252,10 +1251,30 @@ nav button.on::after{content:'';position:absolute;bottom:-8px;left:0;width:100%;
   border: 2px solid #fff;
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(255,106,0,.7);
-  transition: transform .2s;
+  transition: transform .25s ease, opacity .25s ease, box-shadow .25s ease;
   cursor: pointer;
 }
 .comunidad-pin-icon:hover{ transform: scale(1.4); background:#ff0000; }
+/* Cuando hay una comunidad seleccionada (clic o recorrido en modo cine),
+   su punto se distingue del resto: más grande, con un pulso propio — y
+   el resto de los puntos se atenúan, para que no se pierdan entre tantos. */
+.comunidad-pin-icon.comunidad-pin-activo{
+  width: 20px; height: 20px;
+  background: #fff;
+  border: 3px solid #ff6a00;
+  box-shadow: 0 0 0 0 rgba(255,106,0,.6);
+  animation: comunidadPinPulso 1.8s infinite;
+  z-index: 1000 !important;
+}
+@keyframes comunidadPinPulso{
+  0%{ box-shadow: 0 0 0 0 rgba(255,106,0,.55); }
+  70%{ box-shadow: 0 0 0 14px rgba(255,106,0,0); }
+  100%{ box-shadow: 0 0 0 0 rgba(255,106,0,0); }
+}
+.comunidad-pin-icon.comunidad-pin-atenuado{
+  opacity: .28;
+  box-shadow: none;
+}
 .picker-pin-icon{
   width: 22px; height: 30px;
   cursor: grab;
@@ -2300,9 +2319,9 @@ button.admin-import-badge.activo{ box-shadow: 0 0 0 2px currentColor inset; tran
         <div class="mapaplay-visual">
           <div class="mapaplay-foto" id="mapaplay-foto"></div>
           <span class="mapaplay-sinfoto" id="mapaplay-sinfoto">🏘️</span>
-          <span class="mapaplay-tag" id="mapaplay-tag">Comunidad</span>
         </div>
         <div class="mapaplay-info">
+          <span class="mapaplay-tag" id="mapaplay-tag">Comunidad</span>
           <h4 id="mapaplay-nombre">—</h4>
           <p id="mapaplay-municipio">—</p>
           <div class="mapaplay-stats">
@@ -4050,6 +4069,34 @@ window.CampanasStore = (function(){
     return [centroLat + radio * Math.sin(angulo), centroLon + (radio * Math.cos(angulo)) / Math.cos(centroLat * Math.PI / 180)];
   }
 
+  // Registro de cada marcador por id de comunidad, para poder resaltar
+  // uno específico (y atenuar el resto) cuando se selecciona una
+  // comunidad — se reconstruye cada vez que se repintan los marcadores.
+  var marcadoresPorComunidad = {};
+
+  function resaltarComunidadEnMapa(id){
+    Object.keys(marcadoresPorComunidad).forEach(function(cid){
+      var el = marcadoresPorComunidad[cid].getElement();
+      var pin = el && el.querySelector('.comunidad-pin-icon');
+      if(!pin) return;
+      if(cid === id){
+        pin.classList.add('comunidad-pin-activo');
+        pin.classList.remove('comunidad-pin-atenuado');
+      } else {
+        pin.classList.remove('comunidad-pin-activo');
+        pin.classList.add('comunidad-pin-atenuado');
+      }
+    });
+  }
+
+  function quitarResaltadoComunidadesMapa(){
+    Object.keys(marcadoresPorComunidad).forEach(function(cid){
+      var el = marcadoresPorComunidad[cid].getElement();
+      var pin = el && el.querySelector('.comunidad-pin-icon');
+      if(pin) pin.classList.remove('comunidad-pin-activo', 'comunidad-pin-atenuado');
+    });
+  }
+
   function colocarGrupoEnPunto(grupo, lat, lon){
     grupo.forEach(function(c){
       var punto = generarPuntoOrganico(c, lat, lon);
@@ -4057,6 +4104,7 @@ window.CampanasStore = (function(){
       var mk = L.marker(punto, {icon:icon}).addTo(comunidadesLayer);
       mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
       mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
+      marcadoresPorComunidad[c.id] = mk;
     });
   }
 
@@ -4133,6 +4181,7 @@ window.CampanasStore = (function(){
   function pintarMarcadoresComunidades(){
     if(!comunidadesLayer) return;
     comunidadesLayer.clearLayers();
+    marcadoresPorComunidad = {};
     var todas = window.ComunidadesStore.cargar();
 
     var sinUbicacionExacta = [];
@@ -4142,6 +4191,7 @@ window.CampanasStore = (function(){
         var mk = L.marker([c.lat, c.lng], {icon:icon}).addTo(comunidadesLayer);
         mk.bindTooltip(c.nombre + ' (' + c.municipio + ')', {className:'mun-tip'});
         mk.on('click', function(){ if(window.edomexMostrarComunidad) window.edomexMostrarComunidad(c.id); });
+        marcadoresPorComunidad[c.id] = mk;
       } else {
         sinUbicacionExacta.push(c);
       }
@@ -4545,6 +4595,7 @@ window.CampanasStore = (function(){
     selectedLayer = layer;
     selectedMunicipioMeta = m;
     fichaActual = {tipo:'municipio'};
+    quitarResaltadoComunidadesMapa();
     layer.setStyle(selectStyle);
     layer.bringToFront();
     var paddingDerecho = 40 + (mapaplay && mapaplay.activo ? anchoPanelInmersivoPx() : 0);
@@ -4615,6 +4666,7 @@ window.CampanasStore = (function(){
     if(!c) return;
 
     fichaActual = {tipo:'comunidad', id:comunidadId};
+    resaltarComunidadEnMapa(comunidadId);
 
     var m = metaByName[normalize(c.municipio)];
     if(m && m._layer){
@@ -4892,6 +4944,7 @@ window.CampanasStore = (function(){
   function mapaPlayVolarComunidad(c){
     fichaActual = {tipo:'comunidad', id:c.id};
     renderComunidadCard(c);
+    resaltarComunidadEnMapa(c.id);
     var m = metaByName[normalize(c.municipio)];
     if(!m || !m._layer) return;
     if(selectedLayer) geoLayer.resetStyle(selectedLayer);
@@ -5047,6 +5100,7 @@ window.CampanasStore = (function(){
     if(card) card.style.display = 'none';
     if(btn){ btn.textContent = '▶'; btn.title = 'Reproducir recorrido en el mapa'; btn.classList.remove('activo'); }
     if(ring) ring.style.strokeDashoffset = MAPAPLAY_RING_CIRCUNFERENCIA;
+    quitarResaltadoComunidadesMapa();
     mapaPlaySalirFullscreen();
     window.edomexResetView();
     if(window.edomexInvalidateSize) setTimeout(window.edomexInvalidateSize, 250);
@@ -6418,7 +6472,7 @@ var OpenLocationCode = function () {};
         var canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        cb(canvas.toDataURL('image/jpeg', 0.72));
+        cb(canvas.toDataURL('image/jpeg', 0.88));
       };
       img.src = e.target.result;
     };
@@ -6445,7 +6499,7 @@ var OpenLocationCode = function () {};
 
   window.manejarFotoCategoria = function(file, categoria){
     if(!file) return;
-    redimensionarImagen(file, 900, function(dataUrl){
+    redimensionarImagen(file, 1600, function(dataUrl){
       window.__fotosPendientes[categoria] = dataUrl;
       pintarPreviewFotos();
     });
